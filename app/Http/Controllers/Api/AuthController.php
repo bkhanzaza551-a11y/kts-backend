@@ -37,9 +37,9 @@ class AuthController extends Controller
         $otpRecord = AdminOtp::generateFor($user, $request->ip());
 
         try {
-            Mail::raw("Your KTS 10 Pips Bots verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
+            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
                 $message->to($user->email)
-                    ->subject("KTS 10 Pips Bots - Email Verification Code: {$otpRecord->otp}");
+                    ->subject("KTS Markets - Email Verification Code: {$otpRecord->otp}");
             });
             \Illuminate\Support\Facades\DB::table('email_logs')->insert([
                 'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
@@ -134,9 +134,9 @@ class AuthController extends Controller
         $otpRecord = AdminOtp::generateFor($user, $request->ip());
 
         try {
-            Mail::raw("Your KTS 10 Pips Bots verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
+            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
                 $message->to($user->email)
-                    ->subject("KTS 10 Pips Bots - Email Verification Code: {$otpRecord->otp}");
+                    ->subject("KTS Markets - Email Verification Code: {$otpRecord->otp}");
             });
             \Illuminate\Support\Facades\DB::table('email_logs')->insert([
                 'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
@@ -196,8 +196,8 @@ class AuthController extends Controller
         $otpRecord = AdminOtp::generateFor($user, $request->ip());
 
         try {
-            Mail::raw("Your KTS 10 Pips Bots verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't attempt to login, please secure your account.", function ($message) use ($user, $otpRecord) {
-                $message->to($user->email)->subject("KTS 10 Pips Bots - Login Verification Code: {$otpRecord->otp}");
+            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't attempt to login, please secure your account.", function ($message) use ($user, $otpRecord) {
+                $message->to($user->email)->subject("KTS Markets - Login Verification Code: {$otpRecord->otp}");
             });
             \Illuminate\Support\Facades\DB::table('email_logs')->insert([
                 'user_id' => $user->id, 'type' => 'otp', 'status' => 'sent',
@@ -446,8 +446,8 @@ class AuthController extends Controller
         ]);
 
         try {
-            Mail::raw("You have requested a password reset for your KTS 10 Pips Bots account.\n\nYour reset token is: {$resetToken}\n\nIf you did not request this, please ignore this email.", function ($message) use ($user) {
-                $message->to($user->email)->subject("KTS 10 Pips Bots - Password Reset");
+            Mail::raw("You have requested a password reset for your KTS Markets account.\n\nYour reset token is: {$resetToken}\n\nIf you did not request this, please ignore this email.", function ($message) use ($user) {
+                $message->to($user->email)->subject("KTS Markets - Password Reset");
             });
             \Illuminate\Support\Facades\DB::table('email_logs')->insert([
                 'user_id' => $user->id, 'type' => 'reset_password', 'status' => 'sent',

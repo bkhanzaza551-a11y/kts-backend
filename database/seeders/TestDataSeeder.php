@@ -183,7 +183,7 @@ class TestDataSeeder extends Seeder
         $templates = [
             ['name' => 'Signal Alert', 'slug' => 'signal-alert', 'title' => 'New Signal: :symbol', 'body' => 'A new :type signal for :symbol has been posted. Entry: :entry, TP: :tp, SL: :sl', 'type' => 'signal', 'event' => 'signal.created', 'channel' => 'push', 'is_active' => true],
             ['name' => 'Signal Closed', 'slug' => 'signal-closed', 'title' => 'Signal Closed: :symbol', 'body' => 'Your signal for :symbol has been closed. Result: :result', 'type' => 'signal', 'event' => 'signal.closed', 'channel' => 'push', 'is_active' => true],
-            ['name' => 'Welcome', 'slug' => 'welcome', 'title' => 'Welcome to KTS 10 Pips Bots!', 'body' => 'Thank you for joining. Start trading with our signals today!', 'type' => 'info', 'event' => 'user.registered', 'channel' => 'email', 'is_active' => true],
+            ['name' => 'Welcome', 'slug' => 'welcome', 'title' => 'Welcome to KTS Markets!', 'body' => 'Thank you for joining. Start trading with our signals today!', 'type' => 'info', 'event' => 'user.registered', 'channel' => 'email', 'is_active' => true],
             ['name' => 'Subscription Expiry', 'slug' => 'subscription-expiry', 'title' => 'Subscription Expiring Soon', 'body' => 'Your subscription expires in :days days. Renew now to keep access.', 'type' => 'warning', 'event' => 'subscription.expiring', 'channel' => 'push', 'is_active' => true],
             ['name' => 'Password Reset', 'slug' => 'password-reset', 'title' => 'Password Reset Request', 'body' => 'Click the link to reset your password: :link', 'type' => 'security', 'event' => 'user.password_reset', 'channel' => 'email', 'is_active' => true],
         ];

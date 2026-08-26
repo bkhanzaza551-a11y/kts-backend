@@ -320,10 +320,10 @@ class AiAgentToolService
                     "Subject: {$data['subject']}\n" .
                     "Priority: " . ucfirst($data['priority'] ?? 'medium') . "\n\n" .
                     "Our team will review and get back to you shortly.\n\n" .
-                    "KTS 10 Pips Bots Support",
+                    "KTS Markets Support",
                     function ($message) use ($user, $ticketId) {
                         $message->to($user->email)
-                            ->subject("Support Ticket #{$ticketId} Created - KTS 10 Pips Bots");
+                            ->subject("Support Ticket #{$ticketId} Created - KTS Markets");
                     }
                 );
                 $emailSent = true;
@@ -382,12 +382,12 @@ class AiAgentToolService
         $otpRecord = AdminOtp::generateFor($user);
 
         Mail::raw(
-            "Your KTS 10 Pips Bots verification code is: {$otpRecord->otp}\n\n" .
+            "Your KTS Markets verification code is: {$otpRecord->otp}\n\n" .
             "This code expires in 5 minutes.\n\n" .
             "If you didn't register, ignore this email.",
             function ($message) use ($user, $otpRecord) {
                 $message->to($user->email)
-                    ->subject("KTS 10 Pips Bots - Email Verification Code: {$otpRecord->otp}");
+                    ->subject("KTS Markets - Email Verification Code: {$otpRecord->otp}");
             }
         );
     }
@@ -403,12 +403,12 @@ class AiAgentToolService
         ]);
 
         Mail::raw(
-            "You have requested a password reset for your KTS 10 Pips Bots account.\n\n" .
+            "You have requested a password reset for your KTS Markets account.\n\n" .
             "Your reset token is: {$token}\n\n" .
             "If you did not request this, please ignore this email.",
             function ($message) use ($user) {
                 $message->to($user->email)
-                    ->subject('KTS 10 Pips Bots - Password Reset');
+                    ->subject('KTS Markets - Password Reset');
             }
         );
     }
@@ -423,7 +423,7 @@ class AiAgentToolService
             "If you didn't attempt to login, please secure your account.",
             function ($message) use ($user, $otpRecord) {
                 $message->to($user->email)
-                    ->subject("KTS 10 Pips Bots - Login OTP: {$otpRecord->otp}");
+                    ->subject("KTS Markets - Login OTP: {$otpRecord->otp}");
             }
         );
     }
@@ -431,14 +431,14 @@ class AiAgentToolService
     private function sendWelcomeEmail(User $user): void
     {
         Mail::raw(
-            "Welcome to KTS 10 Pips Bots!\n\n" .
+            "Welcome to KTS Markets!\n\n" .
             "Hi {$user->name},\n\n" .
             "Your account is ready. Start exploring our trading signals and MT5 bots.\n\n" .
             "Need help? Just chat with our AI assistant!\n\n" .
-            "KTS 10 Pips Bots Team",
+            "KTS Markets Team",
             function ($message) use ($user) {
                 $message->to($user->email)
-                    ->subject('Welcome to KTS 10 Pips Bots!');
+                    ->subject('Welcome to KTS Markets!');
             }
         );
     }
@@ -449,10 +449,10 @@ class AiAgentToolService
             "Hi {$user->name},\n\n" .
             "Our team has received your support request and will get back to you within 24 hours.\n\n" .
             "Thank you for your patience!\n\n" .
-            "KTS 10 Pips Bots Support",
+            "KTS Markets Support",
             function ($message) use ($user) {
                 $message->to($user->email)
-                    ->subject('Support Request Received - KTS 10 Pips Bots');
+                    ->subject('Support Request Received - KTS Markets');
             }
         );
     }

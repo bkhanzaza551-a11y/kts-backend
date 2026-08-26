@@ -31,7 +31,7 @@ class DemoAccountSetting extends Model
         return static::firstOrCreate([], [
             'referral_link' => 'https://www.exness.com/register/',
             'page_title' => 'How to Create Exness Demo Account',
-            'page_description' => 'Follow these simple steps to create your Exness demo account and start trading with KTS 10 Pips Bots.',
+            'page_description' => 'Follow these simple steps to create your Exness demo account and start trading with KTS Markets.',
             'instructions' => self::getDefaultInstructions(),
             'account_types' => self::getDefaultAccountTypes(),
             'deposit_amounts' => ['1000', '5000', '10000', '50000', '100000'],

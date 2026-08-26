@@ -14,9 +14,9 @@ echo "Mail Encryption: " . config('mail.encryption') . "\n";
 echo "Mail From: " . config('mail.from.address') . "\n";
 
 try {
-    \Illuminate\Support\Facades\Mail::raw('Test email from KTS 10 Pips Bots', function ($message) {
+    \Illuminate\Support\Facades\Mail::raw('Test email from KTS Markets', function ($message) {
         $message->to('huntergaming5555566@gmail.com')
-                ->subject('Test Email - KTS 10 Pips Bots');
+                ->subject('Test Email - KTS Markets');
     });
     echo "Email sent successfully!\n";
 } catch (\Exception $e) {

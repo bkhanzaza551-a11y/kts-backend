@@ -1,4 +1,4 @@
-# Railway Deployment Guide - KTS 10 Pips Bots Backend
+# Railway Deployment Guide - KTS Markets Backend
 
 ## Prerequisites
 - GitHub account
@@ -34,7 +34,7 @@ git push -u origin main
 In Railway dashboard → Your Service → **Variables** tab → Add:
 
 ```
-APP_NAME=KTS 10 Pips Bots
+APP_NAME=KTS Markets
 APP_ENV=production
 APP_DEBUG=false
 APP_TIMEZONE=UTC
@@ -50,7 +50,7 @@ MAIL_USERNAME=ahmedbilalkhangl09@gmail.com
 MAIL_PASSWORD=pvrahwujjucsqwlo
 MAIL_ENCRYPTION=ssl
 MAIL_FROM_ADDRESS=ahmedbilalkhangl09@gmail.com
-MAIL_FROM_NAME=KTS 10 Pips Bots
+MAIL_FROM_NAME=KTS Markets
 ```
 
 **Generate APP_KEY:**

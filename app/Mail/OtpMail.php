@@ -21,7 +21,7 @@ class OtpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your KTS 10 Pips Bots Admin OTP',
+            subject: 'Your KTS Markets Admin OTP',
         );
     }
 
@@ -53,7 +53,7 @@ class OtpMail extends Mailable
         <body>
             <div class='container'>
                 <div class='header'>
-                    <div class='logo'>KTS 10 Pips Bots</div>
+                    <div class='logo'>KTS Markets</div>
                     <p style='color:#94a3b8;'>Admin Panel Verification</p>
                 </div>
                 <p>Hello {$this->userName},</p>
@@ -66,7 +66,7 @@ class OtpMail extends Mailable
                     This OTP expires in 5 minutes. Do not share this code with anyone. If you did not request this login, please secure your account immediately.
                 </div>
                 <div class='footer'>
-                    <p>KTS 10 Pips Bots &copy; " . date('Y') . " | Codex Aura Solutions</p>
+                    <p>KTS Markets &copy; " . date('Y') . " | Codex Aura Solutions</p>
                 </div>
             </div>
         </body>
