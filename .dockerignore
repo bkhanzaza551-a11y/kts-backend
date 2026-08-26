@@ -1,0 +1,17 @@
+node_modules
+vendor
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+tests
+*.md
+deployment
+docker-compose*.yml
+.phpunit.cache
+storage/logs/*.log
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+database/database.sqlite

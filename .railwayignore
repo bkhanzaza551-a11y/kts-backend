@@ -1,0 +1,13 @@
+node_modules
+vendor
+.env
+.env.local
+.git
+.gitignore
+tests
+*.md
+deployment
+docker-compose*.yml
+.dockerignore
+.phpunit.cache
+storage/logs/*.log
