@@ -5,7 +5,9 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0 fw-bold"><i class="bi bi-file-earmark-text me-2 text-primary"></i>Legal Pages</h4>
+    @if(auth()->user()->hasPermission('settings_manage'))
     <a href="{{ route('admin.legal-pages.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Page</a>
+    @endif
 </div>
 
 <div class="row g-4">
@@ -35,12 +37,14 @@
                         @endif
                     </small>
                     <div class="d-flex gap-1">
+                        @if(auth()->user()->hasPermission('settings_manage'))
                         <a href="{{ route('admin.legal-pages.edit', $page->slug) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Edit</a>
                         @if($page->slug === 'privacy-policy' || $page->slug === 'terms-conditions')
                         <form method="POST" action="{{ route('admin.legal-pages.publish', $page->slug) }}">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-send"></i> Publish</button>
                         </form>
+                        @endif
                         @endif
                     </div>
                 </div>

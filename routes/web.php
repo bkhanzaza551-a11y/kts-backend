@@ -378,8 +378,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('settings/security-code/update', [\App\Http\Controllers\Admin\SecurityController::class, 'updateCode'])->middleware('throttle:3,1')->name('security.update-code');
         });
 
-        // Audit Logs
-        Route::middleware('permission:settings_manage')->group(function () {
+        // Audit Logs (read-only requires settings_view)
+        Route::middleware('permission:settings_view')->group(function () {
             Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
         });
 
@@ -391,9 +391,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('analytics/mt5', [Mt5AnalyticsController::class, 'index'])->name('analytics.mt5');
         });
 
-        // Currency Switcher
-        Route::post('currency/switch', [\App\Http\Controllers\Admin\CurrencyController::class, 'switch'])->name('currency.switch');
-        Route::get('currency/rates', [\App\Http\Controllers\Admin\CurrencyController::class, 'getRates'])->name('currency.rates');
+        // Currency Switcher (auth required)
+        Route::middleware('auth')->group(function () {
+            Route::post('currency/switch', [\App\Http\Controllers\Admin\CurrencyController::class, 'switch'])->name('currency.switch');
+            Route::get('currency/rates', [\App\Http\Controllers\Admin\CurrencyController::class, 'getRates'])->name('currency.rates');
+        });
 
         // Market Data (Binance API)
         Route::middleware('permission:signals_view')->group(function () {
@@ -422,8 +424,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
 
         // Legal Pages (Privacy Policy, Terms & Conditions)
-        Route::middleware('permission:settings_manage')->group(function () {
+        Route::middleware('permission:settings_view')->group(function () {
             Route::get('legal-pages', [\App\Http\Controllers\Admin\LegalPageController::class, 'index'])->name('legal-pages.index');
+        });
+        Route::middleware('permission:settings_manage')->group(function () {
             Route::get('legal-pages/create', [\App\Http\Controllers\Admin\LegalPageController::class, 'create'])->name('legal-pages.create');
             Route::post('legal-pages', [\App\Http\Controllers\Admin\LegalPageController::class, 'store'])->name('legal-pages.store');
             Route::get('legal-pages/{slug}/edit', [\App\Http\Controllers\Admin\LegalPageController::class, 'edit'])->name('legal-pages.edit');

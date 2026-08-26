@@ -5,16 +5,19 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h4 class="mb-0 fw-bold"><i class="bi bi-gear me-2 text-primary"></i>System Settings</h4>
     <div class="d-flex gap-2">
-        <a href="{{ route('admin.settings.backups') }}" class="btn btn-outline-info btn-sm"><i class="bi bi-cloud-download me-1"></i>Backups</a>
         <a href="{{ route('admin.security.change-form') }}" class="btn btn-outline-warning btn-sm"><i class="bi bi-shield-lock me-1"></i>Security Code</a>
+        @if(auth()->user()->hasPermission('settings_manage'))
+        <a href="{{ route('admin.settings.backups') }}" class="btn btn-outline-info btn-sm"><i class="bi bi-cloud-download me-1"></i>Backups</a>
         <form method="POST" action="{{ route('admin.settings.toggle-maintenance') }}" class="d-inline" onsubmit="return confirm('{{ ($settings['system']['maintenance_mode']->value ?? '0') === '1' ? 'Disable maintenance mode?' : 'Enable maintenance mode? Users will not be able to access the app.' }}')">
             @csrf @method('PATCH')
             <button type="submit" class="btn btn-sm {{ ($settings['system']['maintenance_mode']->value ?? '0') === '1' ? 'btn-success' : 'btn-outline-warning' }}">
                 <i class="bi bi-tools me-1"></i>{{ ($settings['system']['maintenance_mode']->value ?? '0') === '1' ? 'Maintenance ON' : 'Maintenance OFF' }}
             </button>
         </form>
+        @endif
     </div>
 </div>
+@if(auth()->user()->hasPermission('settings_manage'))
 <form method="POST" action="{{ route('admin.settings.update') }}">
     @csrf @method('PUT')
     <div class="row g-4">
@@ -78,4 +81,10 @@
     </div>
     <div class="mt-4"><button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg me-1"></i>Save Settings</button></div>
 </form>
+@else
+<div class="alert alert-info d-flex align-items-center" role="alert">
+    <i class="bi bi-info-circle me-2"></i>
+    <span>You have view-only access. Contact an administrator to make changes.</span>
+</div>
+@endif
 @endsection
