@@ -13,10 +13,6 @@ fi
 touch /var/www/database/database.sqlite
 chmod 775 /var/www/database/database.sqlite
 
-# Re-cache config in case env vars changed
-php /var/www/artisan config:cache
-php /var/www/artisan route:cache
-
 # Run migrations
 echo "📦 Running migrations..."
 php /var/www/artisan migrate --force
