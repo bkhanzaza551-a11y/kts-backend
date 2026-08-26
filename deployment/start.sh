@@ -3,8 +3,49 @@ set -e
 
 echo "🚀 Starting KTS Markets Backend..."
 
+# Create .env if it doesn't exist
+if [ ! -f /var/www/.env ]; then
+    echo "📝 Creating .env file..."
+    cat > /var/www/.env <<EOF
+APP_NAME="KTS Markets"
+APP_ENV=production
+APP_DEBUG=true
+APP_TIMEZONE=UTC
+APP_URL=https://${RAILWAY_PUBLIC_DOMAIN:-kts-backend-production.up.railway.app}
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+APP_MAINTENANCE_DRIVER=file
+BCRYPT_ROUNDS=12
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_LEVEL=error
+DB_CONNECTION=sqlite
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=null
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+CACHE_PREFIX=
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME=ahmedbilalkhangl09@gmail.com
+MAIL_PASSWORD=pvrahwujjucsqwlo
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS="ahmedbilalkhangl09@gmail.com"
+MAIL_FROM_NAME="KTS 10 Pips"
+SANCTUM_STATEFUL_DOMAINS=kts-backend-production.up.railway.app
+SANCTUM_TOKEN_EXPIRATION=1440
+FRONTEND_URL=http://localhost:3000
+EOF
+fi
+
 # Generate APP_KEY if not set
-if [ -z "$APP_KEY" ]; then
+if grep -q "APP_KEY=$" /var/www/.env 2>/dev/null; then
     echo "🔑 Generating APP_KEY..."
     php /var/www/artisan key:generate --force
 fi
