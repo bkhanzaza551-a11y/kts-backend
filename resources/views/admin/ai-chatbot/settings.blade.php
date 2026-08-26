@@ -5,6 +5,7 @@
     <h4 class="mb-0 fw-bold"><i class="bi bi-robot me-2 text-primary"></i>AI Chatbot Settings</h4>
     <a href="{{ route('admin.ai-chatbot.chat-logs') }}" class="btn btn-outline-info btn-sm"><i class="bi bi-chat-left-text me-1"></i>Chat Logs</a>
 </div>
+@if(auth()->user()->hasPermission('ai_chatbot_manage'))
 <form method="POST" action="{{ route('admin.ai-chatbot.update-settings') }}">
     @csrf @method('PUT')
     <div class="row g-4">
@@ -75,4 +76,10 @@
         </div>
     </div>
 </form>
+@else
+<div class="alert alert-info d-flex align-items-center" role="alert">
+    <i class="bi bi-info-circle me-2"></i>
+    <span>You have view-only access. Contact an administrator to change AI Chatbot settings.</span>
+</div>
+@endif
 @endsection

@@ -4,7 +4,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h4 class="mb-0 fw-bold"><i class="bi bi-bell me-2 text-primary"></i>Notifications</h4>
     <div class="d-flex gap-2">
+        @if(auth()->user()->hasPermission('notifications_send'))
         <a href="{{ route('admin.notifications.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Send Notification</a>
+        @endif
         <a href="{{ route('admin.notifications.templates') }}" class="btn btn-outline-info btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Templates</a>
         <a href="{{ route('admin.notifications.tips') }}" class="btn btn-outline-success btn-sm"><i class="bi bi-lightbulb me-1"></i>AI Tips</a>
     </div>

@@ -6,6 +6,7 @@
     <a href="{{ route('admin.chat.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
 </div>
 
+@if(auth()->user()->hasPermission('chat_moderate'))
 <div class="card mb-4">
     <div class="card-header"><h6 class="mb-0">Add Restricted Word</h6></div>
     <div class="card-body">
@@ -24,6 +25,7 @@
         </form>
     </div>
 </div>
+@endif
 
 <div class="card">
     <div class="card-body p-0">
@@ -38,6 +40,7 @@
                         <td><span class="badge bg-{{ $word->is_active ? 'success' : 'secondary' }}">{{ $word->is_active ? 'Active' : 'Inactive' }}</span></td>
                         <td class="text-secondary">{{ $word->creator->name ?? '-' }}</td>
                         <td class="pe-3">
+                            @if(auth()->user()->hasPermission('chat_moderate'))
                             <div class="d-flex gap-1">
                                 <form method="POST" action="{{ route('admin.chat.toggle-restricted-word', $word) }}" class="d-inline">
                                     @csrf @method('PATCH')
@@ -48,6 +51,7 @@
                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                 </form>
                             </div>
+                            @endif
                         </td>
                     </tr>
                     @empty

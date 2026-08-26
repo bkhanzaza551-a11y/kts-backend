@@ -136,20 +136,26 @@
                 <input type="checkbox" class="form-check-input" id="selectAll" title="Select all">
                 <span class="text-secondary small" id="selectedCount">0 selected</span>
             </div>
+            @if(auth()->user()->hasAnyPermission(['users_edit', 'users_delete']))
             <div class="d-flex gap-2" id="bulkActions" style="display:none !important;">
+                @if(auth()->user()->hasPermission('users_edit'))
                 <button type="submit" class="btn btn-sm btn-outline-success" onclick="document.getElementById('bulkAction').value='activate'">
                     <i class="bi bi-check-lg me-1"></i>Activate
                 </button>
                 <button type="submit" class="btn btn-sm btn-outline-warning" onclick="document.getElementById('bulkAction').value='suspend'">
                     <i class="bi bi-pause-lg me-1"></i>Suspend
                 </button>
+                @endif
+                @if(auth()->user()->hasPermission('users_delete'))
                 <button type="submit" class="btn btn-sm btn-outline-danger" onclick="document.getElementById('bulkAction').value='delete'; return confirm('Delete selected users?')">
                     <i class="bi bi-trash me-1"></i>Delete
                 </button>
+                @endif
                 <button type="submit" class="btn btn-sm btn-outline-info" onclick="document.getElementById('bulkAction').value='export'">
                     <i class="bi bi-download me-1"></i>Export CSV
                 </button>
             </div>
+            @endif
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">

@@ -5,6 +5,7 @@
     <h4 class="mb-0 fw-bold"><i class="bi bi-bell me-2 text-primary"></i>Send Notification</h4>
     <a href="{{ route('admin.notifications.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
 </div>
+@if(auth()->user()->hasPermission('notifications_send'))
 <form method="POST" action="{{ route('admin.notifications.store') }}">
     @csrf
     <div class="row g-4">
@@ -80,6 +81,12 @@
         </div>
     </div>
 </form>
+@else
+<div class="alert alert-warning d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <span>You don't have permission to send notifications. Contact an administrator.</span>
+</div>
+@endif
 <script>
 function applyTemplate(){var s=document.getElementById('templateSelect');var o=s.options[s.selectedIndex];if(o.value){document.getElementById('notifTitle').value=o.dataset.title||'';document.getElementById('notifBody').value=o.dataset.body||'';}}
 function toggleTargetFields(){var t=document.getElementById('targetSelect').value;document.getElementById('roleField').style.display=t==='role'?'block':'none';document.getElementById('userField').style.display=t==='user'?'block':'none';}

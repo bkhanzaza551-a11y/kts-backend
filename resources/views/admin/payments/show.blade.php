@@ -36,7 +36,7 @@
         <div class="card mb-4">
             <div class="card-header"><h6 class="mb-0">Actions</h6></div>
             <div class="card-body">
-                @if($transaction->status === 'pending')
+                @if(auth()->user()->hasPermission('transactions_manage') && $transaction->status === 'pending')
                 <form method="POST" action="{{ route('admin.payments.approve', $transaction) }}">
                     @csrf @method('PATCH')
                     <div class="mb-3">
@@ -50,7 +50,7 @@
                     <input type="hidden" name="admin_notes" value="{{ $transaction->admin_notes }}">
                     <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Reject this payment?')"><i class="bi bi-x-lg me-1"></i>Reject</button>
                 </form>
-                @else
+                @elseif($transaction->status !== 'pending')
                 <div class="text-center text-secondary">
                     <p class="mb-1">Processed by: <span class="text-dark">{{ $transaction->approver->name ?? '-' }}</span></p>
                     <p class="mb-0">At: {{ $transaction->approved_at?->format('M d, Y H:i') ?? '-' }}</p>

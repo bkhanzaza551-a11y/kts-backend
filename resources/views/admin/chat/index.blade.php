@@ -144,8 +144,9 @@
                             <span style="color:var(--text-primary);">{{ Str::limit($msg->filtered_message, 150) }}</span>
                         @endif
                     </div>
+                    @if(auth()->user()->hasAnyPermission(['chat_moderate', 'chat_delete_message', 'chat_ban_user']))
                     <div class="d-flex gap-1 flex-wrap">
-                        @if(!$msg->is_deleted)
+                        @if(auth()->user()->hasPermission('chat_moderate') && !$msg->is_deleted)
                         <form method="POST" action="{{ $msg->is_pinned ? route('admin.chat.unpin-message', $msg) : route('admin.chat.pin-message', $msg) }}" class="d-inline" onsubmit="return confirm('{{ $msg->is_pinned ? 'Unpin this message?' : 'Pin this message?' }}')">
                             @csrf @method('PATCH')
                             <button type="submit" class="btn btn-sm {{ $msg->is_pinned ? 'btn-info' : 'btn-outline-info' }}" style="font-size:0.75rem;padding:0.2rem 0.5rem;" title="{{ $msg->is_pinned ? 'Unpin' : 'Pin' }}">
@@ -153,24 +154,27 @@
                             </button>
                         </form>
                         @endif
+                        @if(auth()->user()->hasPermission('chat_moderate'))
                         <form method="POST" action="{{ route('admin.chat.toggle-flag', $msg) }}" class="d-inline" onsubmit="return confirm('{{ $msg->is_flagged ? 'Remove flag?' : 'Flag this message?' }}')">
                             @csrf @method('PATCH')
                             <button type="submit" class="btn btn-sm {{ $msg->is_flagged ? 'btn-warning' : 'btn-outline-warning' }}" style="font-size:0.75rem;padding:0.2rem 0.5rem;" title="{{ $msg->is_flagged ? 'Unflag' : 'Flag' }}">
                                 <i class="bi bi-flag"></i>
                             </button>
                         </form>
-                        @if($msg->is_deleted)
+                        @endif
+                        @if(auth()->user()->hasPermission('chat_moderate') && $msg->is_deleted)
                         <form method="POST" action="{{ route('admin.chat.restore-message', $msg) }}" class="d-inline" onsubmit="return confirm('Restore this message?')">
                             @csrf @method('PATCH')
                             <button type="submit" class="btn btn-sm btn-outline-success" style="font-size:0.75rem;padding:0.2rem 0.5rem;" title="Restore"><i class="bi bi-arrow-counterclockwise"></i></button>
                         </form>
-                        @else
+                        @endif
+                        @if(auth()->user()->hasPermission('chat_delete_message'))
                         <form method="POST" action="{{ route('admin.chat.destroy-message', $msg) }}" class="d-inline" onsubmit="return confirm('Delete this message?')">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:0.75rem;padding:0.2rem 0.5rem;" title="Delete"><i class="bi bi-trash3"></i></button>
                         </form>
                         @endif
-                        @if(!$msg->is_deleted)
+                        @if(auth()->user()->hasPermission('chat_ban_user') && !$msg->is_deleted)
                         <form method="POST" action="{{ route('admin.chat.ban-user') }}" class="d-inline" onsubmit="return confirm('Ban this user from chat?')">
                             @csrf
                             <input type="hidden" name="user_id" value="{{ $msg->user_id }}">
@@ -179,6 +183,7 @@
                         </form>
                         @endif
                     </div>
+                    @endif
                 </div>
             </div>
         </div>

@@ -19,10 +19,12 @@
                         <td class="text-secondary">{{ $ban->expires_at ? $ban->expires_at->format('M d, Y') : 'Permanent' }}</td>
                         <td><span class="badge bg-{{ $ban->isCurrentlyBanned() ? 'danger' : 'success' }}">{{ $ban->isCurrentlyBanned() ? 'Active' : 'Expired' }}</span></td>
                         <td class="pe-3">
+                            @if(auth()->user()->hasPermission('chat_ban_user'))
                             <form method="POST" action="{{ route('admin.chat.unban-user', $ban) }}" class="d-inline" onsubmit="return confirm('Unban this user?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-person-check me-1"></i>Unban</button>
                             </form>
+                            @endif
                         </td>
                     </tr>
                     @empty
