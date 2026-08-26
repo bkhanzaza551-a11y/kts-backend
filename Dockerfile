@@ -43,7 +43,7 @@ COPY deployment/start.sh /var/www/start.sh
 RUN chmod +x /var/www/start.sh
 
 # PHP-FPM pool config for /var/www
-RUN printf '[www]\nuser = www-data\ngroup = www-data\nlisten = /var/run/php/php8.3-fpm.sock\nlisten.owner = www-data\nlisten.group = www-data\nlisten.mode = 0660\npm = dynamic\npm.max_children = 5\npm.start_servers = 2\npm.min_spare_servers = 1\npm.max_spare_servers = 3\n' > /usr/local/etc/php-fpm.d/www.conf
+RUN mkdir -p /var/run/php && printf '[www]\nuser = www-data\ngroup = www-data\nlisten = 127.0.0.1:9000\npm = dynamic\npm.max_children = 5\npm.start_servers = 2\npm.min_spare_servers = 1\npm.max_spare_servers = 3\n' > /usr/local/etc/php-fpm.d/www.conf
 
 EXPOSE 8080
 
