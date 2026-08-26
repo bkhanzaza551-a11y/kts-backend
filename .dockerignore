@@ -7,7 +7,6 @@ vendor
 .gitignore
 tests
 *.md
-deployment
 docker-compose*.yml
 .phpunit.cache
 storage/logs/*.log
