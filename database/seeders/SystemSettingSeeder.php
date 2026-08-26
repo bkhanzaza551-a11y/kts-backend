@@ -10,7 +10,7 @@ class SystemSettingSeeder extends Seeder
     public function run(): void
     {
         $defaults = [
-            ['key' => 'app_name', 'value' => 'KTS 10 Pips Bots', 'type' => 'text', 'description' => 'Application name', 'group' => 'general'],
+            ['key' => 'app_name', 'value' => 'KTS Markets', 'type' => 'text', 'description' => 'Application name', 'group' => 'general'],
             ['key' => 'support_email', 'value' => 'support@kts10pipsbots.com', 'type' => 'email', 'description' => 'Support email', 'group' => 'general'],
             ['key' => 'maintenance_mode', 'value' => '0', 'type' => 'boolean', 'description' => 'Enable/disable maintenance mode', 'group' => 'system'],
             ['key' => 'groq_api_key', 'value' => '', 'type' => 'password', 'description' => 'Groq API key', 'group' => 'api_keys'],

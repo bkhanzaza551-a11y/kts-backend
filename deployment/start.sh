@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting KTS 10 Pips Bots Backend..."
+echo "🚀 Starting KTS Markets Backend..."
 
 # Create SQLite database if it doesn't exist
 touch /var/www/database/database.sqlite

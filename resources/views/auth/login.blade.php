@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - KTS 10 Pips Bots</title>
+    <title>Login - KTS Markets</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
                     <div class="rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;background:linear-gradient(135deg,#4f46e5,#7c3aed);">
                         <i class="bi bi-graph-up-arrow text-white fs-2"></i>
                     </div>
-                    <h4 class="fw-bold mb-1" style="color:#111827;">KTS 10 Pips Bots</h4>
+                    <h4 class="fw-bold mb-1" style="color:#111827;">KTS Markets</h4>
                     <p class="text-secondary mb-0">Super Admin Panel</p>
                 </div>
 

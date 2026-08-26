@@ -66,7 +66,7 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label text-secondary">App Name</label>
-                        <input type="text" name="app_name" class="form-control" value="{{ SystemSetting::getValue('app_name', 'KTS 10 Pips Bots') }}">
+                        <input type="text" name="app_name" class="form-control" value="{{ SystemSetting::getValue('app_name', 'KTS Markets') }}">
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-secondary">Support Email</label>
