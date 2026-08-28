@@ -21,7 +21,10 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 # Copy application code
 COPY . .
 
-# Application code already copied, autoloader handled by composer install above
+# Generate autoloader (no --optimize to avoid artisan boot without .env)
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload
+
+# Setup storage permissions
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/app/public \
     && mkdir -p storage/logs \
