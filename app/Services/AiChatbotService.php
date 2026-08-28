@@ -275,14 +275,18 @@ PROMPT;
 
     private function isUserBlocked(int $userId): bool
     {
-        $block = \DB::table('ai_chat_blocks')->where('user_id', $userId)->first();
-        if (!$block) return false;
-        if ($block->blocked_until && now()->lt($block->blocked_until)) return true;
-        if ($block->blocked_until && now()->gte($block->blocked_until)) {
-            \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
-                'abuse_count' => 0,
-                'blocked_until' => null,
-            ]);
+        try {
+            $block = \DB::table('ai_chat_blocks')->where('user_id', $userId)->first();
+            if (!$block) return false;
+            if ($block->blocked_until && now()->lt($block->blocked_until)) return true;
+            if ($block->blocked_until && now()->gte($block->blocked_until)) {
+                \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
+                    'abuse_count' => 0,
+                    'blocked_until' => null,
+                ]);
+                return false;
+            }
+        } catch (\Exception $e) {
             return false;
         }
         return false;
@@ -290,24 +294,28 @@ PROMPT;
 
     private function recordAbuse(int $userId): bool
     {
-        $block = \DB::table('ai_chat_blocks')->firstOrCreate(
-            ['user_id' => $userId],
-            ['abuse_count' => 0]
-        );
+        try {
+            $block = \DB::table('ai_chat_blocks')->firstOrCreate(
+                ['user_id' => $userId],
+                ['abuse_count' => 0]
+            );
 
-        $newCount = $block->abuse_count + 1;
+            $newCount = $block->abuse_count + 1;
 
-        if ($newCount >= 2) {
+            if ($newCount >= 2) {
+                \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
+                    'abuse_count' => $newCount,
+                    'blocked_until' => now()->addHours(24),
+                ]);
+                return true;
+            }
+
             \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
                 'abuse_count' => $newCount,
-                'blocked_until' => now()->addHours(24),
             ]);
-            return true;
+        } catch (\Exception $e) {
+            return false;
         }
-
-        \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
-            'abuse_count' => $newCount,
-        ]);
         return false;
     }
 
