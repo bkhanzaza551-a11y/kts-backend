@@ -15,12 +15,9 @@ WORKDIR /var/www
 # Copy all code first
 COPY . .
 
-# Create .env for build-time artisan commands
-RUN cp .env.example .env 2>/dev/null || printf "APP_NAME=\"KTS Markets\"\nAPP_ENV=local\nAPP_KEY=base64:buildkey1234567890123456789012=\nAPP_DEBUG=true\nDB_CONNECTION=sqlite\n" > .env
-
-# Install dependencies WITH autoloader
+# Install dependencies WITH autoloader (skip scripts: package:discover fails without .env)
 ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN composer install --no-dev --prefer-dist
+RUN composer install --no-dev --prefer-dist --no-scripts
 
 # Setup storage
 RUN mkdir -p storage/framework/{sessions,views,cache} storage/app/public storage/logs \

@@ -51,6 +51,12 @@ if grep -q "APP_KEY=$" /var/www/.env 2>/dev/null; then
     php /var/www/artisan key:generate --force
 fi
 
+# Discover service providers (deferred from Docker build --no-scripts)
+echo "🔎 Discovering packages..."
+php /var/www/artisan package:discover --ansi
+php /var/www/artisan config:clear
+php /var/www/artisan optimize:clear
+
 # Create SQLite database if it doesn't exist
 touch /var/www/database/database.sqlite
 chmod 775 /var/www/database/database.sqlite
