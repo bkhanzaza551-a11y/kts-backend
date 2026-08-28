@@ -13,7 +13,7 @@ class SystemSettingSeeder extends Seeder
             ['key' => 'app_name', 'value' => 'KTS Markets', 'type' => 'text', 'description' => 'Application name', 'group' => 'general'],
             ['key' => 'support_email', 'value' => 'support@kts10pipsbots.com', 'type' => 'email', 'description' => 'Support email', 'group' => 'general'],
             ['key' => 'maintenance_mode', 'value' => '0', 'type' => 'boolean', 'description' => 'Enable/disable maintenance mode', 'group' => 'system'],
-            ['key' => 'groq_api_key', 'value' => '', 'type' => 'password', 'description' => 'Groq API key', 'group' => 'api_keys'],
+            ['key' => 'groq_api_key', 'value' => env('GROQ_API_KEY', ''), 'type' => 'password', 'description' => 'Groq API key', 'group' => 'api_keys'],
             ['key' => 'openai_api_key', 'value' => '', 'type' => 'password', 'description' => 'OpenAI API key', 'group' => 'api_keys'],
             ['key' => 'firebase_key', 'value' => '', 'type' => 'password', 'description' => 'Firebase credentials', 'group' => 'api_keys'],
             ['key' => 'jazzcash_merchant_id', 'value' => '', 'type' => 'text', 'description' => 'JazzCash merchant ID', 'group' => 'payment'],

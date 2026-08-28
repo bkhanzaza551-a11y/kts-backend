@@ -41,6 +41,7 @@ MAIL_FROM_NAME="KTS 10 Pips"
 SANCTUM_STATEFUL_DOMAINS=kts-backend-production.up.railway.app
 SANCTUM_TOKEN_EXPIRATION=1440
 FRONTEND_URL=http://localhost:3000
+GROQ_API_KEY=${GROQ_API_KEY:-}
 EOF
 fi
 

@@ -34,7 +34,7 @@ class AiChatbotService
 
     private function loadSettings(): void
     {
-        $this->groqApiKey = AiChatbotSetting::getValue('groq_api_key', '');
+        $this->groqApiKey = AiChatbotSetting::getValue('groq_api_key', '') ?: env('GROQ_API_KEY', '');
         $this->model = AiChatbotSetting::getValue('model', 'llama-3.1-8b-instant');
         $this->maxTokens = (int) AiChatbotSetting::getValue('max_tokens', 2048);
         $this->temperature = (float) AiChatbotSetting::getValue('temperature', 0.7);
