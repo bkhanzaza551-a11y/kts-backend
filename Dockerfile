@@ -21,7 +21,10 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 # Copy application code
 COPY . .
 
-# Generate autoloader (no --optimize to avoid artisan boot without .env)
+# Create minimal .env for composer scripts (will be overwritten at runtime)
+RUN cp -n .env.example .env 2>/dev/null || echo "APP_KEY=" > .env
+
+# Generate autoloader
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload
 
 # Setup storage permissions
