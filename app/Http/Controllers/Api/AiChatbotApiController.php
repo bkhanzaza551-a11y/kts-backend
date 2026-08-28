@@ -43,7 +43,20 @@ class AiChatbotApiController extends Controller
             $userId
         );
 
-        return response()->json($result, $result['success'] ? 200 : 500);
+        $statusCode = $result['success'] ? 200 : 500;
+
+        return response()->json([
+            'success' => $result['success'],
+            'data' => [
+                'user_message' => $request->input('message'),
+                'response' => $result['message'] ?? $result['message'] ?? '',
+                'model' => $result['model'] ?? '',
+                'tokens_used' => $result['tokens_used'] ?? 0,
+                'response_time_ms' => $result['response_time_ms'] ?? 0,
+                'tools_used' => $result['tools_used'] ?? false,
+                'timestamp' => now()->toIso8601String(),
+            ],
+        ], $statusCode);
     }
 
     /**
