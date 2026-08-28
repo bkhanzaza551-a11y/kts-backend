@@ -21,10 +21,7 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 # Copy application code
 COPY . .
 
-# Generate autoloader
-RUN composer dump-autoload --optimize
-
-# Setup storage permissions
+# Application code already copied, autoloader handled by composer install above
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/app/public \
     && mkdir -p storage/logs \
