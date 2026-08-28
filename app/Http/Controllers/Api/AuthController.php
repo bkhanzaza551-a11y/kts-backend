@@ -36,23 +36,26 @@ class AuthController extends Controller
 
         $otpRecord = AdminOtp::generateFor($user, $request->ip());
 
-        try {
-            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
-                $message->to($user->email)
-                    ->subject("KTS Markets - Email Verification Code: {$otpRecord->otp}");
-            });
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'failed',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        }
-
         ActivityLogger::log('register', 'User', $user->id, 'New user registered via API - email verification pending');
+
+        // Return response FIRST, send email in background
+        dispatch(function () use ($user, $otpRecord) {
+            try {
+                Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
+                    $message->to($user->email)
+                        ->subject("KTS Markets - Email Verification Code: {$otpRecord->otp}");
+                });
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'failed',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+            }
+        })->afterCommit();
 
         return response()->json([
             'success' => true,
@@ -133,21 +136,24 @@ class AuthController extends Controller
 
         $otpRecord = AdminOtp::generateFor($user, $request->ip());
 
-        try {
-            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
-                $message->to($user->email)
-                    ->subject("KTS Markets - Email Verification Code: {$otpRecord->otp}");
-            });
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'failed',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        }
+        // Return response FIRST, send email in background
+        dispatch(function () use ($user, $otpRecord) {
+            try {
+                Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
+                    $message->to($user->email)
+                        ->subject("KTS Markets - Email Verification Code: {$otpRecord->otp}");
+                });
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'failed',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+            }
+        })->afterCommit();
 
         return response()->json([
             'success' => true,
@@ -195,22 +201,25 @@ class AuthController extends Controller
 
         $otpRecord = AdminOtp::generateFor($user, $request->ip());
 
-        try {
-            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't attempt to login, please secure your account.", function ($message) use ($user, $otpRecord) {
-                $message->to($user->email)->subject("KTS Markets - Login Verification Code: {$otpRecord->otp}");
-            });
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'otp', 'status' => 'sent',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'otp', 'status' => 'failed',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        }
-
         ActivityLogger::log('login', 'User', $user->id, 'User logged in via API');
+
+        // Return response FIRST, send OTP email in background
+        dispatch(function () use ($user, $otpRecord) {
+            try {
+                Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't attempt to login, please secure your account.", function ($message) use ($user, $otpRecord) {
+                    $message->to($user->email)->subject("KTS Markets - Login Verification Code: {$otpRecord->otp}");
+                });
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'otp', 'status' => 'sent',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'otp', 'status' => 'failed',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+            }
+        })->afterCommit();
 
         return response()->json([
             'success' => true,
@@ -445,22 +454,25 @@ class AuthController extends Controller
             'remember_token' => $resetToken,
         ]);
 
-        try {
-            Mail::raw("You have requested a password reset for your KTS Markets account.\n\nYour reset token is: {$resetToken}\n\nIf you did not request this, please ignore this email.", function ($message) use ($user) {
-                $message->to($user->email)->subject("KTS Markets - Password Reset");
-            });
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'reset_password', 'status' => 'sent',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'reset_password', 'status' => 'failed',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        }
-
         ActivityLogger::log('forgot_password', 'User', $user->id, 'Password reset requested via API');
+
+        // Return response FIRST, send email in background
+        dispatch(function () use ($user, $resetToken) {
+            try {
+                Mail::raw("You have requested a password reset for your KTS Markets account.\n\nYour reset token is: {$resetToken}\n\nIf you did not request this, please ignore this email.", function ($message) use ($user) {
+                    $message->to($user->email)->subject("KTS Markets - Password Reset");
+                });
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'reset_password', 'status' => 'sent',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'reset_password', 'status' => 'failed',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+            }
+        })->afterCommit();
 
         return response()->json([
             'success' => true,
