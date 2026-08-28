@@ -20,7 +20,7 @@ class AiChatbotApiController extends Controller
     {
         $request->validate([
             'message' => 'required|string|max:5000',
-            'conversation_history' => 'nullable|string|max:50000',
+            'conversation_history' => 'nullable',
         ]);
 
         if (!$this->chatbotService->isEnabled()) {
@@ -32,9 +32,14 @@ class AiChatbotApiController extends Controller
 
         $userId = $request->user()?->id;
 
+        $history = $request->input('conversation_history');
+        if (is_array($history)) {
+            $history = json_encode($history);
+        }
+
         $result = $this->chatbotService->chat(
             $request->input('message'),
-            $request->input('conversation_history'),
+            $history,
             $userId
         );
 
