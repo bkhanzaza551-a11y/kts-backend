@@ -1,6 +1,5 @@
 FROM php:8.3-fpm
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libpng-dev libonig-dev libxml2-dev \
     libsqlite3-dev libpq-dev libzip-dev supervisor nginx \
@@ -9,43 +8,30 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_sqlite \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copy composer files first for caching
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
-
-# Copy application code
+# Copy all code first
 COPY . .
 
-# Create minimal .env for composer scripts (will be overwritten at runtime)
-RUN cp -n .env.example .env 2>/dev/null || echo "APP_KEY=" > .env
+# Create .env for build-time artisan commands
+RUN cp .env.example .env 2>/dev/null || printf "APP_NAME=\"KTS Markets\"\nAPP_ENV=local\nAPP_KEY=base64:buildkey1234567890123456789012=\nAPP_DEBUG=true\nDB_CONNECTION=sqlite\n" > .env
 
-# Generate autoloader
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload
+# Install dependencies WITH autoloader
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN composer install --no-dev --prefer-dist
 
-# Setup storage permissions
-RUN mkdir -p storage/framework/{sessions,views,cache} \
-    && mkdir -p storage/app/public \
-    && mkdir -p storage/logs \
-    && chmod -R 775 storage \
-    && chmod -R 775 bootstrap/cache \
+# Setup storage
+RUN mkdir -p storage/framework/{sessions,views,cache} storage/app/public storage/logs \
+    && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
-# Copy Nginx config
 COPY deployment/nginx.conf /etc/nginx/sites-available/default
-
-# Copy Supervisor config
 COPY deployment/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Copy startup script
 COPY deployment/start.sh /var/www/start.sh
 RUN chmod +x /var/www/start.sh
 
-# PHP-FPM pool config for /var/www
 RUN mkdir -p /var/run/php && printf '[www]\nuser = www-data\ngroup = www-data\nlisten = 127.0.0.1:9000\npm = dynamic\npm.max_children = 5\npm.start_servers = 2\npm.min_spare_servers = 1\npm.max_spare_servers = 3\n' > /usr/local/etc/php-fpm.d/www.conf
 
 EXPOSE 8080
