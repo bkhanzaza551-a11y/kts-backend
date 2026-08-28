@@ -138,7 +138,7 @@ class NotificationApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'is_enabled' => $setting->is_enabled,
+            'data' => ['is_enabled' => $setting->is_enabled],
             'message' => "{$setting->name} has been " . ($setting->is_enabled ? 'enabled' : 'disabled'),
         ]);
     }

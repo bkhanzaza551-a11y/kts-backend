@@ -9,7 +9,7 @@ if [ ! -f /var/www/.env ]; then
     cat > /var/www/.env <<EOF
 APP_NAME="KTS Markets"
 APP_ENV=production
-APP_DEBUG=true
+APP_DEBUG=false
 APP_TIMEZONE=UTC
 APP_URL=https://${RAILWAY_PUBLIC_DOMAIN:-kts-backend-production.up.railway.app}
 APP_LOCALE=en

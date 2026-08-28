@@ -42,8 +42,8 @@ class AuthController extends Controller
         dispatch(function () use ($user, $otpRecord) {
             try {
                 Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
-                    $message->to($user->email)
-                        ->subject("KTS Markets - Email Verification Code: {$otpRecord->otp}");
+                $message->to($user->email)
+                    ->subject("KTS Markets - Email Verification");
                 });
                 \Illuminate\Support\Facades\DB::table('email_logs')->insert([
                     'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
@@ -140,8 +140,8 @@ class AuthController extends Controller
         dispatch(function () use ($user, $otpRecord) {
             try {
                 Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
-                    $message->to($user->email)
-                        ->subject("KTS Markets - Email Verification Code: {$otpRecord->otp}");
+                $message->to($user->email)
+                    ->subject("KTS Markets - Email Verification");
                 });
                 \Illuminate\Support\Facades\DB::table('email_logs')->insert([
                     'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
@@ -177,17 +177,10 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($user->is_banned) {
+        if ($user->is_banned || $user->status !== 'active') {
             return response()->json([
                 'success' => false,
-                'message' => 'Your account has been banned.',
-            ], 403);
-        }
-
-        if ($user->status !== 'active') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Your account is not active.',
+                'message' => 'Your account has been suspended.',
             ], 403);
         }
 
@@ -207,7 +200,7 @@ class AuthController extends Controller
         dispatch(function () use ($user, $otpRecord) {
             try {
                 Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't attempt to login, please secure your account.", function ($message) use ($user, $otpRecord) {
-                    $message->to($user->email)->subject("KTS Markets - Login Verification Code: {$otpRecord->otp}");
+                    $message->to($user->email)->subject("KTS Markets - Login Verification");
                 });
                 \Illuminate\Support\Facades\DB::table('email_logs')->insert([
                     'user_id' => $user->id, 'type' => 'otp', 'status' => 'sent',
@@ -283,14 +276,11 @@ class AuthController extends Controller
                 \Storage::disk('public')->delete($user->avatar);
             }
             $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        } else {
+            unset($validated['avatar']);
         }
 
-        unset($validated['avatar']);
         $user->update($validated);
-
-        if ($request->hasFile('avatar')) {
-            $user->update(['avatar' => $validated['avatar'] ?? $user->avatar]);
-        }
 
         ActivityLogger::log(
             'update_profile',
@@ -450,9 +440,10 @@ class AuthController extends Controller
         }
 
         $resetToken = \Illuminate\Support\Str::random(60);
-        $user->update([
-            'remember_token' => $resetToken,
-        ]);
+        \Illuminate\Support\Facades\DB::table('password_resets')->updateOrInsert(
+            ['email' => $user->email],
+            ['token' => Hash::make($resetToken), 'created_at' => now()]
+        );
 
         ActivityLogger::log('forgot_password', 'User', $user->id, 'Password reset requested via API');
 
@@ -488,18 +479,31 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)],
         ]);
 
-        $user = User::where('email', $validated['email'])
-                    ->where('remember_token', $validated['token'])
-                    ->first();
+        $user = User::where('email', $validated['email'])->first();
 
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'Invalid or expired reset token.'], 400);
         }
 
+        $resetRecord = \Illuminate\Support\Facades\DB::table('password_resets')
+            ->where('email', $validated['email'])
+            ->latest()
+            ->first();
+
+        if (!$resetRecord || !\Illuminate\Support\Hash::check($validated['token'], $resetRecord->token)) {
+            return response()->json(['success' => false, 'message' => 'Invalid or expired reset token.'], 400);
+        }
+
+        if (\Carbon\Carbon::parse($resetRecord->created_at)->diffInMinutes(now()) > 60) {
+            return response()->json(['success' => false, 'message' => 'Reset token has expired. Please request a new one.'], 400);
+        }
+
         $user->update([
             'password' => Hash::make($validated['password']),
-            'remember_token' => null,
         ]);
+
+        $user->tokens()->delete();
+        \Illuminate\Support\Facades\DB::table('password_resets')->where('email', $validated['email'])->delete();
 
         ActivityLogger::log('reset_password', 'User', $user->id, 'Password successfully reset via API');
 
