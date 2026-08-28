@@ -7,8 +7,8 @@ return [
 
     'allowed_origins' => array_filter([
         env('FRONTEND_URL', 'http://localhost:3000'),
-        app()->environment('local') ? 'http://localhost:8002' : null,
-        app()->environment('local') ? 'http://127.0.0.1:8002' : null,
+        env('APP_ENV', 'production') === 'local' ? 'http://localhost:8002' : null,
+        env('APP_ENV', 'production') === 'local' ? 'http://127.0.0.1:8002' : null,
     ]),
 
     'allowed_origins_patterns' => [],

@@ -15,7 +15,6 @@ return new class extends Migration
                 'email' => 'test@kts.com',
                 'password' => Hash::make('Test123!'),
                 'status' => 'active',
-                'is_admin' => 0,
                 'email_verified_at' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
