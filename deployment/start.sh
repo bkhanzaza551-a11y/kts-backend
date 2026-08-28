@@ -36,6 +36,7 @@ MAIL_PORT=465
 MAIL_USERNAME=ahmedbilalkhangl09@gmail.com
 MAIL_PASSWORD=pvrahwujjucsqwlo
 MAIL_ENCRYPTION=ssl
+MAIL_TIMEOUT=5
 MAIL_FROM_ADDRESS="ahmedbilalkhangl09@gmail.com"
 MAIL_FROM_NAME="KTS 10 Pips"
 SANCTUM_STATEFUL_DOMAINS=kts-backend-production.up.railway.app
