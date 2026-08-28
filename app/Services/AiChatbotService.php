@@ -20,10 +20,11 @@ class AiChatbotService
     private const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
     private const AVAILABLE_MODELS = [
-        'llama-3.1-8b-instant' => ['name' => 'Llama 3.1 8B Instant', 'speed' => 'fastest', 'quality' => 'good', 'tools' => true],
-        'llama-3.3-70b-versatile' => ['name' => 'Llama 3.3 70B Versatile', 'speed' => 'fast', 'quality' => 'best', 'tools' => true],
-        'mixtral-8x7b-32768' => ['name' => 'Mixtral 8x7B', 'speed' => 'fast', 'quality' => 'good', 'tools' => false],
-        'gemma2-9b-it' => ['name' => 'Gemma 2 9B', 'speed' => 'fastest', 'quality' => 'basic', 'tools' => false],
+        'qwen/qwen3.6-27b' => ['name' => 'Qwen 3.6 27B', 'speed' => 'fast', 'quality' => 'good', 'tools' => false],
+        'qwen/qwen3.8-27b' => ['name' => 'Qwen 3.8 27B', 'speed' => 'fast', 'quality' => 'best', 'tools' => false],
+        'openai/gpt-oss-20b' => ['name' => 'OpenAI GPT-OSS 20B', 'speed' => 'fastest', 'quality' => 'good', 'tools' => false],
+        'openai/gpt-oss-120b' => ['name' => 'OpenAI GPT-OSS 120B', 'speed' => 'fast', 'quality' => 'best', 'tools' => false],
+        'groq/compound' => ['name' => 'Groq Compound', 'speed' => 'fast', 'quality' => 'best', 'tools' => false],
     ];
 
     public function __construct(
@@ -35,7 +36,7 @@ class AiChatbotService
     private function loadSettings(): void
     {
         $this->groqApiKey = AiChatbotSetting::getValue('groq_api_key', '') ?: env('GROQ_API_KEY', '');
-        $this->model = AiChatbotSetting::getValue('model', 'llama-3.1-8b-instant');
+        $this->model = AiChatbotSetting::getValue('model', 'qwen/qwen3.6-27b');
         $this->maxTokens = (int) AiChatbotSetting::getValue('max_tokens', 2048);
         $this->temperature = (float) AiChatbotSetting::getValue('temperature', 0.7);
         $this->systemPrompt = AiChatbotSetting::getValue('system_prompt', $this->getDefaultSystemPrompt());
