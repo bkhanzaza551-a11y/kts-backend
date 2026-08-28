@@ -104,6 +104,27 @@ PROMPT;
             ];
         }
 
+        if ($userId && $this->isUserBlocked($userId)) {
+            return [
+                'success' => false,
+                'message' => 'You have been temporarily blocked from using the AI chatbot due to inappropriate messages. Please try again after 24 hours.',
+            ];
+        }
+
+        if ($userId && $this->isAbuse($userMessage)) {
+            $blocked = $this->recordAbuse($userId);
+            if ($blocked) {
+                return [
+                    'success' => false,
+                    'message' => 'You have been blocked from using the AI chatbot for 24 hours due to repeated inappropriate messages.',
+                ];
+            }
+            return [
+                'success' => false,
+                'message' => "I'm here to help with trading. Let's keep it professional. This is your first warning.",
+            ];
+        }
+
         $messages = $this->buildMessages($userMessage, $conversationHistory, $userName);
         $tools = $this->areToolsEnabled() ? $this->toolService->getTools() : null;
 
@@ -229,6 +250,65 @@ PROMPT;
         $messages[] = ['role' => 'user', 'content' => $userMessage];
 
         return $messages;
+    }
+
+    private function isAbuse(string $message): bool
+    {
+        $message = strtolower(trim($message));
+        $abusePatterns = [
+            'mc', 'bc', 'madarchod', 'bhenchod', 'bhosdi', 'gandu', 'lund', 'chut',
+            'randi', 'kutte', 'kutta', 'harami', 'chutiya', 'behen ka loda',
+            'sale', 'sala', 'saala', 'bitch', 'fuck', 'shit', 'asshole',
+            'damn', 'stfu', 'gtfo', 'idiot', 'moron', 'stupid',
+            'teri maa', 'teri behen', 'maa ki', 'behens ki', 'suar',
+            'tatti', 'potty', 'laude', 'lodu', 'chutiyapa',
+            'lavde', 'bhadwe', 'bhosadike', 'gandu',
+        ];
+
+        foreach ($abusePatterns as $pattern) {
+            if (str_contains($message, $pattern)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function isUserBlocked(int $userId): bool
+    {
+        $block = \DB::table('ai_chat_blocks')->where('user_id', $userId)->first();
+        if (!$block) return false;
+        if ($block->blocked_until && now()->lt($block->blocked_until)) return true;
+        if ($block->blocked_until && now()->gte($block->blocked_until)) {
+            \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
+                'abuse_count' => 0,
+                'blocked_until' => null,
+            ]);
+            return false;
+        }
+        return false;
+    }
+
+    private function recordAbuse(int $userId): bool
+    {
+        $block = \DB::table('ai_chat_blocks')->firstOrCreate(
+            ['user_id' => $userId],
+            ['abuse_count' => 0]
+        );
+
+        $newCount = $block->abuse_count + 1;
+
+        if ($newCount >= 2) {
+            \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
+                'abuse_count' => $newCount,
+                'blocked_until' => now()->addHours(24),
+            ]);
+            return true;
+        }
+
+        \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
+            'abuse_count' => $newCount,
+        ]);
+        return false;
     }
 
     private function logChat(?int $userId, string $userMessage, string $assistantMessage, int $tokensUsed, int $responseTime): void
