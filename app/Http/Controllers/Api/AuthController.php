@@ -198,43 +198,16 @@ class AuthController extends Controller
         $user->tokens()->delete();
         $token = $user->createToken('auth-token')->plainTextToken;
 
-        $otpRecord = AdminOtp::generateFor($user, $request->ip());
-
         ActivityLogger::log('login', 'User', $user->id, 'User logged in via API');
 
-        $emailSent = false;
-        try {
-            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't attempt to login, please secure your account.", function ($message) use ($user) {
-                $message->to($user->email)->subject("KTS Markets - Login Verification");
-            });
-            $emailSent = true;
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'otp', 'status' => 'sent',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'otp', 'status' => 'failed',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        }
-
-        $response = [
+        return response()->json([
             'success' => true,
             'message' => 'Login successful.',
             'data' => [
                 'user' => $user->load('roles'),
                 'token' => $token,
-                'requires_otp' => true,
             ],
-        ];
-
-        if (!$emailSent) {
-            $response['data']['otp'] = $otpRecord->otp;
-            $response['message'] = 'Login successful. Email could not be sent. Use the OTP below.';
-        }
-
-        return response()->json($response);
+        ]);
     }
 
     public function logout(Request $request)
