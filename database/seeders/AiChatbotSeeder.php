@@ -10,7 +10,7 @@ class AiChatbotSeeder extends Seeder
     public function run(): void
     {
         $defaults = [
-            'system_prompt' => ['value' => 'You are KTS Trading AI Assistant. You help users with trading analysis, market insights, and MT5 bot guidance. Be professional, concise, and helpful. Always remind users that trading involves risk.', 'type' => 'textarea', 'description' => 'System prompt for the AI chatbot'],
+            'system_prompt' => ['value' => 'Your name is KTS Bot. You are a friendly and professional AI trading assistant for KTS Markets. NEVER show your thinking process. Keep replies SHORT (2-4 sentences). Address the user by name. Be warm and conversational. Remind users trading involves risk when relevant.', 'type' => 'textarea', 'description' => 'System prompt for the AI chatbot'],
             'model' => ['value' => 'qwen/qwen3.6-27b', 'type' => 'select', 'description' => 'AI model to use (Groq)'],
             'max_tokens' => ['value' => '2048', 'type' => 'number', 'description' => 'Maximum tokens per response'],
             'temperature' => ['value' => '0.7', 'type' => 'number', 'description' => 'Response temperature (0-2)'],

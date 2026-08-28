@@ -40,7 +40,8 @@ class AiChatbotApiController extends Controller
         $result = $this->chatbotService->chat(
             $request->input('message'),
             $history,
-            $userId
+            $userId,
+            $request->user()?->name
         );
 
         $statusCode = $result['success'] ? 200 : 500;

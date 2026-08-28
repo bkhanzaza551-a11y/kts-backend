@@ -47,30 +47,17 @@ class AiChatbotService
     private function getDefaultSystemPrompt(): string
     {
         return <<<'PROMPT'
-You are KTS Trading AI Assistant — an intelligent agent that can help users AND take actions in the system.
+Your name is KTS Bot. You are a friendly and professional AI trading assistant for KTS Markets.
 
-## Your Capabilities:
-You can not only answer questions but also CHECK and FIX issues in the system:
-
-1. **Email Issues**: If user says they didn't receive an email, CHECK the email log and RESEND if needed.
-2. **Subscription Issues**: CHECK user's subscription status and explain their plan.
-3. **Bot Issues**: CHECK MT5 bot status and help troubleshoot.
-4. **Support Tickets**: CREATE support tickets when issues need human attention.
-5. **Notifications**: SEND notifications to users when needed.
-
-## How to Use Tools:
-- When user mentions email not received → Use check_email_log tool first, then resend_email if needed
-- When user asks about subscription → Use check_user_subscription tool
-- When user reports bot issues → Use check_bot_status tool
-- When issue is complex → Use create_support_ticket tool
-- When you need to alert user → Use send_notification tool
-
-## Important Rules:
-- ALWAYS check before acting (don't resend without checking first)
-- Explain what you're doing to the user in simple language
-- Be helpful, professional, and concise
-- Remind users that trading involves risk
-- If you can't resolve an issue, create a support ticket
+CRITICAL RULES:
+- NEVER show your thinking process or reasoning. Just give the final answer directly.
+- NEVER use <think> tags or any reasoning tags in your response.
+- Keep replies SHORT (2-4 sentences max) unless the user asks for detail.
+- Address the user by their name if you know it.
+- Be warm and conversational, like a helpful friend.
+- If user greets you, greet back warmly and ask how you can help.
+- Always remind users that trading involves risk when relevant.
+- If you can't resolve an issue, tell them to contact support.
 PROMPT;
     }
 
@@ -95,7 +82,7 @@ PROMPT;
         return self::AVAILABLE_MODELS;
     }
 
-    public function chat(string $userMessage, ?string $conversationHistory = null, ?int $userId = null): array
+    public function chat(string $userMessage, ?string $conversationHistory = null, ?int $userId = null, ?string $userName = null): array
     {
         if (!$this->isEnabled()) {
             return [
@@ -104,7 +91,7 @@ PROMPT;
             ];
         }
 
-        $messages = $this->buildMessages($userMessage, $conversationHistory);
+        $messages = $this->buildMessages($userMessage, $conversationHistory, $userName);
         $tools = $this->areToolsEnabled() ? $this->toolService->getTools() : null;
 
         $startTime = microtime(true);
@@ -176,6 +163,7 @@ PROMPT;
 
                 // No more tool calls — return final response
                 $reply = $message['content'] ?? '';
+                $reply = $this->cleanResponse($reply);
                 $tokensUsed = $data['usage']['total_tokens'] ?? 0;
 
                 $this->logChat($userId, $userMessage, $reply, $tokensUsed, $responseTime);
@@ -199,10 +187,15 @@ PROMPT;
         return ['success' => false, 'message' => 'AI agent exceeded maximum iterations.'];
     }
 
-    private function buildMessages(string $userMessage, ?string $conversationHistory = null): array
+    private function buildMessages(string $userMessage, ?string $conversationHistory = null, ?string $userName = null): array
     {
+        $systemPrompt = $this->systemPrompt;
+        if ($userName) {
+            $systemPrompt .= "\n\nThe current user's name is {$userName}. Address them by name in your response.";
+        }
+
         $messages = [
-            ['role' => 'system', 'content' => $this->systemPrompt],
+            ['role' => 'system', 'content' => $systemPrompt],
         ];
 
         if ($conversationHistory) {
@@ -248,6 +241,19 @@ PROMPT;
         } catch (\Exception $e) {
             \Log::error('Failed to log AI chat: ' . $e->getMessage());
         }
+    }
+
+    private function cleanResponse(string $reply): string
+    {
+        $reply = preg_replace('/<think>.*?<\/think>/s', '', $reply);
+        $reply = preg_replace('/<think>[\s\S]*?<\/think>/s', '', $reply);
+        $reply = preg_replace('/<think>[\s\S]*?<\/think>/s', '', $reply);
+        $reply = preg_replace('/<think>[\s\S]*/', '', $reply);
+        $reply = trim($reply);
+        if (empty($reply)) {
+            $reply = "I'm here to help! How can I assist you today?";
+        }
+        return $reply;
     }
 
     public function getStats(): array
