@@ -44,20 +44,19 @@ class NotificationApiController extends Controller
     public function unread(Request $request): JsonResponse
     {
         $userId = $request->user()->id;
-        $totalTargeted = AdminNotification::where('is_sent', true)
+        $count = AdminNotification::where('is_sent', true)
             ->where(function ($q) use ($userId) {
                 $q->where('target', 'all')
                     ->orWhere(function($sub) use ($userId) {
                         $sub->where('target', 'specific')->where('target_user_id', $userId);
                     });
             })
+            ->whereNotIn('id', function ($query) use ($userId) {
+                $query->select('admin_notification_id')
+                    ->from('admin_notification_reads')
+                    ->where('user_id', $userId);
+            })
             ->count();
-
-        $readCount = \DB::table('admin_notification_reads')
-            ->where('user_id', $userId)
-            ->count();
-
-        $count = max(0, $totalTargeted - $readCount);
 
         return response()->json([
             'success' => true,

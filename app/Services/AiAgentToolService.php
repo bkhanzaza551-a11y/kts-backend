@@ -263,26 +263,26 @@ class AiAgentToolService
         }
 
         $botConfig = DB::table('mt5_bot_configs')
-            ->where('user_id', $userId)
+            ->where('created_by', $userId)
             ->latest()
             ->first();
 
         $recentTrades = DB::table('mt5_bot_trades')
-            ->where('user_id', $userId)
+            ->where('bot_config_id', $botConfig?->id)
             ->latest()
             ->limit(5)
             ->get();
 
         $botLogs = DB::table('mt5_bot_logs')
-            ->where('user_id', $userId)
+            ->where('bot_config_id', $botConfig?->id)
             ->latest()
             ->first();
 
         return [
             'success' => true,
             'bot_configured' => !!$botConfig,
-            'bot_active' => $botConfig?->is_active ?? false,
-            'connection_status' => $botConfig?->connection_status ?? 'unknown',
+            'bot_active' => ($botConfig?->status ?? '') === 'active',
+            'connection_status' => $botConfig?->last_connected_at ? 'connected' : ($botConfig?->error_message ?? 'unknown'),
             'last_trade_at' => $recentTrades->first()?->created_at ?? null,
             'recent_trades_count' => $recentTrades->count(),
             'last_log' => $botLogs?->message ?? null,

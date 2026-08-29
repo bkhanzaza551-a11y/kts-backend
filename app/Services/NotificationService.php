@@ -39,7 +39,7 @@ class NotificationService
             'sent_by' => $data['sent_by'] ?? null,
         ]);
 
-        ActivityLogger::log('notification_sent', "Notification sent: {$notification->title} (type: {$slug})");
+        ActivityLogger::log('notification_sent', 'Notification', $notification->id, "Notification sent: {$notification->title} (type: {$slug})");
 
         return $notification;
     }

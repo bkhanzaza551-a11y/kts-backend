@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Api;
 
@@ -54,7 +54,7 @@ class SupportTicketApiController extends Controller
             ->firstOrFail();
             
         $replies = SupportTicketReply::where('support_ticket_id', $ticket->id)
-            ->with('user:id,name,role') // assuming role or similar exists, but let's just get name
+            ->with('user:id,name')
             ->oldest()
             ->get();
             
@@ -83,7 +83,6 @@ class SupportTicketApiController extends Controller
             'message' => $validated['message']
         ]);
 
-        // Optional: Update ticket status to open if it was pending or resolved and user replied
         if ($ticket->status !== 'open') {
             $ticket->update(['status' => 'open']);
         }

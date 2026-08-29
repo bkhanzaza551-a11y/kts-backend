@@ -47,6 +47,10 @@ class AuthController extends Controller
 
             Auth::logout();
 
+            if ($request->boolean('remember')) {
+                $request->session()->put('remember_me', true);
+            }
+
             $otpRecord = AdminOtp::generateFor($user, $request->ip());
 
             $request->session()->put('otp_user_id', $user->id);

@@ -6,7 +6,6 @@ use App\Models\Mt5BotConfig;
 use App\Models\Mt5BotLog;
 use App\Models\Mt5BotTrade;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Crypt;
 
 class Mt5BotSeeder extends Seeder
 {
@@ -25,14 +24,11 @@ class Mt5BotSeeder extends Seeder
                 'description' => 'High-frequency scalping bot targeting 10 pips per trade on major pairs.',
                 'mt5_account_number' => '100123456',
                 'mt5_server' => 'MetaQuotes-Demo',
-                'mt5_password_encrypted' => Crypt::encryptString('Demo123!'),
                 'api_key' => null,
                 'api_secret' => null,
                 'mode' => 'demo',
                 'status' => 'active',
                 'auto_trade' => true,
-                'lot_size' => 0.01,
-                'max_lot_size' => 1.00,
                 'take_profit_pips' => 10,
                 'stop_loss_pips' => 20,
                 'max_daily_trades' => 20,
@@ -51,14 +47,11 @@ class Mt5BotSeeder extends Seeder
                 'description' => 'Medium-term trend following strategy on gold and indices.',
                 'mt5_account_number' => '100789012',
                 'mt5_server' => 'MetaQuotes-Demo',
-                'mt5_password_encrypted' => Crypt::encryptString('Demo123!'),
                 'api_key' => null,
                 'api_secret' => null,
                 'mode' => 'demo',
                 'status' => 'inactive',
                 'auto_trade' => false,
-                'lot_size' => 0.05,
-                'max_lot_size' => 5.00,
                 'take_profit_pips' => 50,
                 'stop_loss_pips' => 30,
                 'max_daily_trades' => 5,
@@ -77,14 +70,11 @@ class Mt5BotSeeder extends Seeder
                 'description' => 'Backtesting bot for strategy optimization on historical data.',
                 'mt5_account_number' => '100345678',
                 'mt5_server' => 'MetaQuotes-Demo',
-                'mt5_password_encrypted' => Crypt::encryptString('Demo123!'),
                 'api_key' => null,
                 'api_secret' => null,
                 'mode' => 'backtest',
                 'status' => 'error',
                 'auto_trade' => false,
-                'lot_size' => 0.10,
-                'max_lot_size' => 10.00,
                 'take_profit_pips' => 20,
                 'stop_loss_pips' => 15,
                 'max_daily_trades' => 50,
@@ -139,7 +129,7 @@ class Mt5BotSeeder extends Seeder
                     $pair = $pairs[array_rand($pairs)];
                     $profit = rand(-500, 500) / 10;
                     $tStatus = $tradeStatuses[array_rand($tradeStatuses)];
-                    $lot = $bot->lot_size * rand(1, 5);
+                    $lot = 0.01 * rand(1, 5);
 
                     Mt5BotTrade::create([
                         'bot_config_id' => $bot->id,

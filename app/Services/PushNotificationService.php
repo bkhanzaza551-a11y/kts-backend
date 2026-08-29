@@ -15,7 +15,7 @@ class PushNotificationService
         if (self::$serverKey !== null) {
             return self::$serverKey;
         }
-        self::$serverKey = env('FCM_SERVER_KEY', config('services.fcm.server_key'));
+        self::$serverKey = config('services.fcm.server_key') ?: env('FCM_SERVER_KEY');
         return self::$serverKey;
     }
 
