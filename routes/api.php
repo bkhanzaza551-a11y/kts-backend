@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\StickerApiController;
@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\EducationApiController;
 use App\Http\Controllers\Api\BotApiController;
 use App\Http\Controllers\Api\PaymentApiController;
 use App\Http\Controllers\Api\AiChatbotApiController;
+use App\Http\Controllers\Api\SupportTicketApiController;
 use App\Http\Controllers\Api\MarketDataApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -80,6 +81,12 @@ Route::prefix('v1')->group(function () {
         Route::post('notification-settings/{slug}/toggle', [NotificationApiController::class, 'toggleSetting'])->name('api.notifications.toggle-setting');
         Route::post('notification-settings/toggle-all', [NotificationApiController::class, 'toggleAllCategory'])->name('api.notifications.toggle-all');
 
+                // Support Tickets
+        Route::get('support/tickets', [SupportTicketApiController::class, 'index']);
+        Route::post('support/tickets', [SupportTicketApiController::class, 'store']);
+        Route::get('support/tickets/{id}', [SupportTicketApiController::class, 'show']);
+        Route::post('support/tickets/{id}/reply', [SupportTicketApiController::class, 'reply']);
+
         // Education
         Route::get('courses', [EducationApiController::class, 'courses'])->name('api.courses.index');
         Route::get('courses/{id}', [EducationApiController::class, 'course'])->name('api.courses.show');
@@ -122,3 +129,5 @@ if (app()->environment('local')) {
         return response()->json(['success' => false, 'message' => 'User not found'], 404);
     });
 }
+
+

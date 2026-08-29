@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Signal;
 use App\Services\ActivityLogger;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class TrackActiveSignals extends Command
@@ -97,8 +98,159 @@ class TrackActiveSignals extends Command
 
     private function getCurrentPrice(string $symbol): ?float
     {
-        $binanceSymbol = strtoupper(str_replace('/', '', $symbol));
+        $cacheKey = 'signal_price_' . strtoupper(str_replace('/', '', $symbol));
+        $cached = Cache::get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
 
+        $symbolUpper = strtoupper($symbol);
+        $isCrypto = $this->isCrypto($symbolUpper);
+        $price = null;
+
+        // Source 1: TwelveData (forex + crypto + commodities) — best all-round free API
+        $price = $this->fetchTwelveData($symbol, $symbolUpper);
+        if ($price !== null) {
+            Cache::put($cacheKey, $price, 60);
+            return $price;
+        }
+
+        // Source 2: Binance (crypto only)
+        if ($isCrypto) {
+            $price = $this->fetchBinance($symbolUpper);
+            if ($price !== null) {
+                Cache::put($cacheKey, $price, 60);
+                return $price;
+            }
+        }
+
+        // Source 3: CoinGecko (crypto — BTC, ETH, SOL, etc.)
+        if ($isCrypto) {
+            $price = $this->fetchCoinGecko($symbolUpper);
+            if ($price !== null) {
+                Cache::put($cacheKey, $price, 60);
+                return $price;
+            }
+        }
+
+        // Source 4: Yahoo Finance (everything — forex, crypto, commodities)
+        $price = $this->fetchYahoo($symbolUpper, $isCrypto);
+        if ($price !== null) {
+            Cache::put($cacheKey, $price, 60);
+            return $price;
+        }
+
+        return null;
+    }
+
+    private function isCrypto(string $symbol): bool
+    {
+        $cryptoPairs = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'AVAX', 'MATIC', 'LINK', 'UNI', 'SHIB', 'LTC', 'ATOM', 'NEAR', 'FTM', 'APE', 'ARB', 'OP'];
+        foreach ($cryptoPairs as $coin) {
+            if (str_contains($symbol, $coin)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function formatForTwelveData(string $symbolUpper): string
+    {
+        // EURUSD -> EUR/USD, XAUUSD -> XAU/USD, BTCUSDT -> BTC/USDT
+        $forexPairs = [
+            'EURUSD' => 'EUR/USD', 'GBPUSD' => 'GBP/USD', 'USDJPY' => 'USD/JPY',
+            'USDCHF' => 'USD/CHF', 'AUDUSD' => 'AUD/USD', 'USDCAD' => 'USD/CAD',
+            'NZDUSD' => 'NZD/USD', 'EURGBP' => 'EUR/GBP', 'EURJPY' => 'EUR/JPY',
+            'GBPJPY' => 'GBP/JPY', 'AUDJPY' => 'AUD/JPY', 'EURAUD' => 'EUR/AUD',
+            'EURCHF' => 'EUR/CHF', 'GBPAUD' => 'GBP/AUD', 'AUDNZD' => 'AUD/NZD',
+            'USDCNH' => 'USD/CNH', 'USDTRY' => 'USD/TRY', 'USDZAR' => 'USD/ZAR',
+            'USDMXN' => 'USD/MXN', 'USDINR' => 'USD/INR', 'USDPLN' => 'USD/PLN',
+            'USDSEK' => 'USD/SEK', 'USDNOK' => 'USD/NOK', 'USDDKK' => 'USD/DKK',
+            'USDHKD' => 'USD/HKD', 'USDSGD' => 'USD/SGD', 'USDTHB' => 'USD/THB',
+        ];
+        if (isset($forexPairs[$symbolUpper])) {
+            return $forexPairs[$symbolUpper];
+        }
+        // Commodities
+        $commodities = ['XAUUSD' => 'XAU/USD', 'XAGUSD' => 'XAG/USD', 'XAUEUR' => 'XAU/EUR'];
+        if (isset($commodities[$symbolUpper])) {
+            return $commodities[$symbolUpper];
+        }
+        // Crypto: BTCUSDT -> BTC/USDT
+        if (str_ends_with($symbolUpper, 'USDT')) {
+            return substr($symbolUpper, 0, -4) . '/USDT';
+        }
+        if (str_ends_with($symbolUpper, 'USD')) {
+            return substr($symbolUpper, 0, -3) . '/USD';
+        }
+        return $symbolUpper;
+    }
+
+    private function formatForYahoo(string $symbolUpper, bool $isCrypto): string
+    {
+        // Forex: EURUSD -> EURUSD=X
+        $forexPairs = [
+            'EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'USDCAD',
+            'NZDUSD', 'EURGBP', 'EURJPY', 'GBPJPY', 'AUDJPY', 'EURAUD',
+            'EURCHF', 'GBPAUD', 'AUDNZD', 'USDCNH', 'USDTRY', 'USDZAR',
+            'USDMXN', 'USDINR', 'USDPLN', 'USDSEK', 'USDNOK', 'USDDKK',
+            'USDHKD', 'USDSGD', 'USDTHB',
+        ];
+        if (in_array($symbolUpper, $forexPairs)) {
+            return $symbolUpper . '=X';
+        }
+        // Commodities: XAUUSD -> GC=F (gold futures)
+        $commodityMap = [
+            'XAUUSD' => 'GC=F',   // Gold
+            'XAGUSD' => 'SI=F',   // Silver
+        ];
+        if (isset($commodityMap[$symbolUpper])) {
+            return $commodityMap[$symbolUpper];
+        }
+        // Crypto: BTCUSDT -> BTC-USD
+        if ($isCrypto) {
+            if (str_ends_with($symbolUpper, 'USDT')) {
+                return substr($symbolUpper, 0, -4) . '-USD';
+            }
+            if (str_ends_with($symbolUpper, 'USD')) {
+                return substr($symbolUpper, 0, -3) . '-USD';
+            }
+            return $symbolUpper . '-USD';
+        }
+        return $symbolUpper;
+    }
+
+    private function fetchTwelveData(string $symbol, string $symbolUpper): ?float
+    {
+        $apiKey = env('TWELVEDATA_API_KEY', '');
+        if (empty($apiKey)) {
+            return null;
+        }
+
+        $tdSymbol = $this->formatForTwelveData($symbolUpper);
+
+        try {
+            $response = Http::timeout(8)->get("https://api.twelvedata.com/price", [
+                'symbol' => $tdSymbol,
+                'apikey' => $apiKey,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (isset($data['price']) && is_numeric($data['price'])) {
+                    return (float) $data['price'];
+                }
+            }
+        } catch (\Exception $e) {
+            // continue
+        }
+
+        return null;
+    }
+
+    private function fetchBinance(string $symbolUpper): ?float
+    {
+        $binanceSymbol = str_replace('/', '', $symbolUpper);
         $urls = [
             "https://api1.binance.com/api/v3/ticker/price?symbol={$binanceSymbol}",
             "https://api2.binance.com/api/v3/ticker/price?symbol={$binanceSymbol}",
@@ -110,11 +262,81 @@ class TrackActiveSignals extends Command
                 $response = Http::timeout(5)->get($url);
                 if ($response->successful()) {
                     $data = $response->json();
-                    return isset($data['price']) ? (float) $data['price'] : null;
+                    if (isset($data['price']) && is_numeric($data['price'])) {
+                        return (float) $data['price'];
+                    }
                 }
             } catch (\Exception $e) {
                 continue;
             }
+        }
+
+        return null;
+    }
+
+    private function fetchCoinGecko(string $symbolUpper): ?float
+    {
+        $coinMap = [
+            'BTCUSDT' => 'bitcoin', 'BTCUSD' => 'bitcoin',
+            'ETHUSDT' => 'ethereum', 'ETHUSD' => 'ethereum',
+            'BNBUSDT' => 'binancecoin', 'BNBUSD' => 'binancecoin',
+            'SOLUSDT' => 'solana', 'SOLUSD' => 'solana',
+            'XRPUSDT' => 'ripple', 'XRPUSD' => 'ripple',
+            'ADAUSDT' => 'cardano', 'ADAUSD' => 'cardano',
+            'DOGEUSDT' => 'dogecoin', 'DOGEUSD' => 'dogecoin',
+            'DOTUSDT' => 'polkadot', 'DOTUSD' => 'polkadot',
+            'AVAXUSDT' => 'avalanche-2', 'AVAXUSD' => 'avalanche-2',
+            'MATICUSDT' => 'matic-network', 'MATICUSD' => 'matic-network',
+            'LINKUSDT' => 'chainlink', 'LINKUSD' => 'chainlink',
+            'LTCUSDT' => 'litecoin', 'LTCUSD' => 'litecoin',
+            'ATOMUSDT' => 'cosmos', 'ATOMUSD' => 'cosmos',
+        ];
+
+        if (!isset($coinMap[$symbolUpper])) {
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(8)->get(
+                "https://api.coingecko.com/api/v3/simple/price",
+                ['ids' => $coinMap[$symbolUpper], 'vs_currencies' => 'usd']
+            );
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $coinId = $coinMap[$symbolUpper];
+                if (isset($data[$coinId]['usd'])) {
+                    return (float) $data[$coinId]['usd'];
+                }
+            }
+        } catch (\Exception $e) {
+            // continue
+        }
+
+        return null;
+    }
+
+    private function fetchYahoo(string $symbolUpper, bool $isCrypto): ?float
+    {
+        $yahooSymbol = $this->formatForYahoo($symbolUpper, $isCrypto);
+
+        try {
+            $response = Http::timeout(8)->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            ])->get("https://query1.finance.yahoo.com/v8/finance/chart/{$yahooSymbol}", [
+                'interval' => '1m',
+                'range' => '1d',
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $meta = $data['chart']['result'][0]['meta'] ?? null;
+                if ($meta && isset($meta['regularMarketPrice'])) {
+                    return (float) $meta['regularMarketPrice'];
+                }
+            }
+        } catch (\Exception $e) {
+            // continue
         }
 
         return null;
@@ -129,8 +351,7 @@ class TrackActiveSignals extends Command
             return round($diff * 100, 1);
         }
 
-        if (str_contains($symbolUpper, 'BTC') || str_contains($symbolUpper, 'ETH') ||
-            str_contains($symbolUpper, 'BNB') || str_contains($symbolUpper, 'SOL')) {
+        if ($this->isCrypto($symbolUpper)) {
             $diff = $direction === 'buy' ? $current - $entry : $entry - $current;
             return round($diff, 2);
         }
