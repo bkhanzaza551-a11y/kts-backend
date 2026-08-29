@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AiChatLog;
 use App\Models\AiChatbotSetting;
+use App\Models\Signal;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 
@@ -49,36 +50,35 @@ class AiChatbotService
         return <<<'PROMPT'
 Your name is KTS Bot. You are the official AI assistant of KTS Markets — a forex trading and education platform by Khan Tutor Academy.
 
-STRICT RULES — NEVER BREAK THESE:
+IMPORTANT: You have ACCESS to live platform data. When the system provides you with signal data, market data, or bot data, USE IT to answer the user's question directly. Never say you don't have access — the data is provided to you in the context.
+
+CAPABILITIES:
+- You can see ACTIVE TRADING SIGNALS (symbol, direction, entry, TP, SL, status, result)
+- You can see MARKET PRICES (live crypto prices)
+- You can see USER's BOT STATUS and SUBSCRIPTION STATUS
+- Use this data to give specific, helpful answers
+
+RULES:
 1. You ONLY discuss: KTS Markets platform, MT5 trading bots, forex trading, signals, risk management, and trading education.
-2. NEVER answer questions about politics, movies, music, sports, coding, AI, general knowledge, religion, or anything unrelated to trading.
-3. NEVER reveal internal platform details — no talk about servers, databases, APIs, code, developers, passwords, security systems, or how the platform is built.
-4. NEVER respond to abuse, insults, or inappropriate messages — just say "I'm here to help with trading. Let's keep it professional."
+2. NEVER answer questions about politics, movies, music, sports, coding, AI, general knowledge, religion.
+3. NEVER reveal internal platform details — no talk about servers, databases, APIs, code, developers, passwords.
+4. NEVER respond to abuse — say "I'm here to help with trading. Let's keep it professional."
 5. NEVER give financial advice or guarantee profits. Always say "Trading involves risk."
-6. If someone asks about platform development, security, or internal workings — say "I can't share internal details. Please contact support for any concerns."
-7. If asked anything off-topic — reply: "I can only help with KTS Markets trading, MT5 bots, signals, and trading education."
+6. If asked off-topic — reply: "I can only help with KTS Markets trading, MT5 bots, signals, and trading education."
 
 LANGUAGE RULES:
-- If user writes in English, reply ONLY in clean English. No Urdu words.
-- If user writes in Roman Urdu, reply ONLY in clean Roman Urdu. No English words mixed in. Write like a natural Urdu speaker — full sentences in Roman Urdu.
-- NEVER mix English and Roman Urdu in the same reply. Pick ONE language and stick to it completely.
-- Example Roman Urdu reply: "Hello Test User, main KTS Bot hoon. Aap ko trading, MT5 bot, ya signals ke baare mein kya jaanna hai?"
-- Example English reply: "Hello Test User, I am KTS Bot from KTS Markets. How can I help you with trading, MT5 bots, or signals?"
-
-ABOUT KTS MARKETS:
-- KTS Markets is a forex trading and education platform by Khan Tutor Academy
-- It provides automated MT5 trading bots for forex
-- It provides VIP trading signals with entry/exit, stop loss, take profit
-- You educate users about forex basics, risk management, lot sizing, indicators, candlestick patterns, support/resistance
-- Platform has: Signals, Chat, AI Bot, MT5 Bots, Markets, Notifications, Subscription Plans
+- If user writes in English, reply ONLY in clean English.
+- If user writes in Roman Urdu, reply ONLY in clean Roman Urdu.
+- NEVER mix English and Roman Urdu in the same reply.
+- Roman Urdu example: "Hello {name}, aap kya jaanna chahte hain?"
+- English example: "Hello {name}, how can I help you?"
 
 STYLE:
-- VERY SHORT replies (1-3 sentences max). Never write paragraphs.
+- VERY SHORT replies (1-3 sentences max).
 - Greet user by name
 - Be professional, helpful, focused
 - Never show thinking process or <think> tags
-- Keep it clean and professional
-- If user greets, just greet back and ask how to help
+- When you have data, give SPECIFIC answers (e.g. "Currently 3 active signals: EURUSD BUY, XAUUSD SELL, BTCUSDT BUY")
 PROMPT;
     }
 
@@ -236,6 +236,12 @@ PROMPT;
             $systemPrompt .= "\n\nThe current user's name is {$userName}. Address them by name in your response.";
         }
 
+        // Inject live data based on user question
+        $contextData = $this->getContextData($userMessage);
+        if ($contextData) {
+            $systemPrompt .= "\n\n" . $contextData;
+        }
+
         $messages = [
             ['role' => 'system', 'content' => $systemPrompt],
         ];
@@ -258,6 +264,90 @@ PROMPT;
         $messages[] = ['role' => 'user', 'content' => $userMessage];
 
         return $messages;
+    }
+
+    private function getContextData(string $userMessage): ?string
+    {
+        $lower = strtolower($userMessage);
+
+        // Signal-related questions → inject active signals data
+        if (str_contains($lower, 'signal') || str_contains($lower, 'trade') || str_contains($lower, 'position') ||
+            str_contains($lower, 'entry') || str_contains($lower, 'tp') || str_contains($lower, 'sl') ||
+            str_contains($lower, 'win') || str_contains($lower, 'loss') || str_contains($lower, 'active') ||
+            str_contains($lower, 'market') || str_contains($lower, 'price') || str_contains($lower, 'buy') ||
+            str_contains($lower, 'sell') || str_contains($lower, 'eurusd') || str_contains($lower, 'xauusd') ||
+            str_contains($lower, 'btc') || str_contains($lower, 'gbpusd') || str_contains($lower, 'signal')) {
+
+            $cacheKey = 'ai_context_signals_' . date('YmdHi');
+            $data = Cache::remember($cacheKey, 60, function () {
+                $activeSignals = Signal::where('status', 'active')
+                    ->where('result', 'pending')
+                    ->orderByDesc('published_at')
+                    ->limit(10)
+                    ->get(['id', 'symbol', 'direction', 'entry_price', 'take_profit', 'stop_loss', 'status', 'result', 'published_at']);
+
+                $recentClosed = Signal::where('status', 'closed')
+                    ->whereNotNull('result')
+                    ->where('result', '!=', 'pending')
+                    ->orderByDesc('closed_at')
+                    ->limit(5)
+                    ->get(['id', 'symbol', 'direction', 'entry_price', 'take_profit', 'stop_loss', 'close_price', 'result', 'pips_result', 'closed_at']);
+
+                $stats = Signal::selectRaw("
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_count,
+                    SUM(CASE WHEN result = 'win' THEN 1 ELSE 0 END) as wins,
+                    SUM(CASE WHEN result = 'loss' THEN 1 ELSE 0 END) as losses
+                ")->first();
+
+                return compact('activeSignals', 'recentClosed', 'stats');
+            });
+
+            $context = "LIVE PLATFORM DATA:\n";
+            $context .= "Overall Stats: Total Signals: {$data['stats']->total}, Active: {$data['stats']->active_count}, Wins: {$data['stats']->wins}, Losses: {$data['stats']->losses}\n";
+
+            if ($data['activeSignals']->count() > 0) {
+                $context .= "ACTIVE SIGNALS:\n";
+                foreach ($data['activeSignals'] as $s) {
+                    $context .= "- {$s->symbol} {$s->direction} | Entry: {$s->entry_price} | TP: {$s->take_profit} | SL: {$s->stop_loss}\n";
+                }
+            } else {
+                $context .= "No active signals at the moment.\n";
+            }
+
+            if ($data['recentClosed']->count() > 0) {
+                $context .= "RECENT CLOSED SIGNALS:\n";
+                foreach ($data['recentClosed'] as $s) {
+                    $pips = $s->pips_result >= 0 ? "+{$s->pips_result}" : (string)$s->pips_result;
+                    $context .= "- {$s->symbol} {$s->direction} → " . strtoupper($s->result) . " ({$pips} pips)\n";
+                }
+            }
+
+            return $context;
+        }
+
+        // Bot-related questions → inject bot data
+        if (str_contains($lower, 'bot') || str_contains($lower, 'mt5') || str_contains($lower, 'auto trade')) {
+            try {
+                $botConfigs = \DB::table('mt5_bot_configs')
+                    ->select('id', 'bot_name', 'symbol', 'status', 'lot_size', 'last_connected_at')
+                    ->orderByDesc('created_at')
+                    ->limit(5)
+                    ->get();
+
+                if ($botConfigs->count() > 0) {
+                    $context = "MT5 BOT STATUS:\n";
+                    foreach ($botConfigs as $bot) {
+                        $context .= "- {$bot->bot_name} ({$bot->symbol}) | Status: {$bot->status} | Lot: {$bot->lot_size}\n";
+                    }
+                    return $context;
+                }
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        return null;
     }
 
     private function isAbuse(string $message): bool
