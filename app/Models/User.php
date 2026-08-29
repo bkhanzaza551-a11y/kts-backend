@@ -32,6 +32,10 @@ class User extends Authenticatable
         'badge_color',
         'last_login_at',
         'last_login_ip',
+        'status',
+        'is_banned',
+        'is_premium',
+        'premium_expires_at',
     ];
 
     protected $hidden = [

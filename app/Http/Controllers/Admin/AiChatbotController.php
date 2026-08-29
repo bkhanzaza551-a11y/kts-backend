@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Cache;
 class AiChatbotController extends Controller
 {
     private const ALLOWED_MODELS = [
+        'qwen/qwen3.6-27b', 'qwen/qwen3.8-27b',
+        'openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'groq/compound',
         'llama-3.1-8b-instant', 'llama-3.3-70b-versatile',
         'mixtral-8x7b-32768', 'gemma2-9b-it',
     ];
