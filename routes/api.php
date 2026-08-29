@@ -47,6 +47,10 @@ Route::prefix('v1')->group(function () {
         Route::put('profile', [AuthController::class, 'updateProfile'])->name('api.profile.update');
         Route::put('change-password', [AuthController::class, 'changePassword'])->middleware('throttle:5,1')->name('api.password.change');
 
+        // Device Registration (FCM tokens)
+        Route::post('device/register', [\App\Http\Controllers\Api\DeviceController::class, 'register'])->name('api.device.register');
+        Route::post('device/unregister', [\App\Http\Controllers\Api\DeviceController::class, 'unregister'])->name('api.device.unregister');
+
         // Chat - Rooms & Messages
         Route::get('chat/rooms', [ChatApiController::class, 'rooms'])->name('api.chat.rooms');
         Route::get('chat/rooms/{room}/messages', [ChatApiController::class, 'messages'])->name('api.chat.messages');

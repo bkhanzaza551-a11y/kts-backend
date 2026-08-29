@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Signal;
 use App\Models\SignalCategory;
 use App\Services\ActivityLogger;
+use App\Services\NotificationService;
+use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -134,6 +136,21 @@ class SignalController extends Controller
         ActivityLogger::log('create', 'Signal', $signal->id, "Created signal: {$signal->title}");
         Cache::forget('signal_stats');
 
+        if ($signal->status === 'active') {
+            $dir = strtoupper($signal->direction);
+            NotificationService::send('signal_new', [
+                'title' => "New Signal: {$signal->symbol}",
+                'body' => "{$dir} {$signal->symbol} @ {$signal->entry_price}. TP: {$signal->take_profit} | SL: {$signal->stop_loss}",
+                'type' => 'info',
+                'target' => 'all',
+            ]);
+            PushNotificationService::sendToAll(
+                "New Signal: {$signal->symbol}",
+                "{$dir} {$signal->symbol} @ {$signal->entry_price}",
+                ['signal_id' => $signal->id, 'type' => 'signal_new']
+            );
+        }
+
         return redirect()->route('admin.signals.show', $signal)->with('success', 'Signal created successfully.');
     }
 
@@ -182,6 +199,18 @@ class SignalController extends Controller
 
         if ($validated['status'] === 'closed' && $signal->status !== 'closed') {
             $validated['closed_at'] = now();
+            $resultEmoji = ($validated['result'] ?? 'closed') === 'win' ? '✅' : (($validated['result'] ?? 'closed') === 'loss' ? '❌' : '⏰');
+            NotificationService::send('signal_closed', [
+                'title' => "{$resultEmoji} Signal Closed: {$signal->symbol}",
+                'body' => "Your {$signal->direction} signal for {$signal->symbol} has been closed.",
+                'type' => ($validated['result'] ?? '') === 'win' ? 'success' : (($validated['result'] ?? '') === 'loss' ? 'danger' : 'info'),
+                'target' => 'all',
+            ]);
+            PushNotificationService::sendToAll(
+                "Signal Closed: {$signal->symbol}",
+                "{$signal->symbol} {$signal->direction} signal has been closed",
+                ['signal_id' => $signal->id, 'type' => 'signal_closed']
+            );
         }
 
         $categories = $validated['categories'] ?? [];
@@ -219,6 +248,19 @@ class SignalController extends Controller
         ActivityLogger::log('publish', 'Signal', $signal->id, "Published signal: {$signal->title}");
         Cache::forget('signal_stats');
 
+        $dir = strtoupper($signal->direction);
+        NotificationService::send('signal_new', [
+            'title' => "New Signal: {$signal->symbol}",
+            'body' => "{$dir} {$signal->symbol} @ {$signal->entry_price}. TP: {$signal->take_profit} | SL: {$signal->stop_loss}",
+            'type' => 'info',
+            'target' => 'all',
+        ]);
+        PushNotificationService::sendToAll(
+            "New Signal: {$signal->symbol}",
+            "{$dir} {$signal->symbol} @ {$signal->entry_price}",
+            ['signal_id' => $signal->id, 'type' => 'signal_new']
+        );
+
         return back()->with('success', 'Signal published successfully.');
     }
 
@@ -242,6 +284,19 @@ class SignalController extends Controller
 
         ActivityLogger::log('close', 'Signal', $signal->id, "Closed signal: {$signal->title} - {$validated['result']} ({$validated['pips_result']} pips)");
         Cache::forget('signal_stats');
+
+        $resultEmoji = $validated['result'] === 'win' ? '✅' : ($validated['result'] === 'loss' ? '❌' : '⏰');
+        NotificationService::send('signal_closed', [
+            'title' => "{$resultEmoji} Signal Closed: {$signal->symbol}",
+            'body' => "Your {$signal->direction} signal for {$signal->symbol} closed as " . strtoupper($validated['result']) . ". {$validated['pips_result']} pips.",
+            'type' => $validated['result'] === 'win' ? 'success' : ($validated['result'] === 'loss' ? 'danger' : 'info'),
+            'target' => 'all',
+        ]);
+        PushNotificationService::sendToAll(
+            "Signal {$resultEmoji} " . strtoupper($validated['result']),
+            "{$signal->symbol} {$signal->direction} signal closed. {$validated['pips_result']} pips",
+            ['signal_id' => $signal->id, 'result' => $validated['result'], 'type' => 'signal_closed']
+        );
 
         return back()->with('success', 'Signal closed successfully.');
     }

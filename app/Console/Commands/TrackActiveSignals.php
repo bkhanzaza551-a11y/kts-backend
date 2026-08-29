@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\Signal;
 use App\Services\ActivityLogger;
+use App\Services\NotificationService;
+use App\Services\PushNotificationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -87,6 +89,22 @@ class TrackActiveSignals extends Command
             $this->info("  [{$emoji}] Signal #{$signal->id} ({$signal->symbol}) CLOSED | Entry: {$entry} | Close: {$currentPrice} | Pips: {$pipsResult}");
 
             ActivityLogger::log('signal_auto_close', 'Signal', $signal->id, "Auto-closed as {$result} at {$currentPrice} ({$pipsResult} pips)");
+
+            // In-app notification
+            $resultEmoji = $result === 'win' ? '✅' : ($result === 'loss' ? '❌' : '⏰');
+            NotificationService::send('signal_closed', [
+                'title' => "{$resultEmoji} Signal Closed: {$signal->symbol}",
+                'body' => "Your {$signal->direction} signal for {$signal->symbol} closed as " . strtoupper($result) . ". {$pipsResult} pips.",
+                'type' => $result === 'win' ? 'success' : ($result === 'loss' ? 'danger' : 'info'),
+                'target' => 'all',
+            ]);
+
+            // Push notification
+            PushNotificationService::sendToAll(
+                "Signal {$resultEmoji} " . strtoupper($result),
+                "{$signal->symbol} {$signal->direction} signal closed at {$currentPrice}. {$pipsResult} pips",
+                ['signal_id' => $signal->id, 'result' => $result, 'type' => 'signal_closed']
+            );
         } else {
             $pnl = $signal->direction === 'buy'
                 ? (($currentPrice - $entry) / $entry * 100)
