@@ -63,11 +63,12 @@ class AuthController extends Controller
                 'user' => $user->load('roles'),
                 'requires_email_verification' => true,
                 'email' => $user->email,
+                'otp' => $emailSent ? null : $otpRecord->otp,
             ],
         ];
 
         if (!$emailSent) {
-            $response['message'] = 'Registration successful. Email could not be sent immediately. Please tap Resend Code to receive your verification OTP.';
+            $response['message'] = 'Registration successful. Email could not be sent. Use this OTP to verify: ' . $otpRecord->otp;
         }
 
         return response()->json($response, 201);
@@ -161,7 +162,10 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $sent ? 'OTP resent to your email.' : 'OTP generated. If email does not arrive, please check spam folder.',
+            'message' => $sent ? 'OTP resent to your email.' : 'Email could not be sent. Use this OTP to verify: ' . $otpRecord->otp,
+            'data' => [
+                'otp' => $sent ? null : $otpRecord->otp,
+            ],
         ]);
     }
 
