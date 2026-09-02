@@ -287,40 +287,53 @@ class AuthController extends Controller
 
         // Handle avatar upload (File or Base64 string)
         if ($request->hasFile('avatar')) {
-            if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
-                \Storage::disk('public')->delete($user->avatar);
+            try {
+                if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
+                    \Storage::disk('public')->delete($user->avatar);
+                }
+                $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
+            } catch (\Throwable $e) {
+                unset($validated['avatar']);
             }
-            $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        } elseif (!empty($validated['avatar']) && is_string($validated['avatar']) && str_starts_with($validated['avatar'], 'data:image')) {
+        } elseif (!empty($validated['avatar']) && is_string($validated['avatar']) && str_starts_with($validated['avatar'], 'data:image') && str_contains($validated['avatar'], ';base64,')) {
             try {
                 if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
                     \Storage::disk('public')->delete($user->avatar);
                 }
                 $imageData = $validated['avatar'];
                 $imageParts = explode(';base64,', $imageData);
-                $imageTypeAux = explode('image/', $imageParts[0]);
-                $imageType = $imageTypeAux[1] ?? 'png';
-                $imageBase64 = base64_decode($imageParts[1]);
-                $fileName = 'avatars/' . uniqid('avatar_') . '.' . $imageType;
-                \Storage::disk('public')->put($fileName, $imageBase64);
-                $validated['avatar'] = $fileName;
-            } catch (\Exception $e) {
+                if (isset($imageParts[1]) && !empty($imageParts[1])) {
+                    $imageTypeAux = explode('image/', $imageParts[0]);
+                    $imageType = $imageTypeAux[1] ?? 'png';
+                    $imageType = explode(';', $imageType)[0];
+                    $imageBase64 = base64_decode($imageParts[1]);
+                    $fileName = 'avatars/' . uniqid('avatar_') . '.' . $imageType;
+                    \Storage::disk('public')->put($fileName, $imageBase64);
+                    $validated['avatar'] = $fileName;
+                } else {
+                    unset($validated['avatar']);
+                }
+            } catch (\Throwable $e) {
                 unset($validated['avatar']);
             }
-        } elseif (!isset($validated['avatar']) || empty($validated['avatar'])) {
+        } elseif (!isset($validated['avatar']) || empty($validated['avatar']) || (is_string($validated['avatar']) && str_starts_with($validated['avatar'], 'http'))) {
             unset($validated['avatar']);
         }
 
         $user->update($validated);
 
-        ActivityLogger::log(
-            'update_profile',
-            'User',
-            $user->id,
-            'Profile updated via API',
-            $oldData,
-            $user->only(['name', 'phone', 'whatsapp', 'city', 'country', 'demo_account_id', 'real_account_id'])
-        );
+        try {
+            ActivityLogger::log(
+                'update_profile',
+                'User',
+                (string)$user->id,
+                'Profile updated via API',
+                $oldData,
+                $user->only(['name', 'phone', 'whatsapp', 'city', 'country', 'demo_account_id', 'real_account_id'])
+            );
+        } catch (\Throwable $e) {
+            // Ignore activity log failure
+        }
 
         $freshUser = $user->fresh()->load('roles');
         if ($freshUser->avatar && !str_starts_with($freshUser->avatar, 'http')) {
