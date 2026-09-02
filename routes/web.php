@@ -29,6 +29,43 @@ Route::get('/', function () {
     return redirect()->route('admin.login');
 });
 
+// Public Legal & Data Safety Routes (Required for Google Play Store Listing)
+Route::get('privacy-policy', function () {
+    $page = \App\Models\LegalPage::active()->where('slug', 'privacy-policy')->first();
+    return view('public.legal', [
+        'title' => $page->title ?? 'Privacy Policy',
+        'content' => $page->content ?? '<p>Official Privacy Policy for KTS 10 Pips Bots. We are committed to protecting your personal information and your right to privacy.</p>',
+        'updated_at' => $page->updated_at ?? now(),
+    ]);
+})->name('public.privacy-policy');
+
+Route::get('terms-conditions', function () {
+    $page = \App\Models\LegalPage::active()->where('slug', 'terms-conditions')->first();
+    return view('public.legal', [
+        'title' => $page->title ?? 'Terms and Conditions',
+        'content' => $page->content ?? '<p>Official Terms and Conditions for KTS 10 Pips Bots. By accessing or using our application, you agree to be bound by these terms.</p>',
+        'updated_at' => $page->updated_at ?? now(),
+    ]);
+})->name('public.terms-conditions');
+
+Route::get('delete-account', function () {
+    return view('public.delete-account');
+})->name('public.delete-account');
+
+Route::post('delete-account', function (\Illuminate\Http\Request $request) {
+    $request->validate(['email' => 'required|email']);
+    $user = \App\Models\User::where('email', $request->email)->first();
+    if ($user && !$user->isSuperAdmin()) {
+        \App\Services\ActivityLogger::log('delete_account_web', 'User', $user->id, 'User requested account deletion via public web portal');
+        if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
+            \Storage::disk('public')->delete($user->avatar);
+        }
+        $user->tokens()->delete();
+        $user->delete();
+    }
+    return back()->with('status', 'If an account exists with this email address, your account and associated personal data have been scheduled for permanent deletion.');
+})->middleware('throttle:5,1')->name('public.delete-account.post');
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
