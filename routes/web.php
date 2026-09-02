@@ -34,7 +34,7 @@ Route::get('privacy-policy', function () {
     $page = \App\Models\LegalPage::active()->where('slug', 'privacy-policy')->first();
     return view('public.legal', [
         'title' => $page->title ?? 'Privacy Policy',
-        'content' => $page->content ?? '<p>Official Privacy Policy for KTS 10 Pips Bots. We are committed to protecting your personal information and your right to privacy.</p>',
+        'content' => $page->content ?? '<p>Official Privacy Policy for KTS Markets. We are committed to protecting your personal information and your right to privacy.</p>',
         'updated_at' => $page->updated_at ?? now(),
     ]);
 })->name('public.privacy-policy');
@@ -43,7 +43,7 @@ Route::get('terms-conditions', function () {
     $page = \App\Models\LegalPage::active()->where('slug', 'terms-conditions')->first();
     return view('public.legal', [
         'title' => $page->title ?? 'Terms and Conditions',
-        'content' => $page->content ?? '<p>Official Terms and Conditions for KTS 10 Pips Bots. By accessing or using our application, you agree to be bound by these terms.</p>',
+        'content' => $page->content ?? '<p>Official Terms and Conditions for KTS Markets. By accessing or using our application, you agree to be bound by these terms.</p>',
         'updated_at' => $page->updated_at ?? now(),
     ]);
 })->name('public.terms-conditions');

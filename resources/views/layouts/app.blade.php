@@ -314,7 +314,7 @@
                     <i class="bi bi-graph-up-arrow text-white fs-6"></i>
                 </div>
                 <div>
-                    <span class="fw-bold d-block lh-1" style="color:var(--text-primary);font-size:0.95rem;">KTS 10 Pips</span>
+                    <span class="fw-bold d-block lh-1" style="color:var(--text-primary);font-size:0.95rem;">KTS Markets</span>
                     <small class="text-muted" style="font-size:0.65rem;">Super Admin Panel</small>
                 </div>
             </a>
@@ -536,7 +536,7 @@
             <button class="btn btn-sm border-0" onclick="toggleSidebar()" style="color:var(--text-secondary);">
                 <i class="bi bi-list fs-4"></i>
             </button>
-            <span class="fw-semibold small" style="color:var(--text-primary);">KTS 10 Pips</span>
+            <span class="fw-semibold small" style="color:var(--text-primary);">KTS Markets</span>
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" style="font-size:0.75rem;">
                     <i class="bi bi-currency-exchange me-1"></i>{{ \App\Services\CurrencyService::getCurrentCurrency() }}

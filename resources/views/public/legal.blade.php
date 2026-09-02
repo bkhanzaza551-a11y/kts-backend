@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title }} - KTS 10 Pips Bots</title>
+    <title>{{ $title }} - KTS Markets</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #0B0E11; color: #E0E0E0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -34,7 +34,7 @@
                     <hr class="border-secondary my-4">
                     <div class="p-3 rounded bg-dark border border-warning">
                         <h6 class="text-gold fw-bold mb-1">⚠️ Financial Risk Disclosure</h6>
-                        <small class="text-secondary">Forex, CFDs, and cryptocurrency trading carry high risk and may not be suitable for all investors. KTS 10 Pips Bots provides automated analysis and signals for informational and educational purposes only.</small>
+                        <small class="text-secondary">Forex, CFDs, and cryptocurrency trading carry high risk and may not be suitable for all investors. KTS Markets provides automated analysis and signals for informational and educational purposes only.</small>
                     </div>
                 </div>
             </div>
