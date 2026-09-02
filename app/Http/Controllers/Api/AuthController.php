@@ -39,17 +39,28 @@ class AuthController extends Controller
         ActivityLogger::log('register', 'User', $user->id, 'New user registered via API - email verification pending');
 
         $emailSent = false;
-        try {
-            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user) {
-                $message->to($user->email)
-                    ->subject("KTS Markets - Email Verification");
-            });
-            $emailSent = true;
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        } catch (\Exception $e) {
+        $maxRetries = 3;
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user) {
+                    $message->to($user->email)
+                        ->subject("KTS Markets - Email Verification");
+                });
+                $emailSent = true;
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+                break;
+            } catch (\Exception $e) {
+                \Log::warning("Email send attempt {$attempt} failed: " . $e->getMessage());
+                if ($attempt < $maxRetries) {
+                    sleep(2);
+                }
+            }
+        }
+
+        if (!$emailSent) {
             \Illuminate\Support\Facades\DB::table('email_logs')->insert([
                 'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'failed',
                 'resent_by' => 'system', 'created_at' => now(),
@@ -143,17 +154,28 @@ class AuthController extends Controller
         $otpRecord = AdminOtp::generateFor($user, $request->ip());
 
         $sent = false;
-        try {
-            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user) {
-                $message->to($user->email)
-                    ->subject("KTS Markets - Email Verification");
-            });
-            $sent = true;
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
-                'resent_by' => 'system', 'created_at' => now(),
-            ]);
-        } catch (\Exception $e) {
+        $maxRetries = 3;
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user) {
+                    $message->to($user->email)
+                        ->subject("KTS Markets - Email Verification");
+                });
+                $sent = true;
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+                break;
+            } catch (\Exception $e) {
+                \Log::warning("Email resend attempt {$attempt} failed: " . $e->getMessage());
+                if ($attempt < $maxRetries) {
+                    sleep(2);
+                }
+            }
+        }
+
+        if (!$sent) {
             \Illuminate\Support\Facades\DB::table('email_logs')->insert([
                 'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'failed',
                 'resent_by' => 'system', 'created_at' => now(),
