@@ -118,6 +118,29 @@ Route::get('test-email', function (\Illuminate\Http\Request $request) {
     }
 })->name('public.test-email');
 
+Route::get('/seed-db', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        return response()->json([
+            'success' => true,
+            'message' => 'Database migrated and seeded successfully with test users!',
+            'users' => [
+                ['email' => 'user@ktsmarkets.com', 'password' => 'Password123!'],
+                ['email' => 'test@ktsmarkets.com', 'password' => 'Password123!'],
+                ['email' => 'admin@ktsmarkets.com', 'password' => 'Password123!'],
+            ],
+            'output' => $output,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+})->name('public.seed-db');
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');

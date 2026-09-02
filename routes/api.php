@@ -91,6 +91,29 @@ Route::prefix('v1')->group(function () {
         }
     })->name('api.test-email');
 
+    Route::get('seed-db', function () {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+            $output = \Illuminate\Support\Facades\Artisan::output();
+            return response()->json([
+                'success' => true,
+                'message' => 'Database migrated and seeded successfully with test users!',
+                'users' => [
+                    ['email' => 'user@ktsmarkets.com', 'password' => 'Password123!'],
+                    ['email' => 'test@ktsmarkets.com', 'password' => 'Password123!'],
+                    ['email' => 'admin@ktsmarkets.com', 'password' => 'Password123!'],
+                ],
+                'output' => $output,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    })->name('api.seed-db');
+
     // Payment Plans (public - mobile shows before login)
     Route::get('payments/plans', [PaymentApiController::class, 'plans'])->name('api.payments.plans');
 
