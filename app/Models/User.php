@@ -17,6 +17,10 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'whatsapp',
+        'gender',
+        'city',
+        'country',
         'password',
         'avatar',
         'google_id',
@@ -26,6 +30,7 @@ class User extends Authenticatable
         'real_account_id',
         'real_account_server',
         'broker_name',
+        'is_profile_completed',
         'email_verified_at',
         'remember_token',
         'chat_badge',
@@ -51,6 +56,7 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'is_banned' => 'boolean',
             'is_premium' => 'boolean',
+            'is_profile_completed' => 'boolean',
             'password' => 'hashed',
         ];
     }

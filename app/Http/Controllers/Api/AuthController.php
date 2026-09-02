@@ -246,22 +246,44 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'phone' => 'nullable|string|max:20',
+            'whatsapp' => 'nullable|string|max:20',
+            'gender' => 'nullable|string|in:male,female,other',
+            'city' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
             'demo_account_id' => 'nullable|string|max:50',
             'demo_account_server' => 'nullable|string|max:100',
             'real_account_id' => 'nullable|string|max:50',
             'real_account_server' => 'nullable|string|max:100',
             'broker_name' => 'nullable|string|max:100',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'is_profile_completed' => 'nullable|boolean',
+            'avatar' => 'nullable',
         ]);
 
-        $oldData = $user->only(['name', 'phone', 'demo_account_id', 'demo_account_server', 'real_account_id', 'real_account_server', 'broker_name']);
+        $oldData = $user->only(['name', 'phone', 'whatsapp', 'gender', 'city', 'country', 'demo_account_id', 'demo_account_server', 'real_account_id', 'real_account_server', 'broker_name']);
 
+        // Handle avatar upload (File or Base64 string)
         if ($request->hasFile('avatar')) {
             if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
                 \Storage::disk('public')->delete($user->avatar);
             }
             $validated['avatar'] = $request->file('avatar')->store('avatars', 'public');
-        } else {
+        } elseif (!empty($validated['avatar']) && is_string($validated['avatar']) && str_starts_with($validated['avatar'], 'data:image')) {
+            try {
+                if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
+                    \Storage::disk('public')->delete($user->avatar);
+                }
+                $imageData = $validated['avatar'];
+                $imageParts = explode(';base64,', $imageData);
+                $imageTypeAux = explode('image/', $imageParts[0]);
+                $imageType = $imageTypeAux[1] ?? 'png';
+                $imageBase64 = base64_decode($imageParts[1]);
+                $fileName = 'avatars/' . uniqid('avatar_') . '.' . $imageType;
+                \Storage::disk('public')->put($fileName, $imageBase64);
+                $validated['avatar'] = $fileName;
+            } catch (\Exception $e) {
+                unset($validated['avatar']);
+            }
+        } elseif (!isset($validated['avatar']) || empty($validated['avatar'])) {
             unset($validated['avatar']);
         }
 
@@ -273,14 +295,19 @@ class AuthController extends Controller
             $user->id,
             'Profile updated via API',
             $oldData,
-            $user->only(['name', 'phone', 'demo_account_id', 'real_account_id'])
+            $user->only(['name', 'phone', 'whatsapp', 'city', 'country', 'demo_account_id', 'real_account_id'])
         );
+
+        $freshUser = $user->fresh()->load('roles');
+        if ($freshUser->avatar && !str_starts_with($freshUser->avatar, 'http')) {
+            $freshUser->avatar = \Storage::disk('public')->url($freshUser->avatar);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Profile updated successfully.',
             'data' => [
-                'user' => $user->fresh()->load('roles'),
+                'user' => $freshUser,
             ],
         ]);
     }

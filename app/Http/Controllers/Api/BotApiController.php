@@ -15,7 +15,7 @@ class BotApiController extends Controller
     {
         $user = $request->user();
         $query = Mt5BotConfig::select([
-            'id', 'name', 'description', 'status', 'mode', 'auto_trade',
+            'id', 'created_by', 'name', 'description', 'status', 'mode', 'auto_trade',
             'balance', 'equity', 'total_profit', 'total_loss',
             'total_trades', 'winning_trades', 'losing_trades',
             'last_connected_at', 'last_trade_at',
@@ -33,7 +33,7 @@ class BotApiController extends Controller
     public function show(Request $request, $id): JsonResponse
     {
         $bot = Mt5BotConfig::select([
-            'id', 'name', 'description', 'status', 'mode', 'auto_trade',
+            'id', 'created_by', 'name', 'description', 'status', 'mode', 'auto_trade',
             'take_profit_pips', 'stop_loss_pips',
             'max_daily_trades', 'max_daily_loss', 'balance', 'equity',
             'total_profit', 'total_loss', 'total_trades', 'winning_trades',
@@ -83,3 +83,4 @@ class BotApiController extends Controller
         ]);
     }
 }
+
