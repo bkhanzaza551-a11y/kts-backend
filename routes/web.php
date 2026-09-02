@@ -66,6 +66,58 @@ Route::post('delete-account', function (\Illuminate\Http\Request $request) {
     return back()->with('status', 'If an account exists with this email address, your account and associated personal data have been scheduled for permanent deletion.');
 })->middleware('throttle:5,1')->name('public.delete-account.post');
 
+Route::get('test-email', function (\Illuminate\Http\Request $request) {
+    $to = $request->query('to', 'huntergaming5555566@gmail.com');
+    $start = microtime(true);
+    
+    $diag = [
+        'mailer' => config('mail.default'),
+        'host' => config('mail.mailers.smtp.host'),
+        'port' => config('mail.mailers.smtp.port'),
+        'encryption' => config('mail.mailers.smtp.encryption'),
+        'username' => config('mail.mailers.smtp.username'),
+        'from_address' => config('mail.from.address'),
+        'from_name' => config('mail.from.name'),
+    ];
+
+    try {
+        \Illuminate\Support\Facades\Mail::raw(
+            "Hello!\n\nThis is a live test email from KTS Markets running on Railway production server.\n\n" .
+            "Server UTC Time: " . now()->toDateTimeString() . "\n" .
+            "Recipient: {$to}\n" .
+            "SMTP Host: {$diag['host']}:{$diag['port']}\n" .
+            "Encryption: {$diag['encryption']}\n\n" .
+            "Railway live email delivery is 100% OPERATIONAL!\n\n" .
+            "Regards,\nKTS Markets Team",
+            function ($message) use ($to) {
+                $message->to($to)
+                    ->subject('KTS Markets - Railway Live SMTP Test');
+            }
+        );
+
+        $duration = round((microtime(true) - $start) * 1000, 2);
+
+        return response()->json([
+            'success' => true,
+            'status' => 'EMAIL_SENT_SUCCESSFULLY',
+            'message' => "Test email successfully sent to {$to}",
+            'duration_ms' => $duration,
+            'server_diagnostics' => $diag,
+        ], 200);
+    } catch (\Throwable $e) {
+        $duration = round((microtime(true) - $start) * 1000, 2);
+
+        return response()->json([
+            'success' => false,
+            'status' => 'EMAIL_DISPATCH_FAILED',
+            'error_message' => $e->getMessage(),
+            'error_class' => get_class($e),
+            'duration_ms' => $duration,
+            'server_diagnostics' => $diag,
+        ], 500);
+    }
+})->name('public.test-email');
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');

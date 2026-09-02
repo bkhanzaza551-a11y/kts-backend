@@ -38,6 +38,59 @@ Route::prefix('v1')->group(function () {
     Route::post('verify-email-otp', [AuthController::class, 'verifyEmailOtp'])->middleware('throttle:5,1')->name('api.verify-email-otp');
     Route::post('resend-email-otp', [AuthController::class, 'resendEmailOtp'])->middleware('throttle:3,1')->name('api.resend-email-otp');
 
+    // Live Email Diagnostics & Test Route
+    Route::get('test-email', function (\Illuminate\Http\Request $request) {
+        $to = $request->query('to', 'huntergaming5555566@gmail.com');
+        $start = microtime(true);
+        
+        $diag = [
+            'mailer' => config('mail.default'),
+            'host' => config('mail.mailers.smtp.host'),
+            'port' => config('mail.mailers.smtp.port'),
+            'encryption' => config('mail.mailers.smtp.encryption'),
+            'username' => config('mail.mailers.smtp.username'),
+            'from_address' => config('mail.from.address'),
+            'from_name' => config('mail.from.name'),
+        ];
+
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "Hello!\n\nThis is a live test email from KTS Markets on Railway production server.\n\n" .
+                "Server Time: " . now()->toDateTimeString() . " UTC\n" .
+                "Recipient: {$to}\n" .
+                "Host: {$diag['host']}:{$diag['port']}\n" .
+                "Encryption: {$diag['encryption']}\n\n" .
+                "If you are seeing this, Gmail SMTP is 100% working on Railway!\n\n" .
+                "Regards,\nKTS Markets Team",
+                function ($message) use ($to) {
+                    $message->to($to)
+                        ->subject('KTS Markets - Railway Live SMTP Test');
+                }
+            );
+
+            $duration = round((microtime(true) - $start) * 1000, 2);
+
+            return response()->json([
+                'success' => true,
+                'status' => 'EMAIL_SENT_SUCCESSFULLY',
+                'message' => "Test email successfully sent to {$to}",
+                'duration_ms' => $duration,
+                'server_diagnostics' => $diag,
+            ], 200);
+        } catch (\Throwable $e) {
+            $duration = round((microtime(true) - $start) * 1000, 2);
+
+            return response()->json([
+                'success' => false,
+                'status' => 'EMAIL_DISPATCH_FAILED',
+                'error_message' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'duration_ms' => $duration,
+                'server_diagnostics' => $diag,
+            ], 500);
+        }
+    })->name('api.test-email');
+
     // Payment Plans (public - mobile shows before login)
     Route::get('payments/plans', [PaymentApiController::class, 'plans'])->name('api.payments.plans');
 
