@@ -45,6 +45,7 @@ Route::prefix('v1')->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('api.logout');
         Route::get('profile', [AuthController::class, 'profile'])->name('api.profile');
         Route::put('profile', [AuthController::class, 'updateProfile'])->name('api.profile.update');
+        Route::delete('profile', [AuthController::class, 'deleteAccount'])->name('api.profile.delete');
         Route::put('change-password', [AuthController::class, 'changePassword'])->middleware('throttle:5,1')->name('api.password.change');
 
         // Device Registration (FCM tokens)
@@ -55,6 +56,8 @@ Route::prefix('v1')->group(function () {
         Route::get('chat/rooms', [ChatApiController::class, 'rooms'])->name('api.chat.rooms');
         Route::get('chat/rooms/{room}/messages', [ChatApiController::class, 'messages'])->name('api.chat.messages');
         Route::post('chat/rooms/{room}/messages', [ChatApiController::class, 'send'])->middleware('throttle:30,1')->name('api.chat.send');
+        Route::post('chat/messages/{id}/report', [ChatApiController::class, 'reportMessage'])->name('api.chat.messages.report');
+        Route::post('chat/users/{id}/block', [ChatApiController::class, 'blockUser'])->name('api.chat.users.block');
         Route::get('chat/rooms/{room}/pinned', [ChatApiController::class, 'pinnedMessages'])->name('api.chat.pinned');
 
         // Chat - Stickers
@@ -110,6 +113,7 @@ Route::prefix('v1')->group(function () {
         Route::post('ai-chat', [AiChatbotApiController::class, 'chat'])->middleware('throttle:20,1')->name('api.ai-chat.send');
         Route::get('ai-chat/status', [AiChatbotApiController::class, 'status'])->name('api.ai-chat.status');
         Route::get('ai-chat/stats', [AiChatbotApiController::class, 'stats'])->name('api.ai-chat.stats');
+        Route::post('ai-chat/report', [AiChatbotApiController::class, 'report'])->middleware('throttle:10,1')->name('api.ai-chat.report');
 
         // Market Data
         Route::get('market/ticker', [MarketDataApiController::class, 'getTicker'])->name('api.market.ticker');

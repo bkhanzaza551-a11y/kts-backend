@@ -67,8 +67,7 @@ class AuthController extends Controller
         ];
 
         if (!$emailSent) {
-            $response['data']['otp'] = $otpRecord->otp;
-            $response['message'] = 'Registration successful. Email could not be sent. Use the OTP below to verify.';
+            $response['message'] = 'Registration successful. Email could not be sent immediately. Please tap Resend Code to receive your verification OTP.';
         }
 
         return response()->json($response, 201);
@@ -309,6 +308,32 @@ class AuthController extends Controller
             'data' => [
                 'user' => $freshUser,
             ],
+        ]);
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->isSuperAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Super Administrator accounts cannot be deleted directly from the app.',
+            ], 403);
+        }
+
+        ActivityLogger::log('delete_account', 'User', $user->id, 'User requested permanent account deletion via mobile app');
+
+        if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
+            \Storage::disk('public')->delete($user->avatar);
+        }
+
+        $user->tokens()->delete();
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Your account and all associated personal data have been permanently deleted.',
         ]);
     }
 

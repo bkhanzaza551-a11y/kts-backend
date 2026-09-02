@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             SystemSettingSeeder::class,
             NotificationSettingSeeder::class,
+            LegalPageSeeder::class,
             TestDataSeeder::class,
         ]);
     }

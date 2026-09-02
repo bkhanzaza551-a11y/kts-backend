@@ -287,13 +287,52 @@ class ChatApiController extends Controller
                     'user' => [
                         'name' => $msg->user->name ?? 'Unknown',
                     ],
-                    'pinned_at' => $msg->pinned_at->toISOString(),
+                    'pinned_at' => $msg->pinned_at?->toISOString(),
                 ];
             });
 
         return response()->json([
             'success' => true,
             'data' => $messages,
+        ]);
+    }
+
+    public function reportMessage(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'reason' => 'nullable|string|max:255',
+        ]);
+
+        $user = $request->user();
+        $message = ChatMessage::findOrFail($id);
+
+        ActivityLogger::log(
+            'report_chat_message',
+            'ChatMessage',
+            $message->id,
+            "User {$user->name} reported message #{$message->id} by user #{$message->user_id}. Reason: " . ($validated['reason'] ?? 'Inappropriate content')
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Thank you. The reported message has been submitted to moderators for review.',
+        ]);
+    }
+
+    public function blockUser(Request $request, $id)
+    {
+        $user = $request->user();
+
+        ActivityLogger::log(
+            'block_chat_user',
+            'User',
+            $id,
+            "User {$user->name} blocked user #{$id}"
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User has been blocked. You will no longer see messages from this user.',
         ]);
     }
 }

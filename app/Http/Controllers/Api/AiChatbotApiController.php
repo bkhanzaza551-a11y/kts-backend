@@ -82,4 +82,31 @@ class AiChatbotApiController extends Controller
             'stats' => $this->chatbotService->getStats(),
         ]);
     }
+
+    /**
+     * Report an AI chatbot message.
+     */
+    public function report(Request $request): JsonResponse
+    {
+        $request->validate([
+            'message_id' => 'required|string',
+            'reason' => 'required|string|in:inappropriate,misleading,spam,other',
+        ]);
+
+        $user = $request->user();
+
+        \App\Models\AiChatLog::create([
+            'user_id' => $user?->id,
+            'message' => '[REPORTED] Message ID: ' . $request->input('message_id'),
+            'response' => 'Reason: ' . $request->input('reason'),
+            'model' => 'report',
+            'is_flagged' => true,
+            'flag_reason' => $request->input('reason'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Report submitted successfully. Thank you for your feedback.',
+        ]);
+    }
 }
