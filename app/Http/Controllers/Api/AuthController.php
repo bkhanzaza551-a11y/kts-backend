@@ -141,28 +141,27 @@ class AuthController extends Controller
 
         $otpRecord = AdminOtp::generateFor($user, $request->ip());
 
-        // Return response FIRST, send email in background
-        dispatch(function () use ($user, $otpRecord) {
-            try {
-                Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user, $otpRecord) {
+        $sent = false;
+        try {
+            Mail::raw("Your KTS Markets verification code is: {$otpRecord->otp}\n\nThis code expires in 5 minutes.\n\nIf you didn't register, ignore this email.", function ($message) use ($user) {
                 $message->to($user->email)
                     ->subject("KTS Markets - Email Verification");
-                });
-                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                    'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
-                    'resent_by' => 'system', 'created_at' => now(),
-                ]);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                    'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'failed',
-                    'resent_by' => 'system', 'created_at' => now(),
-                ]);
-            }
-        })->afterCommit();
+            });
+            $sent = true;
+            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'sent',
+                'resent_by' => 'system', 'created_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                'user_id' => $user->id, 'type' => 'confirmation', 'status' => 'failed',
+                'resent_by' => 'system', 'created_at' => now(),
+            ]);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'OTP resent to your email.',
+            'message' => $sent ? 'OTP resent to your email.' : 'OTP generated. If email does not arrive, please check spam folder.',
         ]);
     }
 
