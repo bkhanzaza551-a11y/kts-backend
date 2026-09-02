@@ -112,8 +112,20 @@ class RoleSeeder extends Seeder
         );
         $user->permissions()->sync([]);
 
-        // Create Super Admin user
+        // Create Super Admin & Test Users
         $superAdminUser = User::updateOrCreate(
+            ['email' => 'admin@ktsmarkets.com'],
+            [
+                'name' => 'KTS Admin',
+                'password' => Hash::make('Password123!'),
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+        $superAdminUser->assignRole('super-admin');
+
+        // Legacy admin compatibility
+        $legacyAdmin = User::updateOrCreate(
             ['email' => 'admin@kts10pipsbots.com'],
             [
                 'name' => 'Super Admin',
@@ -122,6 +134,30 @@ class RoleSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $superAdminUser->assignRole('super-admin');
+        $legacyAdmin->assignRole('super-admin');
+
+        // Test Mobile App User 1
+        $testUser1 = User::updateOrCreate(
+            ['email' => 'test@ktsmarkets.com'],
+            [
+                'name' => 'Demo Trader',
+                'password' => Hash::make('Password123!'),
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+        $testUser1->assignRole('user');
+
+        // Test Mobile App User 2
+        $testUser2 = User::updateOrCreate(
+            ['email' => 'user@ktsmarkets.com'],
+            [
+                'name' => 'Pro Trader',
+                'password' => Hash::make('Password123!'),
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
+        $testUser2->assignRole('user');
     }
 }
