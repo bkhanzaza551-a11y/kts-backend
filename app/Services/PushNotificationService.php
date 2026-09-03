@@ -31,13 +31,25 @@ class PushNotificationService
 
     private static function getAccessToken(): ?string
     {
-        $serviceAccountPath = self::getServiceAccountPath();
-        if (empty($serviceAccountPath) || !file_exists($serviceAccountPath)) {
+        // Try JSON env var first (for Railway)
+        $serviceAccountJson = env('FCM_SERVICE_ACCOUNT_JSON');
+        if (!empty($serviceAccountJson)) {
+            $serviceAccount = json_decode($serviceAccountJson, true);
+        } else {
+            // Try file path (for local dev)
+            $serviceAccountPath = self::getServiceAccountPath();
+            if (empty($serviceAccountPath) || !file_exists($serviceAccountPath)) {
+                return null;
+            }
+            $serviceAccount = json_decode(file_get_contents($serviceAccountPath), true);
+        }
+
+        if (empty($serviceAccount) || empty($serviceAccount['client_email']) || empty($serviceAccount['private_key'])) {
+            Log::warning('FCM: Invalid service account configuration');
             return null;
         }
 
         try {
-            $serviceAccount = json_decode(file_get_contents($serviceAccountPath), true);
             $now = time();
 
             $header = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
