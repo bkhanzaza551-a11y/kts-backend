@@ -15,8 +15,8 @@ class SupportTicketApiController extends Controller
         $tickets = SupportTicket::where('user_id', $request->user()->id)
             ->withCount('replies')
             ->latest()
-            ->get();
-            
+            ->paginate(20);
+
         return response()->json([
             'success' => true,
             'data' => $tickets
@@ -27,8 +27,9 @@ class SupportTicketApiController extends Controller
     {
         $validated = $request->validate([
             'subject' => 'required|string|max:255',
-            'description' => 'required|string',
-            'priority' => 'nullable|in:low,medium,high'
+            'description' => 'required|string|max:5000',
+            'priority' => 'nullable|in:low,medium,high',
+            'source' => 'nullable|in:manual,ai_chatbot,email',
         ]);
 
         $ticket = SupportTicket::create([
@@ -37,7 +38,16 @@ class SupportTicketApiController extends Controller
             'subject' => $validated['subject'],
             'description' => $validated['description'],
             'priority' => $validated['priority'] ?? 'medium',
+            'source' => $validated['source'] ?? 'manual',
             'status' => 'open'
+        ]);
+
+        // Save auto-message to DB
+        SupportTicketReply::create([
+            'support_ticket_id' => $ticket->id,
+            'user_id' => $request->user()->id,
+            'message' => 'Our team will contact you as soon as possible. Please describe your issue below.',
+            'is_system' => true,
         ]);
 
         return response()->json([
@@ -52,12 +62,12 @@ class SupportTicketApiController extends Controller
         $ticket = SupportTicket::where('id', $id)
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
-            
+
         $replies = SupportTicketReply::where('support_ticket_id', $ticket->id)
             ->with('user:id,name')
             ->oldest()
             ->get();
-            
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -74,13 +84,22 @@ class SupportTicketApiController extends Controller
             ->firstOrFail();
 
         $validated = $request->validate([
-            'message' => 'required|string'
+            'message' => 'required|string|max:5000',
+            'attachment' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,webp,pdf,mp4',
         ]);
+
+        $attachmentPath = null;
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $filename = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $attachmentPath = $file->storeAs('support-chat', $filename, 'public');
+        }
 
         $reply = SupportTicketReply::create([
             'support_ticket_id' => $ticket->id,
             'user_id' => $request->user()->id,
-            'message' => $validated['message']
+            'message' => $validated['message'],
+            'attachment' => $attachmentPath,
         ]);
 
         if ($ticket->status !== 'open') {

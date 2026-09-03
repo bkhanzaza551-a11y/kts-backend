@@ -623,6 +623,6 @@ PROMPT;
     private function getHumanSupportResponse(?string $userName): string
     {
         $name = $userName ? " {$userName}" : "";
-        return "Hello{$name}! 👋\n\nI understand you need help from our support team. I'll connect you with them right away.\n\n请点击 the button below to start a conversation with our support team. They will assist you personally.\n\n🔄 **Tap the button below to connect:**";
+        return "Hello{$name}! 👋\n\nI understand you need help from our support team. I'll connect you with them right away.\n\nPlease tap the button below to start a conversation with our support team. They will assist you personally.\n\n🔄 **Tap the button below to connect:**";
     }
 }

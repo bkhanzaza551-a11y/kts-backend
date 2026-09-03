@@ -38,6 +38,7 @@
                         <th>Subject</th>
                         <th>Replies</th>
                         <th>Status</th>
+                        <th>Priority</th>
                         <th>Created</th>
                         <th>Action</th>
                     </tr>
@@ -45,7 +46,12 @@
                 <tbody>
                     @forelse($tickets as $ticket)
                     <tr>
-                        <td><code>{{ $ticket->ticket_number }}</code></td>
+                        <td>
+                            <code>{{ $ticket->ticket_number }}</code>
+                            @if($ticket->source == 'ai_chatbot')
+                                <br><span class="badge bg-info mt-1"><i class="bi bi-robot me-1"></i>AI Chatbot</span>
+                            @endif
+                        </td>
                         <td>
                             <strong>{{ $ticket->user->name ?? 'N/A' }}</strong><br>
                             <small class="text-secondary">{{ $ticket->user->email ?? '' }}</small>
@@ -55,8 +61,19 @@
                         <td>
                             @if($ticket->status == 'open')
                                 <span class="badge bg-success">Open</span>
+                            @elseif($ticket->status == 'in_progress')
+                                <span class="badge bg-warning">In Progress</span>
                             @else
                                 <span class="badge bg-secondary">Closed</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($ticket->priority == 'high')
+                                <span class="badge bg-danger">High</span>
+                            @elseif($ticket->priority == 'medium')
+                                <span class="badge bg-warning">Medium</span>
+                            @else
+                                <span class="badge bg-secondary">Low</span>
                             @endif
                         </td>
                         <td>{{ $ticket->created_at->diffForHumans() }}</td>

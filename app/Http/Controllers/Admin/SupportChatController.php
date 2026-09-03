@@ -46,16 +46,25 @@ class SupportChatController extends Controller
     public function reply(Request $request, SupportTicket $ticket)
     {
         $validated = $request->validate([
-            'message' => 'required|string',
+            'message' => 'required|string|max:5000',
+            'attachment' => 'nullable|file|max:10240|mimes:jpg,jpeg,png,gif,webp,pdf,mp4',
         ]);
+
+        $attachmentPath = null;
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $filename = time() . '_' . \Illuminate\Support\Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $attachmentPath = $file->storeAs('support-chat', $filename, 'public');
+        }
 
         SupportTicketReply::create([
             'support_ticket_id' => $ticket->id,
             'user_id' => $request->user()->id,
             'message' => $validated['message'],
+            'attachment' => $attachmentPath,
         ]);
 
-        if ($ticket->status === 'closed') {
+        if ($ticket->status !== 'open') {
             $ticket->update(['status' => 'open']);
         }
 

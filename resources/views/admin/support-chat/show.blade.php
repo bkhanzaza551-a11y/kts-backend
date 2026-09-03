@@ -40,10 +40,24 @@
                     <div class="d-flex mb-3 {{ $reply->user_id == $ticket->user_id ? 'justify-content-start' : 'justify-content-end' }}">
                         <div class="p-3 rounded-3 {{ $reply->user_id == $ticket->user_id ? 'bg-light' : 'bg-primary text-white' }}" style="max-width:75%;">
                             <div class="fw-semibold mb-1" style="font-size:0.8rem;">
-                                {{ $reply->user->name ?? 'Unknown' }}
+                                {{ $reply->user->name ?? 'System' }}
+                                @if($reply->is_system)
+                                    <span class="badge bg-info ms-1" style="font-size:0.65rem;">System</span>
+                                @endif
                                 <span class="ms-2 opacity-75" style="font-size:0.7rem;">{{ $reply->created_at->diffForHumans() }}</span>
                             </div>
                             <div style="white-space:pre-wrap;">{{ $reply->message }}</div>
+                            @if($reply->attachment)
+                                <div class="mt-2">
+                                    @if(in_array(pathinfo($reply->attachment, PATHINFO_EXTENSION), ['jpg','jpeg','png','gif','webp']))
+                                        <img src="{{ asset('storage/' . $reply->attachment) }}" style="max-width:200px;border-radius:8px;cursor:pointer;" onclick="window.open(this.src)">
+                                    @else
+                                        <a href="{{ asset('storage/' . $reply->attachment) }}" target="_blank" class="btn btn-sm btn-outline-light mt-1">
+                                            <i class="bi bi-paperclip me-1"></i>Attachment
+                                        </a>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
                     @empty
@@ -59,10 +73,15 @@
         @if($ticket->status == 'open')
         <div class="card mt-3">
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.support-chat.reply', $ticket) }}">
+                <form method="POST" action="{{ route('admin.support-chat.reply', $ticket) }}" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
                         <textarea name="message" class="form-control" rows="3" placeholder="Type your reply..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Attachment (optional)</label>
+                        <input type="file" name="attachment" class="form-control" accept="image/*,.pdf,.mp4">
+                        <small class="text-secondary">Max 10MB. Supported: JPG, PNG, GIF, WebP, PDF, MP4</small>
                     </div>
                     <button type="submit" class="btn btn-success"><i class="bi bi-send me-1"></i>Send Reply</button>
                 </form>

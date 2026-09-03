@@ -166,9 +166,9 @@ Route::prefix('v1')->group(function () {
 
                 // Support Tickets
         Route::get('support/tickets', [SupportTicketApiController::class, 'index']);
-        Route::post('support/tickets', [SupportTicketApiController::class, 'store']);
+        Route::post('support/tickets', [SupportTicketApiController::class, 'store'])->middleware('throttle:5,1');
         Route::get('support/tickets/{id}', [SupportTicketApiController::class, 'show']);
-        Route::post('support/tickets/{id}/reply', [SupportTicketApiController::class, 'reply']);
+        Route::post('support/tickets/{id}/reply', [SupportTicketApiController::class, 'reply'])->middleware('throttle:30,1');
 
         // Education
         Route::get('courses', [EducationApiController::class, 'courses'])->name('api.courses.index');
