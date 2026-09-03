@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AdminNotification;
 use App\Models\NotificationSetting;
+use App\Models\UserNotificationSetting;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -78,72 +79,93 @@ class NotificationApiController extends Controller
     }
 
     /**
-     * Get all notification settings for the mobile app.
+     * Get notification settings for the current user.
      */
-    public function settings(): JsonResponse
+    public function settings(Request $request): JsonResponse
     {
-        $settings = NotificationSetting::orderBy('category')->orderBy('name')->get([
+        $userId = $request->user()->id;
+        $globalSettings = NotificationSetting::orderBy('category')->orderBy('name')->get([
             'slug', 'name', 'description', 'category', 'icon', 'is_enabled'
         ]);
 
-        $grouped = $settings->groupBy('category');
+        $userSettings = UserNotificationSetting::where('user_id', $userId)
+            ->pluck('is_enabled', 'notification_setting_slug')
+            ->toArray();
+
+        $mergedSettings = $globalSettings->map(function ($setting) use ($userSettings) {
+            if (array_key_exists($setting->slug, $userSettings)) {
+                $setting->is_enabled = $userSettings[$setting->slug];
+            }
+            return $setting;
+        });
+
+        $grouped = $mergedSettings->groupBy('category');
+        $enabledSlugs = $mergedSettings->where('is_enabled', true)->pluck('slug')->toArray();
 
         return response()->json([
             'success' => true,
             'data' => [
-                'settings' => $settings,
+                'settings' => $mergedSettings,
                 'grouped' => $grouped,
-                'enabled_slugs' => NotificationService::getEnabledSlugs(),
+                'enabled_slugs' => $enabledSlugs,
             ],
         ]);
     }
 
     /**
-     * Check if a specific notification type is enabled.
+     * Check if a specific notification type is enabled for the current user.
      */
-    public function checkSetting($slug): JsonResponse
+    public function checkSetting(Request $request, $slug): JsonResponse
     {
-        $setting = NotificationSetting::where('slug', $slug)->first();
+        $userId = $request->user()->id;
+        $isEnabled = UserNotificationSetting::isEnabledForUser($userId, $slug);
 
-        if (!$setting) {
-            return response()->json([
-                'success' => true,
-                'data' => ['slug' => $slug, 'is_enabled' => true],
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'slug' => $slug,
+                'is_enabled' => $isEnabled,
+            ],
+        ]);
+    }
+
+    /**
+     * Toggle a notification setting for the current user only.
+     */
+    public function toggleSetting(Request $request, $slug): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        $globalSetting = NotificationSetting::where('slug', $slug)->first();
+        if (!$globalSetting) {
+            return response()->json(['success' => false, 'message' => 'Setting not found'], 404);
+        }
+
+        $userSetting = UserNotificationSetting::where('user_id', $userId)
+            ->where('notification_setting_slug', $slug)
+            ->first();
+
+        if ($userSetting) {
+            $newEnabled = !$userSetting->is_enabled;
+            $userSetting->update(['is_enabled' => $newEnabled]);
+        } else {
+            $newEnabled = !$globalSetting->is_enabled;
+            UserNotificationSetting::create([
+                'user_id' => $userId,
+                'notification_setting_slug' => $slug,
+                'is_enabled' => $newEnabled,
             ]);
         }
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'slug' => $setting->slug,
-                'name' => $setting->name,
-                'is_enabled' => $setting->is_enabled,
-            ],
+            'data' => ['is_enabled' => $newEnabled],
+            'message' => "{$globalSetting->name} has been " . ($newEnabled ? 'enabled' : 'disabled'),
         ]);
     }
 
     /**
-     * Toggle a notification setting (for mobile app).
-     */
-    public function toggleSetting($slug): JsonResponse
-    {
-        $setting = NotificationSetting::where('slug', $slug)->first();
-
-        if (!$setting) {
-            return response()->json(['success' => false, 'message' => 'Setting not found'], 404);
-        }
-
-        $setting->update(['is_enabled' => !$setting->is_enabled]);
-
-        return response()->json([
-            'success' => true,
-            'data' => ['is_enabled' => $setting->is_enabled],
-            'message' => "{$setting->name} has been " . ($setting->is_enabled ? 'enabled' : 'disabled'),
-        ]);
-    }
-
-    /**
-     * Toggle all settings in a category (for mobile app).
+     * Toggle all settings in a category for the current user only.
      */
     public function toggleAllCategory(Request $request): JsonResponse
     {
@@ -152,12 +174,19 @@ class NotificationApiController extends Controller
             'is_enabled' => 'required|boolean',
         ]);
 
-        NotificationSetting::where('category', $request->category)
-            ->update(['is_enabled' => $request->is_enabled]);
+        $userId = $request->user()->id;
+        $globalSettings = NotificationSetting::where('category', $request->category)->get();
+
+        foreach ($globalSettings as $setting) {
+            UserNotificationSetting::updateOrCreate(
+                ['user_id' => $userId, 'notification_setting_slug' => $setting->slug],
+                ['is_enabled' => $request->is_enabled]
+            );
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'All ' . $request->category . ' notifications have been ' . ($request->is_enabled ? 'enabled' : 'disabled'),
+            'message' => 'All ' . $request->category . ' notifications have been ' . ($request->is_enabled ? 'enabled' : 'disabled') . ' for your account',
         ]);
     }
 }

@@ -8,6 +8,7 @@ use App\Models\ChatRoom;
 use App\Models\ChatSticker;
 use App\Models\ChatStickerPack;
 use App\Models\ChatBannedUser;
+use App\Models\UserBlockedUser;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -78,6 +79,11 @@ class ChatApiController extends Controller
         $query = $room->messages()
             ->with(['user:id,name,chat_badge,badge_color,is_premium', 'sticker:id,name,image_url,pack_id'])
             ->where('is_deleted', false);
+
+        $blockedUserIds = UserBlockedUser::getBlockedUserIds($user->id);
+        if (!empty($blockedUserIds)) {
+            $query->whereNotIn('user_id', $blockedUserIds);
+        }
 
         if (!empty($validated['before_id'])) {
             $query->where('id', '<', $validated['before_id']);
@@ -334,16 +340,79 @@ class ChatApiController extends Controller
     {
         $user = $request->user();
 
+        if ($user->id === (int) $id) {
+            return response()->json(['success' => false, 'message' => 'You cannot block yourself'], 400);
+        }
+
+        $targetUser = \App\Models\User::find($id);
+        if (!$targetUser) {
+            return response()->json(['success' => false, 'message' => 'User not found'], 404);
+        }
+
+        $alreadyBlocked = UserBlockedUser::where('user_id', $user->id)
+            ->where('blocked_user_id', $id)
+            ->exists();
+
+        if ($alreadyBlocked) {
+            return response()->json(['success' => false, 'message' => 'User is already blocked'], 400);
+        }
+
+        UserBlockedUser::create([
+            'user_id' => $user->id,
+            'blocked_user_id' => $id,
+        ]);
+
         ActivityLogger::log(
             'block_chat_user',
             'User',
             $id,
-            "User {$user->name} blocked user #{$id}"
+            "User {$user->id} blocked user #{$id}"
         );
 
         return response()->json([
             'success' => true,
             'message' => 'User has been blocked. You will no longer see messages from this user.',
+        ]);
+    }
+
+    public function unblockUser(Request $request, $id)
+    {
+        $user = $request->user();
+
+        $deleted = UserBlockedUser::where('user_id', $user->id)
+            ->where('blocked_user_id', $id)
+            ->delete();
+
+        if (!$deleted) {
+            return response()->json(['success' => false, 'message' => 'User is not blocked'], 400);
+        }
+
+        ActivityLogger::log(
+            'unblock_chat_user',
+            'User',
+            $id,
+            "User {$user->id} unblocked user #{$id}"
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User has been unblocked.',
+        ]);
+    }
+
+    public function blockedUsers(Request $request)
+    {
+        $user = $request->user();
+
+        $blockedIds = UserBlockedUser::where('user_id', $user->id)->pluck('blocked_user_id');
+
+        $blockedUsers = \App\Models\User::whereIn('id', $blockedIds)
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $blockedUsers,
         ]);
     }
 }

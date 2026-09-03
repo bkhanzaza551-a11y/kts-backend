@@ -136,6 +136,8 @@ Route::prefix('v1')->group(function () {
         Route::post('chat/rooms/{room:slug}/messages', [ChatApiController::class, 'send'])->middleware('throttle:30,1')->name('api.chat.send');
         Route::post('chat/messages/{id}/report', [ChatApiController::class, 'reportMessage'])->name('api.chat.messages.report');
         Route::post('chat/users/{id}/block', [ChatApiController::class, 'blockUser'])->name('api.chat.users.block');
+        Route::post('chat/users/{id}/unblock', [ChatApiController::class, 'unblockUser'])->name('api.chat.users.unblock');
+        Route::get('chat/blocked-users', [ChatApiController::class, 'blockedUsers'])->name('api.chat.blocked-users');
         Route::get('chat/rooms/{room}/pinned', [ChatApiController::class, 'pinnedMessages'])->name('api.chat.pinned');
 
         // Chat - Stickers
