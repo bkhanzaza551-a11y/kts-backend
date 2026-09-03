@@ -164,11 +164,12 @@ Route::prefix('v1')->group(function () {
         Route::post('notification-settings/{slug}/toggle', [NotificationApiController::class, 'toggleSetting'])->name('api.notifications.toggle-setting');
         Route::post('notification-settings/toggle-all', [NotificationApiController::class, 'toggleAllCategory'])->name('api.notifications.toggle-all');
 
-                // Support Tickets
+        // Support Tickets
         Route::get('support/tickets', [SupportTicketApiController::class, 'index']);
         Route::post('support/tickets', [SupportTicketApiController::class, 'store'])->middleware('throttle:5,1');
         Route::get('support/tickets/{id}', [SupportTicketApiController::class, 'show']);
         Route::post('support/tickets/{id}/reply', [SupportTicketApiController::class, 'reply'])->middleware('throttle:30,1');
+        Route::post('support/tickets/{id}/close', [SupportTicketApiController::class, 'close']);
 
         // Education
         Route::get('courses', [EducationApiController::class, 'courses'])->name('api.courses.index');

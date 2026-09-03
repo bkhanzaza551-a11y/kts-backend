@@ -11,7 +11,7 @@ class SupportTicket extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'ticket_number', 'user_id', 'subject', 'description', 'status', 'priority', 'attachment'
+        'ticket_number', 'user_id', 'subject', 'description', 'status', 'priority', 'source', 'attachment'
     ];
 
     public function user()

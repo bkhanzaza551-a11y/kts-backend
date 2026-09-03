@@ -112,4 +112,22 @@ class SupportTicketApiController extends Controller
             'data' => $reply
         ]);
     }
+
+    public function close(Request $request, $id)
+    {
+        $ticket = SupportTicket::where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        if ($ticket->status === 'closed') {
+            return response()->json(['success' => false, 'message' => 'Ticket is already closed'], 400);
+        }
+
+        $ticket->update(['status' => 'closed']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ticket closed successfully'
+        ]);
+    }
 }
