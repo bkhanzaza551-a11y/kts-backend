@@ -22,6 +22,7 @@ class Mt5BotConfig extends Model
         'status',
         'mode',
         'auto_trade',
+        'lot_size',
         'take_profit_pips',
         'stop_loss_pips',
         'max_daily_trades',

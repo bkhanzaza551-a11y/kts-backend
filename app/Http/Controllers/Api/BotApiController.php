@@ -7,73 +7,75 @@ use App\Models\Mt5BotConfig;
 use App\Models\Mt5BotTrade;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class BotApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $query = Mt5BotConfig::select([
-            'id', 'created_by', 'name', 'description', 'status', 'mode', 'auto_trade',
+        $bot = Mt5BotConfig::select([
+            'id', 'name', 'description', 'status', 'mode', 'auto_trade',
+            'lot_size', 'take_profit_pips', 'stop_loss_pips',
+            'max_daily_trades', 'max_daily_loss',
             'balance', 'equity', 'total_profit', 'total_loss',
             'total_trades', 'winning_trades', 'losing_trades',
-            'last_connected_at', 'last_trade_at',
-        ]);
+            'last_connected_at', 'last_trade_at', 'error_message',
+        ])->first();
 
-        if (!$user->isSuperAdmin()) {
-            $query->where(function ($q) use ($user) {
-                $q->where('status', 'active')
-                  ->orWhere('created_by', $user->id);
-            });
+        if (!$bot) {
+            return response()->json([
+                'success' => true,
+                'data' => null,
+                'message' => 'No bot configured yet',
+            ]);
         }
 
-        $bots = $query->get();
-
-        return response()->json(['success' => true, 'data' => $bots]);
+        return response()->json(['success' => true, 'data' => $bot]);
     }
 
-    public function show(Request $request, $id): JsonResponse
+    public function show(Request $request): JsonResponse
     {
         $bot = Mt5BotConfig::select([
-            'id', 'created_by', 'name', 'description', 'status', 'mode', 'auto_trade',
-            'take_profit_pips', 'stop_loss_pips',
-            'max_daily_trades', 'max_daily_loss', 'balance', 'equity',
-            'total_profit', 'total_loss', 'total_trades', 'winning_trades',
-            'losing_trades', 'last_connected_at', 'last_trade_at', 'error_message',
-        ])->findOrFail($id);
+            'id', 'name', 'description', 'status', 'mode', 'auto_trade',
+            'lot_size', 'take_profit_pips', 'stop_loss_pips',
+            'max_daily_trades', 'max_daily_loss',
+            'balance', 'equity', 'total_profit', 'total_loss',
+            'total_trades', 'winning_trades', 'losing_trades',
+            'last_connected_at', 'last_trade_at', 'error_message',
+        ])->first();
 
-        $user = $request->user();
-        if (!$user->isSuperAdmin() && $bot->created_by !== $user->id && $bot->status !== 'active') {
+        if (!$bot) {
             return response()->json(['success' => false, 'message' => 'Bot not found'], 404);
         }
 
         return response()->json(['success' => true, 'data' => $bot]);
     }
 
-    public function trades(Request $request, $id): JsonResponse
+    public function trades(Request $request): JsonResponse
     {
-        $bot = Mt5BotConfig::findOrFail($id);
+        $bot = Mt5BotConfig::first();
 
-        $user = $request->user();
-        if (!$user->isSuperAdmin() && $bot->created_by !== $user->id && $bot->status !== 'active') {
-            return response()->json(['success' => false, 'message' => 'Bot not found'], 404);
+        if (!$bot) {
+            return response()->json(['success' => true, 'data' => []]);
         }
 
-        $trades = Mt5BotTrade::where('bot_config_id', $id)
+        $trades = Mt5BotTrade::where('bot_config_id', $bot->id)
             ->latest()
             ->paginate(20);
 
         return response()->json(['success' => true, 'data' => $trades]);
     }
 
-    public function toggle(Request $request, $id): JsonResponse
+    public function toggle(Request $request): JsonResponse
     {
-        $bot = Mt5BotConfig::findOrFail($id);
+        $bot = Mt5BotConfig::first();
+
+        if (!$bot) {
+            return response()->json(['success' => false, 'message' => 'Bot not found'], 404);
+        }
 
         $user = $request->user();
-        if (!$user->isSuperAdmin() && $bot->created_by !== $user->id) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        if (!$user->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Only super admin can toggle auto-trade'], 403);
         }
 
         $bot->auto_trade = !$bot->auto_trade;
@@ -85,5 +87,52 @@ class BotApiController extends Controller
             'data' => ['auto_trade' => $bot->auto_trade],
         ]);
     }
-}
 
+    public function update(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Only super admin can update bot'], 403);
+        }
+
+        $bot = Mt5BotConfig::first();
+
+        if (!$bot) {
+            return response()->json(['success' => false, 'message' => 'Bot not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'description' => 'sometimes|nullable|string|max:1000',
+            'status' => 'sometimes|in:active,inactive,error',
+            'mode' => 'sometimes|in:live,demo,backtest',
+            'auto_trade' => 'sometimes|boolean',
+            'lot_size' => 'sometimes|nullable|numeric|min:0.01|max:100',
+            'take_profit_pips' => 'sometimes|nullable|numeric|min:1|max:10000',
+            'stop_loss_pips' => 'sometimes|nullable|numeric|min:1|max:10000',
+            'max_daily_trades' => 'sometimes|nullable|integer|min:1|max:500',
+            'max_daily_loss' => 'sometimes|nullable|numeric|min:0|max:100000',
+            'balance' => 'sometimes|nullable|numeric|min:0',
+            'equity' => 'sometimes|nullable|numeric|min:0',
+        ]);
+
+        if (isset($validated['auto_trade'])) {
+            $validated['auto_trade'] = $request->boolean('auto_trade');
+        }
+
+        $bot->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Bot updated successfully',
+            'data' => $bot->select([
+                'id', 'name', 'description', 'status', 'mode', 'auto_trade',
+                'lot_size', 'take_profit_pips', 'stop_loss_pips',
+                'max_daily_trades', 'max_daily_loss',
+                'balance', 'equity', 'total_profit', 'total_loss',
+                'total_trades', 'winning_trades', 'losing_trades',
+                'last_connected_at', 'last_trade_at',
+            ])->first(),
+        ]);
+    }
+}

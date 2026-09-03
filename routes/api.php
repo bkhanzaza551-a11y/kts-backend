@@ -180,11 +180,12 @@ Route::prefix('v1')->group(function () {
         Route::get('courses/{id}', [EducationApiController::class, 'course'])->name('api.courses.show');
         Route::get('education/categories', [EducationApiController::class, 'categories'])->name('api.education.categories');
 
-        // MT5 Bots
+        // MT5 Bot (Single Bot)
         Route::get('bots', [BotApiController::class, 'index'])->name('api.bots.index');
-        Route::get('bots/{id}', [BotApiController::class, 'show'])->name('api.bots.show');
-        Route::get('bots/{id}/trades', [BotApiController::class, 'trades'])->name('api.bots.trades');
-        Route::post('bots/{id}/toggle', [BotApiController::class, 'toggle'])->name('api.bots.toggle');
+        Route::get('bot', [BotApiController::class, 'show'])->name('api.bots.show');
+        Route::get('bot/trades', [BotApiController::class, 'trades'])->name('api.bots.trades');
+        Route::post('bot/toggle', [BotApiController::class, 'toggle'])->name('api.bots.toggle');
+        Route::put('bot', [BotApiController::class, 'update'])->name('api.bots.update');
 
         // Payments
         Route::get('payments/history', [PaymentApiController::class, 'history'])->name('api.payments.history');
