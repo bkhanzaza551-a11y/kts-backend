@@ -529,7 +529,7 @@ PROMPT;
                 'user_id' => $userId,
                 'role' => 'user',
                 'message' => $userMessage,
-                'model' => $this->model,
+                'model_used' => $this->model,
                 'tokens_used' => 0,
                 'response_time_ms' => 0,
             ]);
@@ -538,7 +538,7 @@ PROMPT;
                 'user_id' => $userId,
                 'role' => 'assistant',
                 'message' => $assistantMessage,
-                'model' => $this->model,
+                'model_used' => $this->model,
                 'tokens_used' => $tokensUsed,
                 'response_time_ms' => $responseTime,
             ]);

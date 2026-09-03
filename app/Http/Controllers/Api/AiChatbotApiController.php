@@ -97,9 +97,9 @@ class AiChatbotApiController extends Controller
 
         \App\Models\AiChatLog::create([
             'user_id' => $user?->id,
-            'message' => '[REPORTED] Message ID: ' . $request->input('message_id'),
-            'response' => 'Reason: ' . $request->input('reason'),
-            'model' => 'report',
+            'role' => 'system',
+            'message' => '[REPORTED] Message ID: ' . $request->input('message_id') . ' | Reason: ' . $request->input('reason'),
+            'model_used' => 'report',
             'is_flagged' => true,
             'flag_reason' => $request->input('reason'),
         ]);

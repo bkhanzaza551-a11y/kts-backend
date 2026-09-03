@@ -19,6 +19,7 @@ class AiChatLog extends Model
         'tokens_used',
         'response_time_ms',
         'is_flagged',
+        'flag_reason',
     ];
 
     protected $casts = [
