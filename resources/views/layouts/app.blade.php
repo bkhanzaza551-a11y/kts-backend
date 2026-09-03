@@ -436,6 +436,13 @@
                 </a>
             </li>
             @endif
+            @if(auth()->user()->hasPermission('chat_view'))
+            <li class="nav-item">
+                <a href="{{ route('admin.support-chat.index') }}" class="nav-link {{ request()->routeIs('admin.support-chat*') ? 'active' : '' }}">
+                    <i class="bi bi-headset"></i> Support Chats
+                </a>
+            </li>
+            @endif
 
             <div class="my-2 px-3">
                 <small class="text-uppercase fw-semibold" style="font-size:0.68rem;letter-spacing:0.06em;color:var(--text-muted);">Finance</small>

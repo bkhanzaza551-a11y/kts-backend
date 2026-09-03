@@ -50,11 +50,12 @@ class AiChatbotApiController extends Controller
             'success' => $result['success'],
             'data' => [
                 'user_message' => $request->input('message'),
-                'response' => $result['message'] ?? $result['message'] ?? '',
+                'response' => $result['message'] ?? '',
                 'model' => $result['model'] ?? '',
                 'tokens_used' => $result['tokens_used'] ?? 0,
                 'response_time_ms' => $result['response_time_ms'] ?? 0,
                 'tools_used' => $result['tools_used'] ?? false,
+                'needs_human_support' => $result['needs_human_support'] ?? false,
                 'timestamp' => now()->toIso8601String(),
             ],
         ], $statusCode);

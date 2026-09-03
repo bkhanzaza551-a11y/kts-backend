@@ -238,6 +238,19 @@ PROMPT;
             ];
         }
 
+        // Check if user needs human support
+        if ($this->needsHumanSupport($userMessage)) {
+            return [
+                'success' => true,
+                'message' => $this->getHumanSupportResponse($userName),
+                'needs_human_support' => true,
+                'model' => $this->model,
+                'tokens_used' => 0,
+                'response_time_ms' => 0,
+                'tools_used' => false,
+            ];
+        }
+
         $messages = $this->buildMessages($userMessage, $conversationHistory, $userName);
         $tools = $this->areToolsEnabled() ? $this->toolService->getTools() : null;
 
@@ -571,5 +584,45 @@ PROMPT;
                 'today_conversations' => AiChatLog::where('role', 'user')->whereDate('created_at', today())->count(),
             ];
         });
+    }
+
+    private function needsHumanSupport(string $message): bool
+    {
+        $lower = strtolower(trim($message));
+
+        $patterns = [
+            'talk to human', 'speak to human', 'human agent', 'real person',
+            'talk to agent', 'speak to agent', 'connect me', 'connect to support',
+            'customer service', 'support team', 'contact support', 'contact team',
+            'help from team', 'help from human', 'need help from', 'talk to someone',
+            'speak to someone', 'kisi insaan se', 'human se baat', 'support se baat',
+            'agent se baat', 'kisi se baat', 'insaan se baat', 'real insaan',
+            'account issue', 'account problem', 'account not working', 'account blocked',
+            'payment issue', 'payment problem', 'payment failed', 'refund',
+            'cannot login', "can't login", 'login problem', 'login issue',
+            'withdrawal issue', 'withdrawal problem', 'deposit issue',
+            'not receiving', 'not getting', 'missing', 'lost',
+            'complaint', 'grievance', 'escalate', 'manager',
+            'supervisor', 'senior', 'higher authority',
+            'mujhe insaan se baat karni hai', 'human se baat karo', 'support se help',
+            'account mera kaam nahi kar raha', 'mera account nahi khul raha',
+            'payment nahi ja raha', 'paisa nahi aaya', 'withdrawal nahi mila',
+            'meri complaint hai', 'yeh galat hai', 'ye ghalat hai',
+            'bhai yaar insaan bhejo', 'koi banda bhejo', 'real person bhejo',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (str_contains($lower, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function getHumanSupportResponse(?string $userName): string
+    {
+        $name = $userName ? " {$userName}" : "";
+        return "Hello{$name}! 👋\n\nI understand you need help from our support team. I'll connect you with them right away.\n\n请点击 the button below to start a conversation with our support team. They will assist you personally.\n\n🔄 **Tap the button below to connect:**";
     }
 }

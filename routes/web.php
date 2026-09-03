@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\NotificationSettingController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\SupportChatController;
 use App\Http\Controllers\Admin\SignalAnalyticsController;
 use App\Http\Controllers\Admin\Mt5AnalyticsController;
 use Illuminate\Support\Facades\Route;
@@ -427,6 +428,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('permission:ai_chatbot_manage')->group(function () {
             Route::put('ai-chatbot/settings', [AiChatbotController::class, 'updateSettings'])->name('ai-chatbot.update-settings');
             Route::patch('ai-chatbot/chat-logs/{log}/toggle-flag', [AiChatbotController::class, 'toggleFlag'])->name('ai-chatbot.toggle-flag');
+        });
+
+        // Support Chat
+        Route::middleware('permission:chat_view')->group(function () {
+            Route::get('support-chat', [SupportChatController::class, 'index'])->name('admin.support-chat.index');
+            Route::get('support-chat/{ticket}', [SupportChatController::class, 'show'])->name('admin.support-chat.show');
+        });
+        Route::middleware('permission:chat_moderate')->group(function () {
+            Route::post('support-chat/{ticket}/reply', [SupportChatController::class, 'reply'])->name('admin.support-chat.reply');
+            Route::post('support-chat/{ticket}/close', [SupportChatController::class, 'close'])->name('admin.support-chat.close');
+            Route::post('support-chat/{ticket}/reopen', [SupportChatController::class, 'reopen'])->name('admin.support-chat.reopen');
         });
 
         // Notifications
