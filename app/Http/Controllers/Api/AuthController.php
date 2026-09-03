@@ -74,12 +74,11 @@ class AuthController extends Controller
                 'user' => $user->load('roles'),
                 'requires_email_verification' => true,
                 'email' => $user->email,
-                'otp' => $emailSent ? null : $otpRecord->otp,
             ],
         ];
 
         if (!$emailSent) {
-            $response['message'] = 'Registration successful. Email could not be sent. Use this OTP to verify: ' . $otpRecord->otp;
+            $response['message'] = 'Registration successful. Email could not be sent. Please use resend to get a new OTP.';
         }
 
         return response()->json($response, 201);
@@ -184,10 +183,8 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $sent ? 'OTP resent to your email.' : 'Email could not be sent. Use this OTP to verify: ' . $otpRecord->otp,
-            'data' => [
-                'otp' => $sent ? null : $otpRecord->otp,
-            ],
+            'message' => $sent ? 'OTP resent to your email.' : 'Email could not be sent. Please try again later.',
+            'data' => [],
         ]);
     }
 
@@ -515,7 +512,7 @@ class AuthController extends Controller
         }
 
         $resetToken = \Illuminate\Support\Str::random(60);
-        \Illuminate\Support\Facades\DB::table('password_resets')->updateOrInsert(
+        \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $user->email],
             ['token' => Hash::make($resetToken), 'created_at' => now()]
         );
@@ -560,7 +557,7 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid or expired reset token.'], 400);
         }
 
-        $resetRecord = \Illuminate\Support\Facades\DB::table('password_resets')
+        $resetRecord = \Illuminate\Support\Facades\DB::table('password_reset_tokens')
             ->where('email', $validated['email'])
             ->latest()
             ->first();
@@ -578,7 +575,7 @@ class AuthController extends Controller
         ]);
 
         $user->tokens()->delete();
-        \Illuminate\Support\Facades\DB::table('password_resets')->where('email', $validated['email'])->delete();
+        \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $validated['email'])->delete();
 
         ActivityLogger::log('reset_password', 'User', $user->id, 'Password successfully reset via API');
 

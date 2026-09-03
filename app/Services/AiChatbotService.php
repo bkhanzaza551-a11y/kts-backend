@@ -303,7 +303,7 @@ PROMPT;
                         $arguments = json_decode($toolCall['function']['arguments'], true) ?? [];
 
                         // Always enforce authenticated user_id (prevent IDOR from prompt injection)
-                        if (in_array($functionName, ['check_user_subscription', 'check_bot_status', 'check_email_log', 'check_user_profile'])) {
+                        if (in_array($functionName, ['check_user_subscription', 'check_bot_status', 'check_email_log', 'create_support_ticket'])) {
                             $arguments['user_id'] = $userId;
                         }
 
@@ -448,7 +448,7 @@ PROMPT;
         if (str_contains($lower, 'bot') || str_contains($lower, 'mt5') || str_contains($lower, 'auto trade')) {
             try {
                 $botConfigs = \DB::table('mt5_bot_configs')
-                    ->select('id', 'bot_name', 'symbol', 'status', 'lot_size', 'last_connected_at')
+                    ->select('id', 'name', 'status', 'mode', 'auto_trade', 'last_connected_at')
                     ->orderByDesc('created_at')
                     ->limit(5)
                     ->get();
@@ -456,7 +456,7 @@ PROMPT;
                 if ($botConfigs->count() > 0) {
                     $context = "MT5 BOT STATUS:\n";
                     foreach ($botConfigs as $bot) {
-                        $context .= "- {$bot->bot_name} ({$bot->symbol}) | Status: {$bot->status} | Lot: {$bot->lot_size}\n";
+                        $context .= "- {$bot->name} | Status: {$bot->status} | Mode: {$bot->mode} | Auto Trade: " . ($bot->auto_trade ? 'ON' : 'OFF') . "\n";
                     }
                     return $context;
                 }
@@ -562,10 +562,7 @@ PROMPT;
 
     private function cleanResponse(string $reply): string
     {
-        $reply = preg_replace('/<think>.*?<\/think>/s', '', $reply);
         $reply = preg_replace('/<think>[\s\S]*?<\/think>/s', '', $reply);
-        $reply = preg_replace('/<think>[\s\S]*?<\/think>/s', '', $reply);
-        $reply = preg_replace('/<think>[\s\S]*/', '', $reply);
         $reply = trim($reply);
         if (empty($reply)) {
             $reply = "I'm here to help! How can I assist you today?";

@@ -43,12 +43,22 @@ class BotApiController extends Controller
             'losing_trades', 'last_connected_at', 'last_trade_at', 'error_message',
         ])->findOrFail($id);
 
+        $user = $request->user();
+        if (!$user->isSuperAdmin() && $bot->created_by !== $user->id && $bot->status !== 'active') {
+            return response()->json(['success' => false, 'message' => 'Bot not found'], 404);
+        }
+
         return response()->json(['success' => true, 'data' => $bot]);
     }
 
     public function trades(Request $request, $id): JsonResponse
     {
         $bot = Mt5BotConfig::findOrFail($id);
+
+        $user = $request->user();
+        if (!$user->isSuperAdmin() && $bot->created_by !== $user->id && $bot->status !== 'active') {
+            return response()->json(['success' => false, 'message' => 'Bot not found'], 404);
+        }
 
         $trades = Mt5BotTrade::where('bot_config_id', $id)
             ->latest()
@@ -60,6 +70,11 @@ class BotApiController extends Controller
     public function toggle(Request $request, $id): JsonResponse
     {
         $bot = Mt5BotConfig::findOrFail($id);
+
+        $user = $request->user();
+        if (!$user->isSuperAdmin() && $bot->created_by !== $user->id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
 
         $bot->auto_trade = !$bot->auto_trade;
         $bot->save();

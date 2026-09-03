@@ -297,6 +297,7 @@ class AiAgentToolService
     private function createSupportTicket(array $data, ?int $agentUserId): array
     {
         $ticketId = DB::table('support_tickets')->insertGetId([
+            'ticket_number' => 'TKT-' . strtoupper(\Illuminate\Support\Str::random(8)),
             'user_id' => $data['user_id'],
             'subject' => $data['subject'],
             'description' => $data['description'],

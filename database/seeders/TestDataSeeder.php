@@ -101,7 +101,6 @@ class TestDataSeeder extends Seeder
             'description' => 'Learn the fundamentals of trading.',
             'difficulty' => 'beginner',
             'estimated_hours' => 5,
-            'is_free' => true,
             'is_published' => true,
             'is_featured' => true,
             'sort_order' => 1,
@@ -115,8 +114,6 @@ class TestDataSeeder extends Seeder
             'description' => 'Master candlestick patterns, indicators, and chart analysis.',
             'difficulty' => 'advanced',
             'estimated_hours' => 12,
-            'is_free' => false,
-            'price' => 49.99,
             'is_published' => true,
             'sort_order' => 2,
         ]);
