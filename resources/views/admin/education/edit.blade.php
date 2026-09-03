@@ -48,17 +48,7 @@
                         </div>
                     </div>
                     <div class="row g-3 mt-1">
-                        <div class="col-md-4">
-                            <label class="form-label text-secondary">Price ($)</label>
-                            <input type="number" name="price" class="form-control @error('price') is-invalid @enderror" value="{{ old('price', $course->price) }}" min="0" step="0.01" id="priceInput">
-                            @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="col-md-8 d-flex align-items-end gap-3">
-                            <div class="form-check form-switch">
-                                <input type="hidden" name="is_free" value="0">
-                                <input type="checkbox" name="is_free" class="form-check-input" id="isFree" value="1" {{ old('is_free', $course->is_free) ? 'checked' : '' }}>
-                                <label class="form-check-label text-secondary" for="isFree">Free Course</label>
-                            </div>
+                        <div class="col-md-12 d-flex align-items-end gap-3">
                             <div class="form-check form-switch">
                                 <input type="hidden" name="is_featured" value="0">
                                 <input type="checkbox" name="is_featured" class="form-check-input" id="isFeatured" value="1" {{ old('is_featured', $course->is_featured) ? 'checked' : '' }}>
@@ -90,16 +80,9 @@
 </form>
 @push('scripts')
 <script>
-function togglePrice() {
-    const isFree = document.getElementById('isFree');
-    const priceInput = document.getElementById('priceInput');
-    if (isFree && priceInput) {
-        priceInput.disabled = isFree.checked;
-        if (isFree.checked) priceInput.value = '0';
-    }
-}
-document.getElementById('isFree')?.addEventListener('change', togglePrice);
-togglePrice();
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-bs-toggle]').forEach(el => new bootstrap.Popover(el));
+});
 </script>
 @endpush
 @endsection

@@ -36,7 +36,6 @@ class LessonController extends Controller
             'video_url' => 'nullable|string|max:255',
             'duration_minutes' => 'nullable|integer|min:0|max:10000',
             'sort_order' => 'nullable|integer|min:0',
-            'is_free' => 'boolean',
             'is_published' => 'boolean',
         ]);
 
@@ -45,7 +44,6 @@ class LessonController extends Controller
         }
 
         $validated['course_id'] = $course->id;
-        $validated['is_free'] = $request->boolean('is_free');
         $validated['is_published'] = $request->boolean('is_published');
 
         $lesson = DB::transaction(function () use ($validated, $course) {
@@ -98,7 +96,6 @@ class LessonController extends Controller
             'video_url' => 'nullable|string|max:255',
             'duration_minutes' => 'nullable|integer|min:0|max:10000',
             'sort_order' => 'nullable|integer|min:0',
-            'is_free' => 'boolean',
             'is_published' => 'boolean',
         ]);
 
@@ -106,10 +103,9 @@ class LessonController extends Controller
             return back()->withErrors(['video_url' => 'Please enter a valid video URL (YouTube, Vimeo, or standard URL).'])->withInput();
         }
 
-        $validated['is_free'] = $request->boolean('is_free');
         $validated['is_published'] = $request->boolean('is_published');
 
-        $oldValues = $lesson->only(['title', 'description', 'content', 'video_url', 'duration_minutes', 'sort_order', 'is_free', 'is_published']);
+        $oldValues = $lesson->only(['title', 'description', 'content', 'video_url', 'duration_minutes', 'sort_order', 'is_published']);
         $lesson->update($validated);
         $newValues = $lesson->only(array_keys($oldValues));
 
@@ -126,7 +122,7 @@ class LessonController extends Controller
         }
 
         $title = $lesson->title;
-        $oldValues = $lesson->only(['title', 'sort_order', 'is_free', 'is_published']);
+        $oldValues = $lesson->only(['title', 'sort_order', 'is_published']);
         $lesson->delete();
 
         ActivityLogger::log('delete', 'Lesson', $lesson->id, "Deleted lesson: {$title} from course: {$course->title}", $oldValues, null);

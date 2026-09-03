@@ -21,7 +21,7 @@
                         <td class="ps-3 text-secondary">{{ $lesson->sort_order }}</td>
                         <td><a href="{{ route('admin.courses.lessons.show', [$course, $lesson]) }}" class="text-dark text-decoration-none fw-semibold">{{ $lesson->title }}</a></td>
                         <td class="text-secondary">{{ $lesson->duration_minutes ? $lesson->duration_minutes . 'm' : '-' }}</td>
-                        <td>@if($lesson->is_free)<span class="badge bg-success">Free</span>@else<span class="badge bg-info">Paid</span>@endif</td>
+                        <td><span class="badge bg-success">Free</span></td>
                         <td>@if($lesson->is_published)<span class="badge bg-success">Published</span>@else<span class="badge bg-secondary">Draft</span>@endif</td>
                         <td class="text-secondary">{{ number_format($lesson->views_count) }}</td>
                         <td class="pe-3"><div class="d-flex gap-1">

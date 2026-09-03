@@ -19,14 +19,12 @@ class Lesson extends Model
         'video_url',
         'duration_minutes',
         'sort_order',
-        'is_free',
         'is_published',
     ];
 
     protected $casts = [
         'duration_minutes' => 'integer',
         'sort_order' => 'integer',
-        'is_free' => 'boolean',
         'is_published' => 'boolean',
         'views_count' => 'integer',
     ];

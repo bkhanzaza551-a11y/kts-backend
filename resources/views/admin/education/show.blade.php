@@ -51,7 +51,6 @@
                             <span class="text-secondary me-2">{{ $i + 1 }}.</span>
                             <a href="{{ route('admin.courses.lessons.show', [$course, $lesson]) }}" class="text-dark text-decoration-none">{{ $lesson->title }}</a>
                             @if(!$lesson->is_published)<span class="badge bg-secondary ms-1">Draft</span>@endif
-                            @if($lesson->is_free)<span class="badge bg-success ms-1">Free</span>@endif
                         </div>
                         <div class="d-flex gap-2 align-items-center">
                             <small class="text-secondary">{{ $lesson->duration_minutes ? $lesson->duration_minutes . 'm' : '-' }}</small>
@@ -75,7 +74,7 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-6"><small class="text-secondary d-block">Status</small>@if($course->is_published)<span class="badge bg-success">Published</span>@else<span class="badge bg-secondary">Draft</span>@endif</div>
-                    <div class="col-6"><small class="text-secondary d-block">Type</small>@if($course->is_free)<span class="badge bg-success">Free</span>@else<span class="badge bg-info">${{ number_format($course->price, 2) }}</span>@endif</div>
+                    <div class="col-6"><small class="text-secondary d-block">Type</small><span class="badge bg-success">Free</span></div>
                     <div class="col-6"><small class="text-secondary d-block">Difficulty</small>@php $dc=match($course->difficulty){'beginner'=>'bg-success','intermediate'=>'bg-warning text-dark','advanced'=>'bg-danger',default=>'bg-secondary'};@endphp<span class="badge {{ $dc }}">{{ ucfirst($course->difficulty) }}</span></div>
                     <div class="col-6"><small class="text-secondary d-block">Featured</small>@if($course->is_featured)<span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i></span>@else<span class="text-secondary">No</span>@endif</div>
                     <div class="col-6"><small class="text-secondary d-block">Lessons</small><span class="text-dark">{{ $lessonsCount }} ({{ $publishedLessonsCount }} published)</span></div>

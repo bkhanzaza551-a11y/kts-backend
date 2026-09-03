@@ -41,10 +41,6 @@ class EducationController extends Controller
             $query->where('is_published', $request->boolean('is_published'));
         }
 
-        if ($request->has('is_free') && $request->input('is_free') !== '') {
-            $query->where('is_free', $request->boolean('is_free'));
-        }
-
         if ($request->has('is_featured') && $request->input('is_featured') !== '') {
             $query->where('is_featured', $request->boolean('is_featured'));
         }
@@ -75,7 +71,6 @@ class EducationController extends Controller
                     SUM(CASE WHEN is_published = 1 THEN 1 ELSE 0 END) as published,
                     SUM(CASE WHEN is_published = 0 THEN 1 ELSE 0 END) as draft,
                     SUM(CASE WHEN is_featured = 1 THEN 1 ELSE 0 END) as featured,
-                    SUM(CASE WHEN is_free = 1 THEN 1 ELSE 0 END) as free,
                     COALESCE(SUM(views_count), 0) as total_views,
                     COALESCE(SUM(enrollments_count), 0) as total_enrollments
                 ")->first();
@@ -87,7 +82,6 @@ class EducationController extends Controller
                 'published' => (int) $row->published,
                 'draft' => (int) $row->draft,
                 'featured' => (int) $row->featured,
-                'free' => (int) $row->free,
                 'total_views' => (int) $row->total_views,
                 'total_enrollments' => (int) $row->total_enrollments,
                 'total_lessons' => $lessonsCount,
@@ -111,8 +105,6 @@ class EducationController extends Controller
             'category_id' => 'required|exists:education_categories,id',
             'difficulty' => 'required|in:beginner,intermediate,advanced',
             'estimated_hours' => 'nullable|integer|min:0|max:10000',
-            'is_free' => 'boolean',
-            'price' => 'required_if:is_free,0|nullable|numeric|min:0.01|max:99999.99',
             'is_featured' => 'boolean',
             'is_published' => 'boolean',
         ]);
@@ -123,10 +115,8 @@ class EducationController extends Controller
         }
 
         $validated['created_by'] = auth()->id();
-        $validated['is_free'] = $request->boolean('is_free');
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_published'] = $request->boolean('is_published');
-        $validated['price'] = $validated['is_free'] ? 0 : $validated['price'];
 
         if ($validated['is_published']) {
             $validated['published_at'] = now();
@@ -164,16 +154,12 @@ class EducationController extends Controller
             'category_id' => 'required|exists:education_categories,id',
             'difficulty' => 'required|in:beginner,intermediate,advanced',
             'estimated_hours' => 'nullable|integer|min:0|max:10000',
-            'is_free' => 'boolean',
-            'price' => 'required_if:is_free,0|nullable|numeric|min:0.01|max:99999.99',
             'is_featured' => 'boolean',
             'is_published' => 'boolean',
         ]);
 
-        $validated['is_free'] = $request->boolean('is_free');
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['is_published'] = $request->boolean('is_published');
-        $validated['price'] = $validated['is_free'] ? 0 : $validated['price'];
 
         $category = EducationCategory::find($validated['category_id']);
         if (!$category || !$category->is_active) {
@@ -186,7 +172,7 @@ class EducationController extends Controller
             $validated['published_at'] = null;
         }
 
-        $oldValues = $course->only(['title', 'description', 'category_id', 'difficulty', 'estimated_hours', 'is_free', 'price', 'is_featured', 'is_published']);
+        $oldValues = $course->only(['title', 'description', 'category_id', 'difficulty', 'estimated_hours', 'is_featured', 'is_published']);
         $course->update($validated);
         $newValues = $course->only(array_keys($oldValues));
 
@@ -199,7 +185,7 @@ class EducationController extends Controller
     public function destroy(Course $course)
     {
         $title = $course->title;
-        $oldValues = $course->only(['title', 'difficulty', 'is_free', 'price', 'is_published']);
+        $oldValues = $course->only(['title', 'difficulty', 'is_published']);
 
         DB::transaction(function () use ($course) {
             foreach ($course->lessons()->withTrashed()->get() as $lesson) {

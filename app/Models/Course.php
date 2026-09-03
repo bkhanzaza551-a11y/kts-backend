@@ -22,8 +22,6 @@ class Course extends Model
         'thumbnail',
         'difficulty',
         'estimated_hours',
-        'is_free',
-        'price',
         'is_featured',
         'is_published',
         'published_at',
@@ -32,8 +30,6 @@ class Course extends Model
 
     protected $casts = [
         'estimated_hours' => 'integer',
-        'is_free' => 'boolean',
-        'price' => 'decimal:2',
         'is_featured' => 'boolean',
         'is_published' => 'boolean',
         'published_at' => 'datetime',

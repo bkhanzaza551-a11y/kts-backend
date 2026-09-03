@@ -50,7 +50,7 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-6"><small class="text-secondary d-block">Status</small>@if($lesson->is_published)<span class="badge bg-success">Published</span>@else<span class="badge bg-secondary">Draft</span>@endif</div>
-                    <div class="col-6"><small class="text-secondary d-block">Type</small>@if($lesson->is_free)<span class="badge bg-success">Free</span>@else<span class="badge bg-info">Paid</span>@endif</div>
+                    <div class="col-6"><small class="text-secondary d-block">Type</small><span class="badge bg-success">Free</span></div>
                     <div class="col-6"><small class="text-secondary d-block">Duration</small><span class="text-dark">{{ $lesson->duration_minutes ? $lesson->duration_minutes . ' min' : 'N/A' }}</span></div>
                     <div class="col-6"><small class="text-secondary d-block">Sort</small><span class="text-dark">#{{ $lesson->sort_order }}</span></div>
                     <div class="col-6"><small class="text-secondary d-block">Views</small><span class="text-dark">{{ number_format($lesson->views_count) }}</span></div>

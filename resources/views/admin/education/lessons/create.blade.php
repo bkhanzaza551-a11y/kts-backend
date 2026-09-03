@@ -25,7 +25,6 @@
         </div>
         <div class="col-lg-4">
             <div class="card mb-4"><div class="card-body">
-                <div class="form-check form-switch mb-2"><input type="hidden" name="is_free" value="0"><input type="checkbox" name="is_free" class="form-check-input" id="isFree" value="1" {{ old('is_free') ? 'checked' : '' }}><label class="form-check-label text-secondary" for="isFree">Free Lesson</label></div>
                 <div class="form-check form-switch"><input type="hidden" name="is_published" value="0"><input type="checkbox" name="is_published" class="form-check-input" id="isPublished" value="1" {{ old('is_published', true) ? 'checked' : '' }}><label class="form-check-label text-secondary" for="isPublished">Published</label></div>
             </div></div>
             <div class="d-grid"><button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg me-1"></i>Create Lesson</button></div>

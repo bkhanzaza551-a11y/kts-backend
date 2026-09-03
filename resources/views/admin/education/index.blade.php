@@ -75,17 +75,9 @@
                     <option value="0" {{ request('is_published') === '0' ? 'selected' : '' }}>Draft</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Type</label>
-                <select name="is_free" class="form-select">
-                    <option value="">All</option>
-                    <option value="1" {{ request('is_free') === '1' ? 'selected' : '' }}>Free</option>
-                    <option value="0" {{ request('is_free') === '0' ? 'selected' : '' }}>Paid</option>
-                </select>
-            </div>
             <div class="col-md-2 d-grid"><button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button></div>
         </form>
-        @if(request()->hasAny(['search','category_id','difficulty','is_published','is_free']))
+        @if(request()->hasAny(['search','category_id','difficulty','is_published']))
         <div class="mt-2"><a href="{{ route('admin.courses.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg me-1"></i>Clear</a></div>
         @endif
     </div>
@@ -128,7 +120,7 @@
                             <span class="badge {{ $dc }}">{{ ucfirst($course->difficulty) }}</span>
                         </td>
                         <td><span class="text-dark">{{ $course->lessons_count }}</span></td>
-                        <td>@if($course->is_free)<span class="badge bg-success">Free</span>@else<span class="badge bg-info">${{ number_format($course->price, 2) }}</span>@endif</td>
+                        <td><span class="badge bg-success">Free</span></td>
                         <td class="text-secondary small">{{ number_format($course->views_count) }}</td>
                         <td>@if($course->is_published)<span class="badge bg-success">Published</span>@else<span class="badge bg-secondary">Draft</span>@endif</td>
                         <td class="pe-3">
