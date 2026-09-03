@@ -37,6 +37,11 @@ return [
 
     'fcm' => [
         'server_key' => env('FCM_SERVER_KEY'),
+        'project_id' => env('FCM_PROJECT_ID', 'laptopharbor-2d756'),
+    ],
+
+    'groq' => [
+        'key' => env('GROQ_API_KEY', ''),
     ],
 
 ];

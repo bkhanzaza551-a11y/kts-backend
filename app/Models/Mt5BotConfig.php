@@ -42,6 +42,9 @@ class Mt5BotConfig extends Model
     protected $hidden = [
         'api_key',
         'api_secret',
+        'mt5_account_number',
+        'mt5_server',
+        'bot_file_path',
     ];
 
     protected $casts = [

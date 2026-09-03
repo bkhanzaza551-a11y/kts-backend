@@ -119,8 +119,8 @@ class SupportTicketApiController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        if ($ticket->status === 'closed') {
-            return response()->json(['success' => false, 'message' => 'Ticket is already closed'], 400);
+        if (in_array($ticket->status, ['closed', 'resolved'])) {
+            return response()->json(['success' => false, 'message' => 'Ticket is already ' . $ticket->status], 400);
         }
 
         $ticket->update(['status' => 'closed']);

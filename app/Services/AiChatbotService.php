@@ -36,7 +36,7 @@ class AiChatbotService
 
     private function loadSettings(): void
     {
-        $this->groqApiKey = AiChatbotSetting::getValue('groq_api_key', '') ?: env('GROQ_API_KEY', '');
+        $this->groqApiKey = AiChatbotSetting::getValue('groq_api_key', '') ?: config('services.groq.key', '');
         $this->model = AiChatbotSetting::getValue('model', 'qwen/qwen3.6-27b');
         $this->maxTokens = (int) AiChatbotSetting::getValue('max_tokens', 2048);
         $this->temperature = (float) AiChatbotSetting::getValue('temperature', 0.7);
@@ -399,7 +399,9 @@ PROMPT;
             $cacheKey = 'ai_context_signals_' . date('YmdHi');
             $data = Cache::remember($cacheKey, 60, function () {
                 $activeSignals = Signal::where('status', 'active')
-                    ->where('result', 'pending')
+                    ->where(function ($q) {
+                        $q->where('result', 'pending')->orWhereNull('result');
+                    })
                     ->orderByDesc('published_at')
                     ->limit(10)
                     ->get(['id', 'symbol', 'direction', 'entry_price', 'take_profit', 'stop_loss', 'status', 'result', 'published_at']);
@@ -511,11 +513,12 @@ PROMPT;
     private function recordAbuse(int $userId): bool
     {
         try {
-            $block = \DB::table('ai_chat_blocks')->firstOrCreate(
+            \DB::table('ai_chat_blocks')->updateOrInsert(
                 ['user_id' => $userId],
-                ['abuse_count' => 0]
+                ['abuse_count' => 0, 'created_at' => now()]
             );
 
+            $block = \DB::table('ai_chat_blocks')->where('user_id', $userId)->first();
             $newCount = $block->abuse_count + 1;
 
             if ($newCount >= 2) {

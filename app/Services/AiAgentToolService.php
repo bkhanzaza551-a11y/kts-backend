@@ -396,10 +396,11 @@ class AiAgentToolService
     private function sendResetPasswordEmail(User $user): void
     {
         $token = bin2hex(random_bytes(32));
+        $hashedToken = \Illuminate\Support\Hash::make($token);
         DB::table('password_reset_tokens')->where('email', $user->email)->delete();
         DB::table('password_reset_tokens')->insert([
             'email' => $user->email,
-            'token' => $token,
+            'token' => $hashedToken,
             'created_at' => now(),
         ]);
 

@@ -132,8 +132,8 @@ Route::prefix('v1')->group(function () {
 
         // Chat - Rooms & Messages
         Route::get('chat/rooms', [ChatApiController::class, 'rooms'])->name('api.chat.rooms');
-        Route::get('chat/rooms/{room}/messages', [ChatApiController::class, 'messages'])->name('api.chat.messages');
-        Route::post('chat/rooms/{room}/messages', [ChatApiController::class, 'send'])->middleware('throttle:30,1')->name('api.chat.send');
+        Route::get('chat/rooms/{room:slug}/messages', [ChatApiController::class, 'messages'])->name('api.chat.messages');
+        Route::post('chat/rooms/{room:slug}/messages', [ChatApiController::class, 'send'])->middleware('throttle:30,1')->name('api.chat.send');
         Route::post('chat/messages/{id}/report', [ChatApiController::class, 'reportMessage'])->name('api.chat.messages.report');
         Route::post('chat/users/{id}/block', [ChatApiController::class, 'blockUser'])->name('api.chat.users.block');
         Route::get('chat/rooms/{room}/pinned', [ChatApiController::class, 'pinnedMessages'])->name('api.chat.pinned');

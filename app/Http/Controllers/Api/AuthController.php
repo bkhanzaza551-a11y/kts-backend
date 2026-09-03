@@ -434,6 +434,13 @@ class AuthController extends Controller
 
         $hasSecurityCode = AdminSecurityCode::where('user_id', $user->id)->where('is_active', true)->exists();
 
+        if ($user->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your account is ' . $user->status . '. Please contact support.',
+            ], 403);
+        }
+
         ActivityLogger::log('verify_otp', 'User', $user->id, 'OTP verified via API');
 
         if ($hasSecurityCode) {

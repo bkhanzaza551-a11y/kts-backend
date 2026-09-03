@@ -59,7 +59,7 @@ class ChatMessage extends Model
 
     public function getFilteredMessageAttribute(): string
     {
-        $words = Cache::remember('active_restricted_words', 300, function () {
+        $words = Cache::remember('active_restricted_words', 600, function () {
             return ChatRestrictedWord::where('is_active', true)->get();
         });
 

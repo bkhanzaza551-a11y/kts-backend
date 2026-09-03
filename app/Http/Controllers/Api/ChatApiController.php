@@ -306,11 +306,22 @@ class ChatApiController extends Controller
         $user = $request->user();
         $message = ChatMessage::findOrFail($id);
 
+        $recentReport = \DB::table('activity_logs')
+            ->where('subject_type', 'ChatMessage')
+            ->where('subject_id', $message->id)
+            ->where('description', 'LIKE', "%User {$user->id} reported%")
+            ->where('created_at', '>', now()->subMinutes(5))
+            ->exists();
+
+        if ($recentReport) {
+            return response()->json(['success' => false, 'message' => 'You have already reported this message recently.'], 429);
+        }
+
         ActivityLogger::log(
             'report_chat_message',
             'ChatMessage',
             $message->id,
-            "User {$user->name} reported message #{$message->id} by user #{$message->user_id}. Reason: " . ($validated['reason'] ?? 'Inappropriate content')
+            "User {$user->id} reported message #{$message->id} by user #{$message->user_id}. Reason: " . ($validated['reason'] ?? 'Inappropriate content')
         );
 
         return response()->json([

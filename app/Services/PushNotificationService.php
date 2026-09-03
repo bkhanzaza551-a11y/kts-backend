@@ -109,7 +109,7 @@ class PushNotificationService
 
     private static function sendViaV1(array $tokens, string $title, string $body, array $data, string $accessToken): int
     {
-        $projectId = env('FCM_PROJECT_ID', 'laptopharbor-2d756');
+        $projectId = config('services.fcm.project_id', 'laptopharbor-2d756');
         $sent = 0;
 
         foreach ($tokens as $token) {
