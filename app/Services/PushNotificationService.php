@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class PushNotificationService
 {
     private static ?string $serverKey = null;
+    private static ?string $serviceAccountPath = null;
 
     private static function getServerKey(): ?string
     {
@@ -19,14 +20,56 @@ class PushNotificationService
         return self::$serverKey;
     }
 
-    public static function sendToAll(string $title, string $body, array $data = []): int
+    private static function getServiceAccountPath(): ?string
     {
-        $serverKey = self::getServerKey();
-        if (empty($serverKey)) {
-            Log::warning('FCM server key not configured. Push notification skipped.');
-            return 0;
+        if (self::$serviceAccountPath !== null) {
+            return self::$serviceAccountPath;
+        }
+        self::$serviceAccountPath = env('FCM_SERVICE_ACCOUNT_PATH');
+        return self::$serviceAccountPath;
+    }
+
+    private static function getAccessToken(): ?string
+    {
+        $serviceAccountPath = self::getServiceAccountPath();
+        if (empty($serviceAccountPath) || !file_exists($serviceAccountPath)) {
+            return null;
         }
 
+        try {
+            $serviceAccount = json_decode(file_get_contents($serviceAccountPath), true);
+            $now = time();
+
+            $header = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+            $payload = base64_encode(json_encode([
+                'iss' => $serviceAccount['client_email'],
+                'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+                'aud' => 'https://oauth2.googleapis.com/token',
+                'iat' => $now,
+                'exp' => $now + 3600,
+            ]));
+
+            $data = "$header.$payload";
+            openssl_sign($data, $signature, $serviceAccount['private_key'], 'SHA256');
+            $jwt = "$data." . base64_encode($signature);
+
+            $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $jwt,
+            ]);
+
+            if ($response->successful()) {
+                return $response->json('access_token');
+            }
+        } catch (\Exception $e) {
+            Log::error('FCM V1 access token error: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    public static function sendToAll(string $title, string $body, array $data = []): int
+    {
         $tokens = UserDevice::whereNotNull('fcm_token')
             ->where('fcm_token', '!=', '')
             ->pluck('fcm_token')
@@ -36,6 +79,71 @@ class PushNotificationService
             return 0;
         }
 
+        // Try V1 API first (if service account exists)
+        $accessToken = self::getAccessToken();
+        if ($accessToken) {
+            return self::sendViaV1($tokens, $title, $body, $data, $accessToken);
+        }
+
+        // Fallback to Legacy API
+        $serverKey = self::getServerKey();
+        if (empty($serverKey)) {
+            Log::warning('FCM: No server key or service account configured. Push notification skipped.');
+            return 0;
+        }
+
+        return self::sendViaLegacy($tokens, $title, $body, $data, $serverKey);
+    }
+
+    private static function sendViaV1(array $tokens, string $title, string $body, array $data, string $accessToken): int
+    {
+        $projectId = env('FCM_PROJECT_ID', 'laptopharbor-2d756');
+        $sent = 0;
+
+        foreach ($tokens as $token) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $accessToken,
+                    'Content-Type' => 'application/json',
+                ])->timeout(10)->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", [
+                    'message' => [
+                        'token' => $token,
+                        'notification' => [
+                            'title' => $title,
+                            'body' => $body,
+                        ],
+                        'data' => array_merge($data, [
+                            'title' => $title,
+                            'body' => $body,
+                        ]),
+                        'android' => [
+                            'priority' => 'high',
+                            'notification' => [
+                                'channel_id' => 'kts_signals',
+                                'sound' => 'default',
+                            ],
+                        ],
+                    ],
+                ]);
+
+                if ($response->successful()) {
+                    $sent++;
+                } else {
+                    $error = $response->json('error.message', 'Unknown');
+                    if (str_contains($error, 'UNREGISTERED') || str_contains($error, 'INVALID')) {
+                        UserDevice::where('fcm_token', $token)->delete();
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('FCM V1 push failed: ' . $e->getMessage());
+            }
+        }
+
+        return $sent;
+    }
+
+    private static function sendViaLegacy(array $tokens, string $title, string $body, array $data, string $serverKey): int
+    {
         $sent = 0;
         $chunks = array_chunk($tokens, 500);
 
@@ -63,7 +171,6 @@ class PushNotificationService
                     $result = $response->json();
                     $sent += $result['success'] ?? 0;
 
-                    // Remove invalid tokens
                     if (isset($result['results'])) {
                         foreach ($result['results'] as $i => $r) {
                             if (isset($r['error']) && in_array($r['error'], ['NotRegistered', 'InvalidRegistration'])) {
@@ -73,7 +180,7 @@ class PushNotificationService
                     }
                 }
             } catch (\Exception $e) {
-                Log::error('FCM push failed: ' . $e->getMessage());
+                Log::error('FCM Legacy push failed: ' . $e->getMessage());
             }
         }
 
@@ -82,11 +189,6 @@ class PushNotificationService
 
     public static function sendToUser(int $userId, string $title, string $body, array $data = []): int
     {
-        $serverKey = self::getServerKey();
-        if (empty($serverKey)) {
-            return 0;
-        }
-
         $tokens = UserDevice::where('user_id', $userId)
             ->whereNotNull('fcm_token')
             ->where('fcm_token', '!=', '')
@@ -97,35 +199,16 @@ class PushNotificationService
             return 0;
         }
 
-        $sent = 0;
-
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'key=' . $serverKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(10)->post('https://fcm.googleapis.com/fcm/send', [
-                'registration_ids' => $tokens,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $body,
-                    'sound' => 'default',
-                    'badge' => 1,
-                ],
-                'data' => array_merge($data, [
-                    'title' => $title,
-                    'body' => $body,
-                ]),
-                'priority' => 'high',
-            ]);
-
-            if ($response->successful()) {
-                $result = $response->json();
-                $sent = $result['success'] ?? 0;
-            }
-        } catch (\Exception $e) {
-            Log::error('FCM push to user failed: ' . $e->getMessage());
+        $accessToken = self::getAccessToken();
+        if ($accessToken) {
+            return self::sendViaV1($tokens, $title, $body, $data, $accessToken);
         }
 
-        return $sent;
+        $serverKey = self::getServerKey();
+        if (empty($serverKey)) {
+            return 0;
+        }
+
+        return self::sendViaLegacy($tokens, $title, $body, $data, $serverKey);
     }
 }
