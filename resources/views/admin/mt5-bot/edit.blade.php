@@ -108,6 +108,61 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card mb-4">
+                <div class="card-header"><h6 class="mb-0">Purchase & Demo Settings</h6></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label text-secondary">WhatsApp Number <span class="text-secondary">(for purchase enquiries)</span></label>
+                            <input type="text" name="whatsapp_number" class="form-control @error('whatsapp_number') is-invalid @enderror" value="{{ old('whatsapp_number', $bot->whatsapp_number ?? '+923371244640') }}" placeholder="+923371244640" maxlength="20">
+                            @error('whatsapp_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary">Base Balance (USDT) <span class="text-secondary">(for lot calc)</span></label>
+                            <input type="number" name="base_balance" class="form-control @error('base_balance') is-invalid @enderror" value="{{ old('base_balance', $bot->base_balance ?? 100) }}" min="1" max="1000000" step="0.01">
+                            @error('base_balance')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary">Base Lot Size <span class="text-secondary">(for lot calc)</span></label>
+                            <input type="number" name="base_lot_size" class="form-control @error('base_lot_size') is-invalid @enderror" value="{{ old('base_lot_size', $bot->base_lot_size ?? 0.1) }}" min="0.01" max="100" step="0.01">
+                            @error('base_lot_size')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <hr class="border-secondary mt-3 mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary">Demo Server <span class="text-secondary">(optional)</span></label>
+                            <input type="text" name="demo_server" class="form-control @error('demo_server') is-invalid @enderror" value="{{ old('demo_server', $bot->demo_server) }}" maxlength="100" placeholder="e.g. Exness-MT5">
+                            @error('demo_server')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary">Demo Account Number <span class="text-secondary">(optional)</span></label>
+                            <input type="text" name="demo_account" class="form-control @error('demo_account') is-invalid @enderror" value="{{ old('demo_account', $bot->demo_account) }}" maxlength="50" placeholder="e.g. 12345678">
+                            @error('demo_account')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary">Demo Email <span class="text-secondary">(optional)</span></label>
+                            <input type="email" name="demo_email" class="form-control @error('demo_email') is-invalid @enderror" value="{{ old('demo_email', $bot->demo_email) }}" maxlength="100" placeholder="demo@exness.com">
+                            @error('demo_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary">Demo Phone <span class="text-secondary">(optional)</span></label>
+                            <input type="text" name="demo_phone" class="form-control @error('demo_phone') is-invalid @enderror" value="{{ old('demo_phone', $bot->demo_phone) }}" maxlength="20" placeholder="+923001234567">
+                            @error('demo_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary">Demo Deposit ($)</label>
+                            <input type="number" name="demo_deposit" class="form-control @error('demo_deposit') is-invalid @enderror" value="{{ old('demo_deposit', $bot->demo_deposit ?? 10000) }}" min="0" max="100000000" step="0.01">
+                            @error('demo_deposit')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-lg-4">
             <div class="card mb-4">

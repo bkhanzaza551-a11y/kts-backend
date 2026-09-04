@@ -91,6 +91,14 @@ class Mt5BotController extends Controller
             'stop_loss_pips' => 'required|numeric|min:1|max:10000',
             'max_daily_trades' => 'required|integer|min:1|max:1000',
             'max_daily_loss' => 'required|numeric|min:1|max:1000000',
+            'whatsapp_number' => 'nullable|string|max:20',
+            'base_balance' => 'nullable|numeric|min:1|max:1000000',
+            'base_lot_size' => 'nullable|numeric|min:0.01|max:100',
+            'demo_server' => 'nullable|string|max:100',
+            'demo_account' => 'nullable|string|max:50',
+            'demo_email' => 'nullable|email|max:100',
+            'demo_phone' => 'nullable|string|max:20',
+            'demo_deposit' => 'nullable|numeric|min:0|max:100000000',
         ]);
 
         if ($request->hasFile('bot_file')) {
@@ -169,6 +177,14 @@ class Mt5BotController extends Controller
             'stop_loss_pips' => 'required|numeric|min:1|max:10000',
             'max_daily_trades' => 'required|integer|min:1|max:1000',
             'max_daily_loss' => 'required|numeric|min:1|max:1000000',
+            'whatsapp_number' => 'nullable|string|max:20',
+            'base_balance' => 'nullable|numeric|min:1|max:1000000',
+            'base_lot_size' => 'nullable|numeric|min:0.01|max:100',
+            'demo_server' => 'nullable|string|max:100',
+            'demo_account' => 'nullable|string|max:50',
+            'demo_email' => 'nullable|email|max:100',
+            'demo_phone' => 'nullable|string|max:20',
+            'demo_deposit' => 'nullable|numeric|min:0|max:100000000',
         ]);
 
         if ($request->hasFile('bot_file')) {
@@ -193,7 +209,7 @@ class Mt5BotController extends Controller
             unset($validated['api_secret']);
         }
 
-        $oldValues = $bot->only(['name', 'mt5_account_number', 'mt5_server', 'mode', 'auto_trade', 'take_profit_pips', 'stop_loss_pips', 'max_daily_trades', 'max_daily_loss']);
+        $oldValues = $bot->only(['name', 'mt5_account_number', 'mt5_server', 'mode', 'auto_trade', 'take_profit_pips', 'stop_loss_pips', 'max_daily_trades', 'max_daily_loss', 'whatsapp_number', 'base_balance', 'base_lot_size', 'demo_server', 'demo_account', 'demo_email', 'demo_phone', 'demo_deposit']);
         $bot->update($validated);
         $newValues = $bot->only(array_keys($oldValues));
 
