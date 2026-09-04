@@ -20,7 +20,7 @@ class BotApiController extends Controller
             'max_daily_trades', 'max_daily_loss',
             'balance', 'equity', 'total_profit', 'total_loss',
             'total_trades', 'winning_trades', 'losing_trades',
-            'last_connected_at', 'last_trade_at', 'error_message',
+            'last_connected_at', 'last_trade_at', 'error_message', 'error_message',
         ])->first();
 
         if (!$bot) {
@@ -44,7 +44,7 @@ class BotApiController extends Controller
             'max_daily_trades', 'max_daily_loss',
             'balance', 'equity', 'total_profit', 'total_loss',
             'total_trades', 'winning_trades', 'losing_trades',
-            'last_connected_at', 'last_trade_at', 'error_message',
+            'last_connected_at', 'last_trade_at', 'error_message', 'error_message',
         ])->first();
 
         if (!$bot) {
@@ -145,7 +145,7 @@ class BotApiController extends Controller
                 'max_daily_trades', 'max_daily_loss',
                 'balance', 'equity', 'total_profit', 'total_loss',
                 'total_trades', 'winning_trades', 'losing_trades',
-                'last_connected_at', 'last_trade_at',
+                'last_connected_at', 'last_trade_at', 'error_message',
             ])->first(),
         ]);
     }

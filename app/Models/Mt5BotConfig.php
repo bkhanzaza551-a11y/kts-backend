@@ -61,6 +61,7 @@ class Mt5BotConfig extends Model
         'lot_size' => 'decimal:2',
         'base_balance' => 'decimal:2',
         'base_lot_size' => 'decimal:2',
+        'demo_deposit' => 'decimal:2',
         'take_profit_pips' => 'decimal:2',
         'stop_loss_pips' => 'decimal:2',
         'max_daily_trades' => 'integer',
