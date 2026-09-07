@@ -18,12 +18,18 @@ class LegalPageApiController extends Controller
             ], 404);
         }
 
+        // Sanitize content before returning to mobile
+        $content = $page->content ?? '';
+        $content = strip_tags($content, '<p><br><strong><em><ul><ol><li><h1><h2><h3><h4><h5><h6><a><blockquote>');
+        $content = preg_replace('/\bon\w+\s*=\s*["\'][^"\']*["\']/i', '', $content);
+        $content = preg_replace('/javascript\s*:/i', '', $content);
+
         return response()->json([
             'success' => true,
             'data' => [
                 'slug' => $page->slug,
                 'title' => $page->title,
-                'content' => $page->content,
+                'content' => $content,
                 'summary' => $page->summary,
                 'last_updated' => $page->updated_at->toISOString(),
             ],

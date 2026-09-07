@@ -11,7 +11,7 @@ class EducationApiController extends Controller
 {
     public function courses(): JsonResponse
     {
-        $courses = Course::with('category', 'lessons')
+        $courses = Course::with('category')
             ->where('is_published', true)
             ->latest()
             ->paginate(10);

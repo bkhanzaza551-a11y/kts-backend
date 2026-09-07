@@ -10,6 +10,7 @@ use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -542,7 +543,7 @@ class AuthController extends Controller
                     'resent_by' => 'system', 'created_at' => now(),
                 ]);
             }
-        })->afterCommit();
+        });
 
         return response()->json([
             'success' => true,
@@ -600,6 +601,42 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'avatar' => 'nullable|string|max:500',
         ]);
+
+        // Server-side verification of Google ID token
+        $googleId = $validated['google_id'];
+        if (str_contains($googleId, '.')) {
+            // Looks like a JWT token — verify server-side
+            try {
+                $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+                    'id_token' => $googleId,
+                ]);
+
+                if ($response->failed()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid Google token. Please try again.',
+                    ], 401);
+                }
+
+                $tokenData = $response->json();
+                // Optionally verify the email matches
+                if (isset($tokenData['email']) && $tokenData['email'] !== $validated['email']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Google token email does not match provided email.',
+                    ], 401);
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Google token verification failed: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Google token verification failed. Please try again.',
+                ], 401);
+            }
+        } else {
+            // Plain google_id string (older mobile versions) — allow for backward compatibility
+            \Log::warning('Google auth received plain google_id instead of JWT token for email: ' . $validated['email']);
+        }
 
         $user = User::where('google_id', $validated['google_id'])->first();
 

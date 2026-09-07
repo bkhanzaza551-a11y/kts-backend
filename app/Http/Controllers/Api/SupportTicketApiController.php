@@ -32,6 +32,20 @@ class SupportTicketApiController extends Controller
             'source' => 'nullable|in:manual,ai_chatbot,email',
         ]);
 
+        // Check for duplicate open/pending tickets with similar subject
+        $userId = $request->user()->id;
+        $similarTicket = SupportTicket::where('user_id', $userId)
+            ->whereIn('status', ['open', 'pending'])
+            ->where('subject', $validated['subject'])
+            ->first();
+
+        if ($similarTicket) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already have an open ticket with a similar subject (Ticket #' . $similarTicket->ticket_number . '). Please check your existing tickets before creating a new one.',
+            ], 422);
+        }
+
         $ticket = SupportTicket::create([
             'ticket_number' => 'TKT-' . strtoupper(Str::random(8)),
             'user_id' => $request->user()->id,
