@@ -54,7 +54,15 @@ Route::get('delete-account', function () {
 })->name('public.delete-account');
 
 Route::post('delete-account', function (\Illuminate\Http\Request $request) {
-    $request->validate(['email' => 'required|email']);
+    $request->validate([
+        'email' => 'required|email',
+        'confirm' => 'required|in:YES_DELETE_MY_ACCOUNT',
+    ]);
+
+    if ($request->confirm !== 'YES_DELETE_MY_ACCOUNT') {
+        return back()->withErrors(['confirm' => 'Please type YES_DELETE_MY_ACCOUNT to confirm.']);
+    }
+
     $user = \App\Models\User::where('email', $request->email)->first();
     if ($user && !$user->isSuperAdmin()) {
         \App\Services\ActivityLogger::log('delete_account_web', 'User', $user->id, 'User requested account deletion via public web portal');
@@ -65,10 +73,13 @@ Route::post('delete-account', function (\Illuminate\Http\Request $request) {
         $user->delete();
     }
     return back()->with('status', 'If an account exists with this email address, your account and associated personal data have been scheduled for permanent deletion.');
-})->middleware('throttle:5,1')->name('public.delete-account.post');
+})->middleware('throttle:3,1')->name('public.delete-account.post');
 
 if (app()->environment('local')) {
     Route::get('test-email', function (\Illuminate\Http\Request $request) {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403);
+        }
         $to = $request->query('to', 'huntergaming5555566@gmail.com');
         $start = microtime(true);
         
@@ -121,6 +132,9 @@ if (app()->environment('local')) {
     })->name('public.test-email');
 
     Route::get('/seed-db', function () {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403);
+        }
         try {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
             \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);

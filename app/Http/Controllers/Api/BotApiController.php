@@ -134,10 +134,12 @@ class BotApiController extends Controller
 
         $bot->update($validated);
 
+        $updated = $bot->fresh();
+
         return response()->json([
             'success' => true,
             'message' => 'Bot updated successfully',
-            'data' => $bot->select([
+            'data' => $updated->only([
                 'id', 'name', 'description', 'status', 'mode', 'auto_trade',
                 'lot_size', 'base_balance', 'base_lot_size', 'whatsapp_number',
                 'demo_server', 'demo_account', 'demo_email', 'demo_phone', 'demo_deposit',
@@ -146,7 +148,7 @@ class BotApiController extends Controller
                 'balance', 'equity', 'total_profit', 'total_loss',
                 'total_trades', 'winning_trades', 'losing_trades',
                 'last_connected_at', 'last_trade_at', 'error_message',
-            ])->first(),
+            ]),
         ]);
     }
 }

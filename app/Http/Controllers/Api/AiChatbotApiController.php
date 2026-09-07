@@ -34,6 +34,8 @@ class AiChatbotApiController extends Controller
 
         $history = $request->input('conversation_history');
         if (is_array($history)) {
+            $history = array_filter($history, fn($msg) => isset($msg['role']) && in_array($msg['role'], ['user', 'assistant']));
+            $history = array_values($history);
             $history = json_encode($history);
         }
 
@@ -48,6 +50,7 @@ class AiChatbotApiController extends Controller
 
         return response()->json([
             'success' => $result['success'],
+            'message' => $result['success'] ? 'Message sent successfully.' : ($result['message'] ?? 'An unexpected error occurred.'),
             'data' => [
                 'user_message' => $request->input('message'),
                 'response' => $result['message'] ?? '',

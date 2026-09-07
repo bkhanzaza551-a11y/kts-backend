@@ -44,6 +44,11 @@ class ChatRoom extends Model
         return $this->hasOne(ChatMessage::class, 'room_id')->where('is_pinned', true)->latest('pinned_at');
     }
 
+    public function lastMessage(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ChatMessage::class, 'room_id')->where('is_deleted', false)->latest();
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

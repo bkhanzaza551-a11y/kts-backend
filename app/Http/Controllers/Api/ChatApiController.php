@@ -22,14 +22,13 @@ class ChatApiController extends Controller
         $rooms = ChatRoom::where('is_active', true)
             ->where('is_paused', false)
             ->withCount('messages')
+            ->with(['lastMessage' => function ($q) {
+                $q->where('is_deleted', false)->with('user:id,name')->latest();
+            }])
             ->orderBy('sort_order')
             ->get()
             ->map(function ($room) {
-                $lastMessage = $room->messages()
-                    ->where('is_deleted', false)
-                    ->with('user:id,name')
-                    ->latest()
-                    ->first();
+                $lastMessage = $room->lastMessage;
 
                 return [
                     'id' => $room->id,

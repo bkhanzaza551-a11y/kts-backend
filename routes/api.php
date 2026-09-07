@@ -206,6 +206,9 @@ Route::prefix('v1')->group(function () {
 // TEST ONLY - Local dev token bypass (NO login needed)
 if (app()->environment('local')) {
     Route::get('v1/test-token', function () {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403);
+        }
         $user = \App\Models\User::where('email', 'admin@kts10pipsbots.com')->first();
         if ($user) {
             $user->tokens()->delete();

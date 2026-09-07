@@ -11,6 +11,9 @@ class PermissionMiddleware
     public function handle(Request $request, Closure $next, string ...$permissions): Response
     {
         if (!$request->user()) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            }
             return redirect()->route('admin.login');
         }
 

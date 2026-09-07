@@ -36,7 +36,12 @@ class AiChatbotService
 
     private function loadSettings(): void
     {
-        $this->groqApiKey = AiChatbotSetting::getValue('groq_api_key', '') ?: config('services.groq.key', '');
+        $envKey = config('services.groq.key', '');
+        $dbKey = AiChatbotSetting::getValue('groq_api_key', '');
+
+        // Prefer env variable if set (allows admin to update without DB changes)
+        $this->groqApiKey = !empty($envKey) ? $envKey : $dbKey;
+
         $this->model = AiChatbotSetting::getValue('model', 'qwen/qwen3.6-27b');
         $this->maxTokens = (int) AiChatbotSetting::getValue('max_tokens', 2048);
         $this->temperature = (float) AiChatbotSetting::getValue('temperature', 0.7);
@@ -284,6 +289,14 @@ PROMPT;
 
                 if (!$response->successful()) {
                     $error = $response->json('error.message', 'Unknown API error');
+                    $status = $response->status();
+
+                    if ($status === 401) {
+                        return ['success' => false, 'message' => 'AI service authentication failed. The Groq API key is invalid or expired. Please contact admin to update the API key.'];
+                    }
+                    if ($status === 429) {
+                        return ['success' => false, 'message' => 'AI service rate limit reached. Please try again in a moment.'];
+                    }
                     return ['success' => false, 'message' => 'AI service error: ' . $error];
                 }
 
@@ -303,7 +316,7 @@ PROMPT;
                         $arguments = json_decode($toolCall['function']['arguments'], true) ?? [];
 
                         // Always enforce authenticated user_id (prevent IDOR from prompt injection)
-                        if (in_array($functionName, ['check_user_subscription', 'check_bot_status', 'check_email_log', 'create_support_ticket'])) {
+                        if (in_array($functionName, ['check_user_subscription', 'check_bot_status', 'check_email_log', 'create_support_ticket', 'resend_email', 'send_notification'])) {
                             $arguments['user_id'] = $userId;
                         }
 
@@ -513,24 +526,32 @@ PROMPT;
     private function recordAbuse(int $userId): bool
     {
         try {
-            \DB::table('ai_chat_blocks')->updateOrInsert(
-                ['user_id' => $userId],
-                ['abuse_count' => 0, 'created_at' => now()]
-            );
-
             $block = \DB::table('ai_chat_blocks')->where('user_id', $userId)->first();
+
+            if (!$block) {
+                \DB::table('ai_chat_blocks')->insert([
+                    'user_id' => $userId,
+                    'abuse_count' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                return false;
+            }
+
             $newCount = $block->abuse_count + 1;
 
             if ($newCount >= 2) {
                 \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
                     'abuse_count' => $newCount,
                     'blocked_until' => now()->addHours(24),
+                    'updated_at' => now(),
                 ]);
                 return true;
             }
 
             \DB::table('ai_chat_blocks')->where('user_id', $userId)->update([
                 'abuse_count' => $newCount,
+                'updated_at' => now(),
             ]);
         } catch (\Exception $e) {
             return false;

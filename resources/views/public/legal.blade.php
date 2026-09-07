@@ -28,7 +28,7 @@
                     </div>
 
                     <div class="legal-content lh-lg text-light">
-                        {!! $content !!}
+                        {!! strip_tags($content, '<p><br><strong><em><u><h1><h2><h3><h4><h5><h6><ul><ol><li><a><blockquote><pre><code><table><thead><tbody><tr><th><td><hr><span><div>') !!}
                     </div>
 
                     <hr class="border-secondary my-4">

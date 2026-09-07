@@ -94,7 +94,7 @@ class Mt5BotConfig extends Model
 
     public function getWinRateAttribute(): float
     {
-        if ($this->total_trades <= 0) return 0;
+        if (!$this->total_trades || $this->total_trades <= 0) return 0;
         return round(($this->winning_trades / $this->total_trades) * 100, 2);
     }
 
