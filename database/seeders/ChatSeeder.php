@@ -15,10 +15,9 @@ class ChatSeeder extends Seeder
         if (!$adminId) return;
 
         $rooms = [
-            ['name' => 'General', 'slug' => 'general', 'description' => 'General trading discussion', 'is_active' => true, 'is_public' => true, 'sort_order' => 1],
+            ['name' => 'Global Chat', 'slug' => 'general', 'description' => 'Global community trading discussion', 'is_active' => true, 'is_public' => true, 'sort_order' => 1],
             ['name' => 'Signals', 'slug' => 'signals', 'description' => 'Live signal discussions', 'is_active' => true, 'is_public' => true, 'sort_order' => 2],
             ['name' => 'Support', 'slug' => 'support', 'description' => 'Customer support chat', 'is_active' => true, 'is_public' => true, 'sort_order' => 3],
-            ['name' => 'VIP', 'slug' => 'vip', 'description' => 'Premium members only', 'is_active' => true, 'is_public' => false, 'sort_order' => 4],
         ];
 
         foreach ($rooms as $roomData) {

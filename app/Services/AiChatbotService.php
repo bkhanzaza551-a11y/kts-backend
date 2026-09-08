@@ -21,11 +21,10 @@ class AiChatbotService
     private const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
     private const AVAILABLE_MODELS = [
-        'qwen/qwen3.6-27b' => ['name' => 'Qwen 3.6 27B', 'speed' => 'fast', 'quality' => 'good', 'tools' => false],
-        'qwen/qwen3.8-27b' => ['name' => 'Qwen 3.8 27B', 'speed' => 'fast', 'quality' => 'best', 'tools' => false],
-        'openai/gpt-oss-20b' => ['name' => 'OpenAI GPT-OSS 20B', 'speed' => 'fastest', 'quality' => 'good', 'tools' => false],
-        'openai/gpt-oss-120b' => ['name' => 'OpenAI GPT-OSS 120B', 'speed' => 'fast', 'quality' => 'best', 'tools' => false],
-        'groq/compound' => ['name' => 'Groq Compound', 'speed' => 'fast', 'quality' => 'best', 'tools' => false],
+        'llama-3.3-70b-versatile' => ['name' => 'Llama 3.3 70B (Versatile)', 'speed' => 'fast', 'quality' => 'best', 'tools' => true],
+        'llama-3.1-8b-instant' => ['name' => 'Llama 3.1 8B (Instant)', 'speed' => 'ultra-fast', 'quality' => 'good', 'tools' => true],
+        'mixtral-8x7b-32768' => ['name' => 'Mixtral 8x7B (32k Context)', 'speed' => 'fast', 'quality' => 'good', 'tools' => false],
+        'gemma2-9b-it' => ['name' => 'Gemma 2 9B IT', 'speed' => 'fastest', 'quality' => 'good', 'tools' => false],
     ];
 
     public function __construct(
@@ -42,7 +41,12 @@ class AiChatbotService
         // Prefer env variable if set (allows admin to update without DB changes)
         $this->groqApiKey = !empty($envKey) ? $envKey : $dbKey;
 
-        $this->model = AiChatbotSetting::getValue('model', 'qwen/qwen3.6-27b');
+        $rawModel = AiChatbotSetting::getValue('model', 'llama-3.3-70b-versatile');
+        if (!array_key_exists($rawModel, self::AVAILABLE_MODELS)) {
+            $this->model = 'llama-3.3-70b-versatile';
+        } else {
+            $this->model = $rawModel;
+        }
         $this->maxTokens = (int) AiChatbotSetting::getValue('max_tokens', 2048);
         $this->temperature = (float) AiChatbotSetting::getValue('temperature', 0.7);
         $dbPrompt = AiChatbotSetting::getValue('system_prompt', '');
@@ -267,8 +271,9 @@ PROMPT;
             $iteration++;
 
             try {
+                $activeModel = $this->model;
                 $payload = [
-                    'model' => $this->model,
+                    'model' => $activeModel,
                     'messages' => $messages,
                     'max_tokens' => $this->maxTokens,
                     'temperature' => $this->temperature,
@@ -285,6 +290,16 @@ PROMPT;
                     'Content-Type' => 'application/json',
                 ])->timeout(30)->post(self::GROQ_API_URL, $payload);
 
+                // Auto-fallback: If rate-limited (429), server overloaded (500/502/503), or bad model (400/404), retry with llama-3.1-8b-instant
+                if (!$response->successful() && in_array($response->status(), [429, 500, 502, 503, 400, 404]) && $activeModel !== 'llama-3.1-8b-instant') {
+                    $activeModel = 'llama-3.1-8b-instant';
+                    $payload['model'] = $activeModel;
+                    $response = Http::withHeaders([
+                        'Authorization' => 'Bearer ' . $this->groqApiKey,
+                        'Content-Type' => 'application/json',
+                    ])->timeout(25)->post(self::GROQ_API_URL, $payload);
+                }
+
                 $responseTime = (int) ((microtime(true) - $startTime) * 1000);
 
                 if (!$response->successful()) {
@@ -295,7 +310,7 @@ PROMPT;
                         return ['success' => false, 'message' => 'AI service authentication failed. The Groq API key is invalid or expired. Please contact admin to update the API key.'];
                     }
                     if ($status === 429) {
-                        return ['success' => false, 'message' => 'AI service rate limit reached. Please try again in a moment.'];
+                        return ['success' => false, 'message' => 'AI Assistant is experiencing high trading volume. Please retry in a few seconds.'];
                     }
                     return ['success' => false, 'message' => 'AI service error: ' . $error];
                 }

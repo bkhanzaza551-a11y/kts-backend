@@ -160,6 +160,7 @@ Route::prefix('v1')->group(function () {
         // Notifications
         Route::get('notifications', [NotificationApiController::class, 'index'])->name('api.notifications.index');
         Route::get('notifications/unread', [NotificationApiController::class, 'unread'])->name('api.notifications.unread');
+        Route::post('notifications/mark-all-read', [NotificationApiController::class, 'markAllAsRead'])->name('api.notifications.mark-all-read');
         Route::post('notifications/{id}/read', [NotificationApiController::class, 'markAsRead'])->name('api.notifications.read');
 
         // Notification Settings (for mobile app to check)

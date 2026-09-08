@@ -78,6 +78,31 @@ class NotificationApiController extends Controller
         ]);
     }
 
+    public function markAllAsRead(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+        $notificationIds = AdminNotification::where('is_sent', true)
+            ->where(function ($q) use ($userId) {
+                $q->where('target', 'all')
+                    ->orWhere(function($sub) use ($userId) {
+                        $sub->where('target', 'specific')->where('target_user_id', $userId);
+                    });
+            })
+            ->pluck('id');
+
+        foreach ($notificationIds as $id) {
+            \DB::table('admin_notification_reads')->updateOrInsert(
+                ['user_id' => $userId, 'admin_notification_id' => $id],
+                ['read_at' => now()]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'All notifications marked as read',
+        ]);
+    }
+
     /**
      * Get notification settings for the current user.
      */

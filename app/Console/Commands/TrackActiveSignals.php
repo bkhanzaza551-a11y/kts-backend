@@ -362,19 +362,30 @@ class TrackActiveSignals extends Command
 
     private function calculatePips(string $symbol, string $direction, float $entry, float $current): float
     {
-        $symbolUpper = strtoupper($symbol);
+        $symbolUpper = strtoupper(str_replace(['/', '_', '-'], '', $symbol));
+        $diff = $direction === 'buy' ? $current - $entry : $entry - $current;
 
-        if (str_contains($symbolUpper, 'JPY')) {
-            $diff = $direction === 'buy' ? $current - $entry : $entry - $current;
+        // Gold (XAUUSD): 1 pip = $0.10, e.g. 2500.00 to 2501.00 is 10 pips
+        if (str_contains($symbolUpper, 'XAU') || str_contains($symbolUpper, 'GOLD')) {
+            return round($diff * 10, 1);
+        }
+
+        // Silver (XAGUSD) & Oil (USOIL/UKOIL): 1 pip = $0.01
+        if (str_contains($symbolUpper, 'XAG') || str_contains($symbolUpper, 'SILVER') || str_contains($symbolUpper, 'OIL')) {
             return round($diff * 100, 1);
         }
 
+        // JPY pairs: 1 pip = 0.01
+        if (str_contains($symbolUpper, 'JPY')) {
+            return round($diff * 100, 1);
+        }
+
+        // Crypto pairs (BTC, ETH, etc.): 1 point = $1
         if ($this->isCrypto($symbolUpper)) {
-            $diff = $direction === 'buy' ? $current - $entry : $entry - $current;
             return round($diff, 2);
         }
 
-        $diff = $direction === 'buy' ? $current - $entry : $entry - $current;
+        // Standard 5-decimal Forex pairs (EURUSD, GBPUSD): 1 pip = 0.0001
         return round($diff * 10000, 1);
     }
 }
