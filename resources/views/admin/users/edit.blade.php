@@ -88,6 +88,40 @@
                         </div>
                     </div>
                 </div>
+            <div class="card mt-3 border-success-subtle">
+                <div class="card-header bg-success-subtle">
+                    <h6 class="mb-0 text-success fw-bold"><i class="bi bi-patch-check-fill me-2"></i>Verified Trader Status & Badges</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <div class="form-check form-switch">
+                                <input type="hidden" name="is_verified" value="0">
+                                <input type="checkbox" name="is_verified" value="1" class="form-check-input" id="isVerified" {{ old('is_verified', $user->is_verified) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-semibold" for="isVerified">
+                                    <i class="bi bi-check-circle-fill text-success me-1"></i>Verified Badge (Green Tick)
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">Displays verified green badge on Mobile Profile & Chat.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-secondary">Badge Title / Role</label>
+                            <input type="text" name="chat_badge" class="form-control" placeholder="e.g. KTS TRADER, VIP, PRO" value="{{ old('chat_badge', $user->chat_badge) }}" maxlength="50">
+                            <small class="text-muted">Shows next to username in chat & profile hero.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-secondary">Badge Color</label>
+                            <select name="badge_color" class="form-select">
+                                <option value="warning" {{ old('badge_color', $user->badge_color) === 'warning' ? 'selected' : '' }}>Gold / Yellow (👑 VIP / Trader)</option>
+                                <option value="success" {{ old('badge_color', $user->badge_color) === 'success' ? 'selected' : '' }}>Green (✅ Verified Pro)</option>
+                                <option value="primary" {{ old('badge_color', $user->badge_color) === 'primary' ? 'selected' : '' }}>Blue (🛡️ Official)</option>
+                                <option value="danger" {{ old('badge_color', $user->badge_color) === 'danger' ? 'selected' : '' }}>Red (🔥 Elite)</option>
+                                <option value="info" {{ old('badge_color', $user->badge_color) === 'info' ? 'selected' : '' }}>Cyan (⚡ Fast Trader)</option>
+                                <option value="secondary" {{ old('badge_color', $user->badge_color) === 'secondary' ? 'selected' : '' }}>Gray (Standard)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-3 d-flex gap-2">

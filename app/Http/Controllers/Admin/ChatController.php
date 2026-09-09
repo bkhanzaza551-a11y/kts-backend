@@ -307,29 +307,35 @@ class ChatController extends Controller
     {
         $users = User::where(function ($q) {
                 $q->whereNotNull('chat_badge')
+                    ->orWhere('is_verified', true)
                     ->orWhere('is_premium', true);
             })
+            ->orderByDesc('is_verified')
             ->orderBy('chat_badge')
             ->paginate(30);
 
-        return view('admin.chat.badges', compact('users'));
+        $allUsers = User::orderBy('name')->get(['id', 'name', 'email', 'chat_badge', 'badge_color', 'is_verified']);
+
+        return view('admin.chat.badges', compact('users', 'allUsers'));
     }
 
     public function updateBadge(Request $request)
     {
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
+            'is_verified' => 'boolean',
             'chat_badge' => 'nullable|string|max:50',
             'badge_color' => 'nullable|string|in:primary,secondary,success,danger,warning,info',
         ]);
 
         $user = User::findOrFail($validated['user_id']);
         $user->update([
+            'is_verified' => (bool) ($validated['is_verified'] ?? false),
             'chat_badge' => $validated['chat_badge'] ?? null,
             'badge_color' => $validated['badge_color'] ?? 'primary',
         ]);
 
-        ActivityLogger::log('update_chat_badge', 'User', $user->id, "Updated chat badge for {$user->name}: " . ($validated['chat_badge'] ?? 'removed'));
+        ActivityLogger::log('update_chat_badge', 'User', $user->id, "Updated chat badge for {$user->name}: " . ($validated['chat_badge'] ?? 'removed') . ' (Verified: ' . ($user->is_verified ? 'Yes' : 'No') . ')');
 
         return back()->with('success', 'Badge updated for ' . $user->name . '.');
     }

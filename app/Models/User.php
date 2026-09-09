@@ -39,6 +39,7 @@ class User extends Authenticatable
         'last_login_ip',
         'status',
         'is_banned',
+        'is_verified',
         'is_premium',
         'premium_expires_at',
     ];
@@ -56,6 +57,7 @@ class User extends Authenticatable
             'premium_expires_at' => 'datetime',
             'last_login_at' => 'datetime',
             'is_banned' => 'boolean',
+            'is_verified' => 'boolean',
             'is_premium' => 'boolean',
             'is_profile_completed' => 'boolean',
             'password' => 'hashed',

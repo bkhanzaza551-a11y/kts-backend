@@ -84,6 +84,9 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:20',
             'password' => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'status' => 'required|in:active,inactive,suspended',
+            'is_verified' => 'boolean',
+            'chat_badge' => 'nullable|string|max:50',
+            'badge_color' => 'nullable|string|in:primary,secondary,success,danger,warning,info',
             'is_premium' => 'boolean',
             'premium_days' => 'nullable|integer|min:0|max:3650',
         ]);
@@ -94,6 +97,9 @@ class UserController extends Controller
             'phone' => $validated['phone'] ?? null,
             'password' => Hash::make($validated['password']),
             'status' => $validated['status'],
+            'is_verified' => (bool) ($validated['is_verified'] ?? false),
+            'chat_badge' => $validated['chat_badge'] ?? null,
+            'badge_color' => $validated['badge_color'] ?? 'primary',
             'is_premium' => $validated['is_premium'] ?? false,
             'premium_expires_at' => ($validated['is_premium'] ?? false) && ($validated['premium_days'] ?? 0) > 0
                 ? now()->addDays($validated['premium_days'])
@@ -158,18 +164,24 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
             'status' => 'required|in:active,inactive,suspended',
+            'is_verified' => 'boolean',
+            'chat_badge' => 'nullable|string|max:50',
+            'badge_color' => 'nullable|string|in:primary,secondary,success,danger,warning,info',
             'is_premium' => 'boolean',
             'premium_days' => 'nullable|integer|min:0|max:3650',
             'password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
         ]);
 
-        $oldData = $user->only(['name', 'email', 'phone', 'status', 'is_premium']);
+        $oldData = $user->only(['name', 'email', 'phone', 'status', 'is_verified', 'chat_badge', 'badge_color', 'is_premium']);
 
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
             'status' => $validated['status'],
+            'is_verified' => (bool) ($validated['is_verified'] ?? false),
+            'chat_badge' => $validated['chat_badge'] ?? null,
+            'badge_color' => $validated['badge_color'] ?? 'primary',
             'is_premium' => $validated['is_premium'] ?? false,
         ];
 

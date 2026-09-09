@@ -76,7 +76,7 @@ class ChatApiController extends Controller
         ]);
 
         $query = $room->messages()
-            ->with(['user:id,name,chat_badge,badge_color,is_premium', 'sticker:id,name,image_url,pack_id'])
+            ->with(['user:id,name,avatar,chat_badge,badge_color,is_verified,is_premium', 'sticker:id,name,image_url,pack_id'])
             ->where('is_deleted', false);
 
         $blockedUserIds = UserBlockedUser::getBlockedUserIds($user->id);
@@ -107,9 +107,11 @@ class ChatApiController extends Controller
                     'user' => [
                         'id' => $msg->user->id,
                         'name' => $msg->user->name,
+                        'avatar' => $msg->user->avatar ? (str_starts_with($msg->user->avatar, 'http') ? $msg->user->avatar : asset('storage/' . $msg->user->avatar)) : null,
                         'badge' => $msg->user->chat_badge,
-                        'badge_color' => $msg->user->badge_color,
-                        'is_premium' => $msg->user->is_premium,
+                        'badge_color' => $msg->user->badge_color ?? 'primary',
+                        'is_verified' => (bool) $msg->user->is_verified,
+                        'is_premium' => (bool) $msg->user->is_premium,
                     ],
                 ];
 
@@ -201,7 +203,7 @@ class ChatApiController extends Controller
 
         $chatMessage = ChatMessage::create($messageData);
 
-        $chatMessage->load(['user:id,name,chat_badge,badge_color,is_premium', 'sticker:id,name,image_url']);
+        $chatMessage->load(['user:id,name,avatar,chat_badge,badge_color,is_verified,is_premium', 'sticker:id,name,image_url']);
 
         $response = [
             'id' => $chatMessage->id,
@@ -211,9 +213,11 @@ class ChatApiController extends Controller
             'user' => [
                 'id' => $chatMessage->user->id,
                 'name' => $chatMessage->user->name,
+                'avatar' => $chatMessage->user->avatar ? (str_starts_with($chatMessage->user->avatar, 'http') ? $chatMessage->user->avatar : asset('storage/' . $chatMessage->user->avatar)) : null,
                 'badge' => $chatMessage->user->chat_badge,
-                'badge_color' => $chatMessage->user->badge_color,
-                'is_premium' => $chatMessage->user->is_premium,
+                'badge_color' => $chatMessage->user->badge_color ?? 'primary',
+                'is_verified' => (bool) $chatMessage->user->is_verified,
+                'is_premium' => (bool) $chatMessage->user->is_premium,
             ],
         ];
 
