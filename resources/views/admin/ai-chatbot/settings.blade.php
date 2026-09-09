@@ -44,11 +44,21 @@
                     <div class="mb-3">
                         <label class="form-label text-secondary">Model <span class="text-danger">*</span></label>
                         <select name="model" class="form-select" required>
-                            <option value="llama3-70b-8192" {{ ($settings['model']->value ?? '') === 'llama3-70b-8192' ? 'selected' : '' }}>Llama 3 70B (Groq)</option>
-                            <option value="llama3-8b-8192" {{ ($settings['model']->value ?? '') === 'llama3-8b-8192' ? 'selected' : '' }}>Llama 3 8B (Groq)</option>
-                            <option value="mixtral-8x7b-32768" {{ ($settings['model']->value ?? '') === 'mixtral-8x7b-32768' ? 'selected' : '' }}>Mixtral 8x7B (Groq)</option>
-                            <option value="gpt-4o" {{ ($settings['model']->value ?? '') === 'gpt-4o' ? 'selected' : '' }}>GPT-4o (OpenAI)</option>
-                            <option value="gpt-4o-mini" {{ ($settings['model']->value ?? '') === 'gpt-4o-mini' ? 'selected' : '' }}>GPT-4o Mini (OpenAI)</option>
+                            <optgroup label="Groq AI (Fast & Free Tier)">
+                                <option value="openai/gpt-oss-120b" {{ ($settings['model']->value ?? 'openai/gpt-oss-120b') === 'openai/gpt-oss-120b' ? 'selected' : '' }}>GPT-OSS 120B (High Reasoning - Recommended)</option>
+                                <option value="openai/gpt-oss-20b" {{ ($settings['model']->value ?? '') === 'openai/gpt-oss-20b' ? 'selected' : '' }}>GPT-OSS 20B (Ultra Fast)</option>
+                                <option value="llama-3.3-70b-versatile" {{ ($settings['model']->value ?? '') === 'llama-3.3-70b-versatile' ? 'selected' : '' }}>Llama 3.3 70B Versatile</option>
+                                <option value="qwen/qwen3.6-27b" {{ ($settings['model']->value ?? '') === 'qwen/qwen3.6-27b' ? 'selected' : '' }}>Qwen 3.6 27B</option>
+                                <option value="llama3-70b-8192" {{ ($settings['model']->value ?? '') === 'llama3-70b-8192' ? 'selected' : '' }}>Llama 3 70B (8k)</option>
+                                <option value="llama3-8b-8192" {{ ($settings['model']->value ?? '') === 'llama3-8b-8192' ? 'selected' : '' }}>Llama 3 8B (8k)</option>
+                                <option value="mixtral-8x7b-32768" {{ ($settings['model']->value ?? '') === 'mixtral-8x7b-32768' ? 'selected' : '' }}>Mixtral 8x7B (32k)</option>
+                                <option value="gemma2-9b-it" {{ ($settings['model']->value ?? '') === 'gemma2-9b-it' ? 'selected' : '' }}>Gemma 2 9B IT</option>
+                                <option value="deepseek-r1-distill-llama-70b" {{ ($settings['model']->value ?? '') === 'deepseek-r1-distill-llama-70b' ? 'selected' : '' }}>DeepSeek R1 Distill 70B</option>
+                            </optgroup>
+                            <optgroup label="OpenAI API">
+                                <option value="gpt-4o" {{ ($settings['model']->value ?? '') === 'gpt-4o' ? 'selected' : '' }}>GPT-4o (OpenAI)</option>
+                                <option value="gpt-4o-mini" {{ ($settings['model']->value ?? '') === 'gpt-4o-mini' ? 'selected' : '' }}>GPT-4o Mini (OpenAI)</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="mb-3">

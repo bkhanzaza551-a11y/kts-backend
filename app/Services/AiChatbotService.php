@@ -20,11 +20,17 @@ class AiChatbotService
 
     private const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-    private const AVAILABLE_MODELS = [
+    public const AVAILABLE_MODELS = [
+        'openai/gpt-oss-120b' => ['name' => 'GPT-OSS 120B (High Reasoning)', 'speed' => 'fast', 'quality' => 'best', 'tools' => true],
+        'openai/gpt-oss-20b' => ['name' => 'GPT-OSS 20B (Ultra Fast)', 'speed' => 'ultra-fast', 'quality' => 'great', 'tools' => true],
         'llama-3.3-70b-versatile' => ['name' => 'Llama 3.3 70B (Versatile)', 'speed' => 'fast', 'quality' => 'best', 'tools' => true],
+        'qwen/qwen3.6-27b' => ['name' => 'Qwen 3.6 27B', 'speed' => 'fast', 'quality' => 'great', 'tools' => true],
         'llama-3.1-8b-instant' => ['name' => 'Llama 3.1 8B (Instant)', 'speed' => 'ultra-fast', 'quality' => 'good', 'tools' => true],
+        'llama3-70b-8192' => ['name' => 'Llama 3 70B (8k Context)', 'speed' => 'fast', 'quality' => 'good', 'tools' => true],
+        'llama3-8b-8192' => ['name' => 'Llama 3 8B (8k Context)', 'speed' => 'ultra-fast', 'quality' => 'good', 'tools' => true],
         'mixtral-8x7b-32768' => ['name' => 'Mixtral 8x7B (32k Context)', 'speed' => 'fast', 'quality' => 'good', 'tools' => false],
         'gemma2-9b-it' => ['name' => 'Gemma 2 9B IT', 'speed' => 'fastest', 'quality' => 'good', 'tools' => false],
+        'deepseek-r1-distill-llama-70b' => ['name' => 'DeepSeek R1 Distill 70B', 'speed' => 'medium', 'quality' => 'reasoning', 'tools' => false],
     ];
 
     public function __construct(
@@ -41,9 +47,9 @@ class AiChatbotService
         // Prefer env variable if set (allows admin to update without DB changes)
         $this->groqApiKey = !empty($envKey) ? $envKey : $dbKey;
 
-        $rawModel = AiChatbotSetting::getValue('model', 'llama-3.3-70b-versatile');
+        $rawModel = AiChatbotSetting::getValue('model', 'openai/gpt-oss-120b');
         if (!array_key_exists($rawModel, self::AVAILABLE_MODELS)) {
-            $this->model = 'llama-3.3-70b-versatile';
+            $this->model = 'openai/gpt-oss-120b';
         } else {
             $this->model = $rawModel;
         }
@@ -266,113 +272,136 @@ PROMPT;
         $startTime = microtime(true);
         $maxIterations = 5; // Prevent infinite loops
         $iteration = 0;
+        $activeModelUsed = $this->model;
+
+        // Candidate fallback ladder: try configured model, then resilient production models in sequence
+        $candidateModels = array_values(array_unique(array_filter([
+            $this->model,
+            'openai/gpt-oss-120b',
+            'openai/gpt-oss-20b',
+            'llama-3.3-70b-versatile',
+            'qwen/qwen3.6-27b',
+            'llama-3.1-8b-instant',
+            'llama3-70b-8192',
+            'llama3-8b-8192',
+            'mixtral-8x7b-32768',
+            'gemma2-9b-it',
+        ])));
 
         while ($iteration < $maxIterations) {
             $iteration++;
 
-            try {
-                $activeModel = $this->model;
+            $response = null;
+            $lastError = '';
+
+            foreach ($candidateModels as $candidate) {
                 $payload = [
-                    'model' => $activeModel,
+                    'model' => $candidate,
                     'messages' => $messages,
                     'max_tokens' => $this->maxTokens,
                     'temperature' => $this->temperature,
                     'stream' => false,
                 ];
 
-                if ($tools) {
+                if ($tools && $this->modelSupportsTools($candidate)) {
                     $payload['tools'] = $tools;
                     $payload['tool_choice'] = 'auto';
                 }
 
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . $this->groqApiKey,
-                    'Content-Type' => 'application/json',
-                ])->timeout(30)->post(self::GROQ_API_URL, $payload);
-
-                // Auto-fallback: If rate-limited (429), server overloaded (500/502/503), or bad model (400/404), retry with llama-3.1-8b-instant
-                if (!$response->successful() && in_array($response->status(), [429, 500, 502, 503, 400, 404]) && $activeModel !== 'llama-3.1-8b-instant') {
-                    $activeModel = 'llama-3.1-8b-instant';
-                    $payload['model'] = $activeModel;
-                    $response = Http::withHeaders([
+                try {
+                    $candidateRes = Http::withHeaders([
                         'Authorization' => 'Bearer ' . $this->groqApiKey,
                         'Content-Type' => 'application/json',
-                    ])->timeout(25)->post(self::GROQ_API_URL, $payload);
-                }
+                    ])->timeout(30)->post(self::GROQ_API_URL, $payload);
 
-                $responseTime = (int) ((microtime(true) - $startTime) * 1000);
+                    if ($candidateRes->successful()) {
+                        $response = $candidateRes;
+                        $activeModelUsed = $candidate;
+                        break;
+                    }
 
-                if (!$response->successful()) {
-                    $error = $response->json('error.message', 'Unknown API error');
-                    $status = $response->status();
+                    $status = $candidateRes->status();
+                    $lastError = $candidateRes->json('error.message') ?? $candidateRes->body();
 
                     if ($status === 401) {
-                        return ['success' => false, 'message' => 'AI service authentication failed. The Groq API key is invalid or expired. Please contact admin to update the API key.'];
-                    }
-                    if ($status === 429) {
-                        return ['success' => false, 'message' => 'AI Assistant is experiencing high trading volume. Please retry in a few seconds.'];
-                    }
-                    return ['success' => false, 'message' => 'AI service error: ' . $error];
-                }
-
-                $data = $response->json();
-                $choice = $data['choices'][0] ?? [];
-                $message = $choice['message'] ?? [];
-                $finishReason = $choice['finish_reason'] ?? '';
-
-                // Check if AI wants to call tools
-                if ($finishReason === 'tool_calls' && !empty($message['tool_calls'])) {
-                    // Add assistant message with tool calls to history
-                    $messages[] = $message;
-
-                    // Execute each tool call
-                    foreach ($message['tool_calls'] as $toolCall) {
-                        $functionName = $toolCall['function']['name'];
-                        $arguments = json_decode($toolCall['function']['arguments'], true) ?? [];
-
-                        // Always enforce authenticated user_id (prevent IDOR from prompt injection)
-                        if (in_array($functionName, ['check_user_subscription', 'check_bot_status', 'check_email_log', 'create_support_ticket', 'resend_email', 'send_notification'])) {
-                            $arguments['user_id'] = $userId;
-                        }
-
-                        $toolResult = $this->toolService->executeTool($functionName, $arguments, $userId);
-
-                        // Add tool result to messages
-                        $messages[] = [
-                            'role' => 'tool',
-                            'tool_call_id' => $toolCall['id'],
-                            'content' => json_encode($toolResult),
+                        return [
+                            'success' => false,
+                            'message' => 'AI service authentication failed. The Groq API key is invalid or expired. Please contact admin to update the API key.',
                         ];
                     }
 
-                    // Continue loop to get AI's response after tool execution
-                    continue;
+                    \Illuminate\Support\Facades\Log::warning("Groq model '{$candidate}' failed with status {$status}: {$lastError}. Trying next candidate.");
+                } catch (\Throwable $e) {
+                    $lastError = $e->getMessage();
+                    \Illuminate\Support\Facades\Log::warning("Groq model '{$candidate}' exception: {$lastError}. Trying next candidate.");
                 }
+            }
 
-                // No more tool calls — return final response
-                $reply = $message['content'] ?? '';
-                $reply = $this->cleanResponse($reply);
-                $tokensUsed = $data['usage']['total_tokens'] ?? 0;
-
-                $this->logChat($userId, $userMessage, $reply, $tokensUsed, $responseTime);
-
-                return [
-                    'success' => true,
-                    'message' => $reply,
-                    'model' => $this->model,
-                    'tokens_used' => $tokensUsed,
-                    'response_time_ms' => $responseTime,
-                    'tools_used' => $iteration > 1,
-                ];
-            } catch (\Exception $e) {
+            if (!$response || !$response->successful()) {
                 return [
                     'success' => false,
-                    'message' => 'Failed to connect to AI service: ' . $e->getMessage(),
+                    'message' => 'AI Assistant is temporarily busy. Please retry in a few moments. (' . ($lastError ?: 'All model endpoints busy') . ')',
                 ];
             }
+
+            $responseTime = (int) ((microtime(true) - $startTime) * 1000);
+            $data = $response->json();
+            $choice = $data['choices'][0] ?? [];
+            $message = $choice['message'] ?? [];
+            $finishReason = $choice['finish_reason'] ?? '';
+
+            // Check if AI wants to call tools
+            if ($finishReason === 'tool_calls' && !empty($message['tool_calls'])) {
+                // Add assistant message with tool calls to history
+                $messages[] = $message;
+
+                // Execute each tool call
+                foreach ($message['tool_calls'] as $toolCall) {
+                    $functionName = $toolCall['function']['name'];
+                    $arguments = json_decode($toolCall['function']['arguments'], true) ?? [];
+
+                    // Always enforce authenticated user_id (prevent IDOR from prompt injection)
+                    if (in_array($functionName, ['check_user_subscription', 'check_bot_status', 'check_email_log', 'create_support_ticket', 'resend_email', 'send_notification'])) {
+                        $arguments['user_id'] = $userId;
+                    }
+
+                    $toolResult = $this->toolService->executeTool($functionName, $arguments, $userId);
+
+                    // Add tool result to messages
+                    $messages[] = [
+                        'role' => 'tool',
+                        'tool_call_id' => $toolCall['id'],
+                        'content' => json_encode($toolResult),
+                    ];
+                }
+
+                // Continue loop to get AI's response after tool execution
+                continue;
+            }
+
+            // No more tool calls — return final response
+            $reply = $message['content'] ?? '';
+            $reply = $this->cleanResponse($reply);
+            $tokensUsed = $data['usage']['total_tokens'] ?? 0;
+
+            $this->logChat($userId, $userMessage, $reply, $tokensUsed, $responseTime);
+
+            return [
+                'success' => true,
+                'message' => $reply,
+                'model' => $activeModelUsed,
+                'tokens_used' => $tokensUsed,
+                'response_time_ms' => $responseTime,
+                'tools_used' => $iteration > 1,
+            ];
         }
 
         return ['success' => false, 'message' => 'AI agent exceeded maximum iterations.'];
+    }
+
+    public function modelSupportsTools(string $model): bool
+    {
+        return self::AVAILABLE_MODELS[$model]['tools'] ?? true;
     }
 
     private function buildMessages(string $userMessage, ?string $conversationHistory = null, ?string $userName = null): array
