@@ -308,17 +308,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::middleware('permission:education_categories_view')->group(function () {
             Route::get('education-categories', [EducationCategoryController::class, 'index'])->name('education-categories.index');
-            Route::get('education-categories/{educationCategory}', [EducationCategoryController::class, 'show'])->name('education-categories.show');
+            Route::get('education-categories/{educationCategory}', [EducationCategoryController::class, 'show'])->name('education-categories.show')->whereNumber('educationCategory');
         });
 
         Route::middleware('permission:education_categories_edit')->group(function () {
-            Route::get('education-categories/{educationCategory}/edit', [EducationCategoryController::class, 'edit'])->name('education-categories.edit');
-            Route::put('education-categories/{educationCategory}', [EducationCategoryController::class, 'update'])->name('education-categories.update');
+            Route::get('education-categories/{educationCategory}/edit', [EducationCategoryController::class, 'edit'])->name('education-categories.edit')->whereNumber('educationCategory');
+            Route::put('education-categories/{educationCategory}', [EducationCategoryController::class, 'update'])->name('education-categories.update')->whereNumber('educationCategory');
         });
 
         Route::middleware('permission:education_categories_delete')->group(function () {
-            Route::delete('education-categories/{educationCategory}', [EducationCategoryController::class, 'destroy'])->name('education-categories.destroy');
-            Route::post('education-categories/{educationCategory}/restore', [EducationCategoryController::class, 'restore'])->name('education-categories.restore')->withTrashed();
+            Route::delete('education-categories/{educationCategory}', [EducationCategoryController::class, 'destroy'])->name('education-categories.destroy')->whereNumber('educationCategory');
+            Route::post('education-categories/{educationCategory}/restore', [EducationCategoryController::class, 'restore'])->name('education-categories.restore')->withTrashed()->whereNumber('educationCategory');
         });
 
         // Courses
@@ -329,41 +329,41 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::middleware('permission:education_view')->group(function () {
             Route::get('courses', [EducationController::class, 'index'])->name('courses.index');
-            Route::get('courses/{course}', [EducationController::class, 'show'])->name('courses.show');
+            Route::get('courses/{course}', [EducationController::class, 'show'])->name('courses.show')->whereNumber('course');
         });
 
         Route::middleware('permission:education_edit')->group(function () {
-            Route::get('courses/{course}/edit', [EducationController::class, 'edit'])->name('courses.edit');
-            Route::put('courses/{course}', [EducationController::class, 'update'])->name('courses.update');
-            Route::post('courses/{course}/publish', [EducationController::class, 'publish'])->name('courses.publish');
-            Route::post('courses/{course}/unpublish', [EducationController::class, 'unpublish'])->name('courses.unpublish');
+            Route::get('courses/{course}/edit', [EducationController::class, 'edit'])->name('courses.edit')->whereNumber('course');
+            Route::put('courses/{course}', [EducationController::class, 'update'])->name('courses.update')->whereNumber('course');
+            Route::post('courses/{course}/publish', [EducationController::class, 'publish'])->name('courses.publish')->whereNumber('course');
+            Route::post('courses/{course}/unpublish', [EducationController::class, 'unpublish'])->name('courses.unpublish')->whereNumber('course');
         });
 
         Route::middleware('permission:education_delete')->group(function () {
-            Route::delete('courses/{course}', [EducationController::class, 'destroy'])->name('courses.destroy');
-            Route::post('courses/{course}/restore', [EducationController::class, 'restore'])->name('courses.restore')->withTrashed();
+            Route::delete('courses/{course}', [EducationController::class, 'destroy'])->name('courses.destroy')->whereNumber('course');
+            Route::post('courses/{course}/restore', [EducationController::class, 'restore'])->name('courses.restore')->withTrashed()->whereNumber('course');
         });
 
         // Lessons (nested under courses)
-        Route::middleware('permission:lessons_view')->group(function () {
-            Route::get('courses/{course}/lessons', [LessonController::class, 'index'])->name('courses.lessons.index');
-            Route::get('courses/{course}/lessons/{lesson}', [LessonController::class, 'show'])->name('courses.lessons.show');
-        });
-
         Route::middleware('permission:lessons_create')->group(function () {
-            Route::get('courses/{course}/lessons/create', [LessonController::class, 'create'])->name('courses.lessons.create');
-            Route::post('courses/{course}/lessons', [LessonController::class, 'store'])->name('courses.lessons.store');
+            Route::get('courses/{course}/lessons/create', [LessonController::class, 'create'])->name('courses.lessons.create')->whereNumber('course');
+            Route::post('courses/{course}/lessons', [LessonController::class, 'store'])->name('courses.lessons.store')->whereNumber('course');
         });
 
         Route::middleware('permission:lessons_edit')->group(function () {
-            Route::get('courses/{course}/lessons/{lesson}/edit', [LessonController::class, 'edit'])->name('courses.lessons.edit');
-            Route::put('courses/{course}/lessons/{lesson}', [LessonController::class, 'update'])->name('courses.lessons.update');
-            Route::post('courses/{course}/lessons/reorder', [LessonController::class, 'reorder'])->name('courses.lessons.reorder');
+            Route::post('courses/{course}/lessons/reorder', [LessonController::class, 'reorder'])->name('courses.lessons.reorder')->whereNumber('course');
+            Route::get('courses/{course}/lessons/{lesson}/edit', [LessonController::class, 'edit'])->name('courses.lessons.edit')->whereNumber('course')->whereNumber('lesson');
+            Route::put('courses/{course}/lessons/{lesson}', [LessonController::class, 'update'])->name('courses.lessons.update')->whereNumber('course')->whereNumber('lesson');
+        });
+
+        Route::middleware('permission:lessons_view')->group(function () {
+            Route::get('courses/{course}/lessons', [LessonController::class, 'index'])->name('courses.lessons.index')->whereNumber('course');
+            Route::get('courses/{course}/lessons/{lesson}', [LessonController::class, 'show'])->name('courses.lessons.show')->whereNumber('course')->whereNumber('lesson');
         });
 
         Route::middleware('permission:lessons_delete')->group(function () {
-            Route::delete('courses/{course}/lessons/{lesson}', [LessonController::class, 'destroy'])->name('courses.lessons.destroy');
-            Route::post('courses/{course}/lessons/{lesson}/restore', [LessonController::class, 'restore'])->name('courses.lessons.restore')->withTrashed();
+            Route::delete('courses/{course}/lessons/{lesson}', [LessonController::class, 'destroy'])->name('courses.lessons.destroy')->whereNumber('course')->whereNumber('lesson');
+            Route::post('courses/{course}/lessons/{lesson}/restore', [LessonController::class, 'restore'])->name('courses.lessons.restore')->withTrashed()->whereNumber('course')->whereNumber('lesson');
         });
 
         // MT5 Bot Management

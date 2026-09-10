@@ -9,21 +9,42 @@ use Illuminate\Http\JsonResponse;
 
 class EducationApiController extends Controller
 {
-    public function courses(): JsonResponse
+    public function courses(\Illuminate\Http\Request $request): JsonResponse
     {
-        $courses = Course::with('category')
-            ->where('is_published', true)
-            ->latest()
-            ->paginate(10);
+        $query = Course::with('category')
+            ->where('is_published', true);
+
+        if ($categoryId = $request->input('category_id')) {
+            $query->where('category_id', $categoryId);
+        }
+
+        if ($difficulty = $request->input('difficulty')) {
+            $query->where('difficulty', $difficulty);
+        }
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $courses = $query->latest()->paginate(15);
 
         return response()->json(['success' => true, 'data' => $courses]);
     }
 
     public function course($id): JsonResponse
     {
-        $course = Course::with(['category', 'lessons'])
-            ->where('is_published', true)
-            ->findOrFail($id);
+        $course = Course::with([
+            'category',
+            'lessons' => fn($q) => $q->where('is_published', true)->orderBy('sort_order', 'asc')
+        ])
+        ->where('is_published', true)
+        ->findOrFail($id);
+
+        // Increment views count safely
+        $course->increment('views_count');
 
         return response()->json(['success' => true, 'data' => $course]);
     }
@@ -31,7 +52,9 @@ class EducationApiController extends Controller
     public function categories(): JsonResponse
     {
         $categories = EducationCategory::where('is_active', true)
-            ->withCount('courses')
+            ->withCount(['courses' => fn($q) => $q->where('is_published', true)])
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('name', 'asc')
             ->get();
 
         return response()->json(['success' => true, 'data' => $categories]);
