@@ -22,12 +22,13 @@ class SupportChatController extends Controller
 
         if ($search = trim($request->input('search', ''))) {
             $safeSearch = addcslashes($search, '%_\\');
-            $query->where(function ($q) use ($safeSearch) {
-                $q->where('subject', 'like', "%{$safeSearch}%")
-                    ->orWhere('ticket_number', 'like', "%{$safeSearch}%")
-                    ->orWhereHas('user', function ($uq) use ($safeSearch) {
-                        $uq->where('name', 'like', "%{$safeSearch}%")
-                            ->orWhere('email', 'like', "%{$safeSearch}%");
+            $lower = strtolower($safeSearch);
+            $query->where(function ($q) use ($lower) {
+                $q->whereRaw('LOWER(subject) LIKE ?', ["%{$lower}%"])
+                    ->orWhereRaw('LOWER(ticket_number) LIKE ?', ["%{$lower}%"])
+                    ->orWhereHas('user', function ($uq) use ($lower) {
+                        $uq->whereRaw('LOWER(name) LIKE ?', ["%{$lower}%"])
+                            ->orWhereRaw('LOWER(email) LIKE ?', ["%{$lower}%"]);
                     });
             });
         }

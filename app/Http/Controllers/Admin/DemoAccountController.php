@@ -19,13 +19,16 @@ class DemoAccountController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = str_replace(['%', '_'], ['\%', '\_'], $request->search);
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"))
-                    ->orWhere('demo_email', 'like', "%{$search}%")
-                    ->orWhere('demo_phone', 'like', "%{$search}%")
-                    ->orWhere('exness_account_number', 'like', "%{$search}%");
-            });
+            $search = str_replace(['%', '_'], ['\%', '\_'], trim($request->search));
+            if ($search !== '') {
+                $lower = strtolower($search);
+                $query->where(function ($q) use ($lower) {
+                    $q->whereHas('user', fn($u) => $u->whereRaw('LOWER(name) LIKE ?', ["%{$lower}%"])->orWhereRaw('LOWER(email) LIKE ?', ["%{$lower}%"]))
+                        ->orWhereRaw('LOWER(COALESCE(demo_email, \'\')) LIKE ?', ["%{$lower}%"])
+                        ->orWhereRaw('LOWER(COALESCE(demo_phone, \'\')) LIKE ?', ["%{$lower}%"])
+                        ->orWhereRaw('LOWER(COALESCE(exness_account_number, \'\')) LIKE ?', ["%{$lower}%"]);
+                });
+            }
         }
 
         if ($request->filled('date_from') && $this->isValidDate($request->input('date_from'))) {

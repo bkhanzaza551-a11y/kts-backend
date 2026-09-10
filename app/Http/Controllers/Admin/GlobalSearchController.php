@@ -27,7 +27,8 @@ class GlobalSearchController extends Controller
             ]);
         }
 
-        $safeQ = addcslashes($q, '%_\\');
+        $needle = strtolower($q);
+        $likePattern = "%{$needle}%";
         $results = [];
 
         // 1. Navigation / Menu items match
@@ -40,27 +41,28 @@ class GlobalSearchController extends Controller
             ];
         }
 
-        // 2. Users (Clients)
+        // 2. Users & Traders (Clients & Accounts)
         if ($request->user()->hasPermission('users_view')) {
-            $users = User::where(function($query) use ($safeQ) {
-                    $query->where('name', 'like', "%{$safeQ}%")
-                          ->orWhere('email', 'like', "%{$safeQ}%")
-                          ->orWhere('phone', 'like', "%{$safeQ}%")
-                          ->orWhere('real_account_id', 'like', "%{$safeQ}%")
-                          ->orWhere('demo_account_id', 'like', "%{$safeQ}%");
+            $users = User::with('roles')
+                ->where(function($query) use ($likePattern) {
+                    $query->whereRaw('LOWER(name) LIKE ?', [$likePattern])
+                          ->orWhereRaw('LOWER(email) LIKE ?', [$likePattern])
+                          ->orWhereRaw('LOWER(COALESCE(phone, \'\')) LIKE ?', [$likePattern])
+                          ->orWhereRaw('LOWER(COALESCE(real_account_id, \'\')) LIKE ?', [$likePattern])
+                          ->orWhereRaw('LOWER(COALESCE(demo_account_id, \'\')) LIKE ?', [$likePattern])
+                          ->orWhereRaw('LOWER(COALESCE(broker_name, \'\')) LIKE ?', [$likePattern]);
                 })
-                ->whereHas('roles', function($rq) {
-                    $rq->where('slug', 'user');
-                })
-                ->limit(4)
+                ->limit(6)
                 ->get();
 
             if ($users->isNotEmpty()) {
                 $userItems = [];
                 foreach ($users as $u) {
-                    $subtitle = $u->email . ($u->real_account_id ? " • Live: {$u->real_account_id}" : ($u->demo_account_id ? " • Demo: {$u->demo_account_id}" : ''));
-                    $badge = $u->is_premium ? 'VIP' : ($u->is_banned ? 'Banned' : 'User');
-                    $badgeClass = $u->is_premium ? 'bg-warning text-dark' : ($u->is_banned ? 'bg-danger text-white' : 'bg-primary text-white');
+                    $roleName = $u->roles->pluck('name')->first() ?? ($u->isSuperAdmin() ? 'Super Admin' : 'Trader');
+                    $subtitle = $u->email . ($u->real_account_id ? " • Real: {$u->real_account_id}" : ($u->demo_account_id ? " • Demo: {$u->demo_account_id}" : " • {$roleName}"));
+                    
+                    $badge = $u->is_banned ? 'Banned' : ($u->is_premium ? 'VIP' : ($u->isSuperAdmin() ? 'Admin' : 'User'));
+                    $badgeClass = $u->is_banned ? 'bg-danger text-white' : ($u->is_premium ? 'bg-warning text-dark' : ($u->isSuperAdmin() ? 'bg-dark text-white' : 'bg-primary text-white'));
                     
                     $userItems[] = [
                         'title' => $u->name,
@@ -72,51 +74,20 @@ class GlobalSearchController extends Controller
                     ];
                 }
                 $results[] = [
-                    'category' => 'Users / Clients',
+                    'category' => 'Users & Accounts',
                     'icon' => 'bi-people',
                     'items' => $userItems,
                 ];
             }
         }
 
-        // 3. Staff & Admins
-        if ($request->user()->hasPermission('staff_view')) {
-            $staff = User::where(function($query) use ($safeQ) {
-                    $query->where('name', 'like', "%{$safeQ}%")
-                          ->orWhere('email', 'like', "%{$safeQ}%");
-                })
-                ->whereHas('roles', function($rq) {
-                    $rq->where('slug', '!=', 'user');
-                })
-                ->limit(3)
-                ->get();
-
-            if ($staff->isNotEmpty()) {
-                $staffItems = [];
-                foreach ($staff as $s) {
-                    $roleNames = $s->roles->pluck('name')->join(', ');
-                    $staffItems[] = [
-                        'title' => $s->name,
-                        'subtitle' => $s->email . " • {$roleNames}",
-                        'badge' => 'Staff',
-                        'badge_class' => 'bg-dark text-white',
-                        'url' => route('admin.staff.edit', $s->id),
-                        'icon' => 'bi-person-badge',
-                    ];
-                }
-                $results[] = [
-                    'category' => 'Staff & Team',
-                    'icon' => 'bi-shield-shaded',
-                    'items' => $staffItems,
-                ];
-            }
-        }
-
-        // 4. Trading Signals
+        // 3. Trading Signals
         if ($request->user()->hasPermission('signals_view')) {
-            $signals = Signal::where('symbol', 'like', "%{$safeQ}%")
-                ->orWhere('type', 'like', "%{$safeQ}%")
-                ->limit(3)
+            $signals = Signal::where(function($query) use ($likePattern) {
+                    $query->whereRaw('LOWER(symbol) LIKE ?', [$likePattern])
+                          ->orWhereRaw('LOWER(type) LIKE ?', [$likePattern]);
+                })
+                ->limit(4)
                 ->latest()
                 ->get();
 
@@ -140,11 +111,13 @@ class GlobalSearchController extends Controller
             }
         }
 
-        // 5. Support Tickets
+        // 4. Support Tickets
         if ($request->user()->hasPermission('chat_view')) {
-            $tickets = SupportTicket::where('ticket_number', 'like', "%{$safeQ}%")
-                ->orWhere('subject', 'like', "%{$safeQ}%")
-                ->limit(3)
+            $tickets = SupportTicket::where(function($query) use ($likePattern) {
+                    $query->whereRaw('LOWER(ticket_number) LIKE ?', [$likePattern])
+                          ->orWhereRaw('LOWER(subject) LIKE ?', [$likePattern]);
+                })
+                ->limit(4)
                 ->latest()
                 ->get();
 
@@ -168,10 +141,13 @@ class GlobalSearchController extends Controller
             }
         }
 
-        // 6. Education Courses
+        // 5. Education Courses & Academy
         if ($request->user()->hasPermission('education_view')) {
-            $courses = Course::where('title', 'like', "%{$safeQ}%")
-                ->limit(3)
+            $courses = Course::where(function($query) use ($likePattern) {
+                    $query->whereRaw('LOWER(title) LIKE ?', [$likePattern])
+                          ->orWhereRaw('LOWER(COALESCE(description, \'\')) LIKE ?', [$likePattern]);
+                })
+                ->limit(4)
                 ->get();
 
             if ($courses->isNotEmpty()) {
@@ -179,26 +155,28 @@ class GlobalSearchController extends Controller
                 foreach ($courses as $c) {
                     $courseItems[] = [
                         'title' => $c->title,
-                        'subtitle' => "Level: " . ucfirst($c->level ?? 'All'),
+                        'subtitle' => "Difficulty: " . ucfirst($c->difficulty ?? 'All'),
                         'badge' => 'Course',
                         'badge_class' => 'bg-info text-dark',
-                        'url' => route('admin.courses.index'),
+                        'url' => route('admin.courses.show', $c->id),
                         'icon' => 'bi-book-half',
                     ];
                 }
                 $results[] = [
-                    'category' => 'Education',
+                    'category' => 'Education & Courses',
                     'icon' => 'bi-mortarboard',
                     'items' => $courseItems,
                 ];
             }
         }
 
-        // 7. Payments / Transactions
+        // 6. Payments & Invoices
         if ($request->user()->hasPermission('transactions_view')) {
-            $payments = Payment::where('transaction_id', 'like', "%{$safeQ}%")
-                ->orWhere('tx_hash', 'like', "%{$safeQ}%")
-                ->limit(3)
+            $payments = Payment::where(function($query) use ($likePattern) {
+                    $query->whereRaw('LOWER(COALESCE(transaction_id, \'\')) LIKE ?', [$likePattern])
+                          ->orWhereRaw('LOWER(COALESCE(tx_hash, \'\')) LIKE ?', [$likePattern]);
+                })
+                ->limit(4)
                 ->latest()
                 ->get();
 

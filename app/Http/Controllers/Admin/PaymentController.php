@@ -32,9 +32,10 @@ class PaymentController extends Controller
 
         if ($search = trim($request->input('search', ''))) {
             $safeSearch = addcslashes($search, '%_\\');
-            $query->where(function ($q) use ($safeSearch) {
-                $q->where('transaction_id', 'like', "%{$safeSearch}%")
-                  ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', "%{$safeSearch}%")->orWhere('email', 'like', "%{$safeSearch}%"));
+            $lower = strtolower($safeSearch);
+            $query->where(function ($q) use ($lower) {
+                $q->whereRaw('LOWER(COALESCE(transaction_id, \'\')) LIKE ?', ["%{$lower}%"])
+                  ->orWhereHas('user', fn($uq) => $uq->whereRaw('LOWER(name) LIKE ?', ["%{$lower}%"])->orWhereRaw('LOWER(email) LIKE ?', ["%{$lower}%"]));
             });
         }
 

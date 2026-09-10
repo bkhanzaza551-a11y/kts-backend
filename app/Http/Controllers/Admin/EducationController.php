@@ -19,9 +19,10 @@ class EducationController extends Controller
 
         if ($search = trim($request->input('search', ''))) {
             $safeSearch = addcslashes($search, '%_\\');
-            $query->where(function ($q) use ($safeSearch) {
-                $q->where('title', 'like', "%{$safeSearch}%")
-                  ->orWhere('description', 'like', "%{$safeSearch}%");
+            $lower = strtolower($safeSearch);
+            $query->where(function ($q) use ($lower) {
+                $q->whereRaw('LOWER(title) LIKE ?', ["%{$lower}%"])
+                  ->orWhereRaw('LOWER(COALESCE(description, \'\')) LIKE ?', ["%{$lower}%"]);
             });
         }
 

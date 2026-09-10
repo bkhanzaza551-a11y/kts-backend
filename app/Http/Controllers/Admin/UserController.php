@@ -20,10 +20,11 @@ class UserController extends Controller
         if ($search = $request->input('search')) {
             $safeSearch = str_replace(['%', '_'], ['\%', '\_'], trim($search));
             if ($safeSearch !== '') {
-                $query->where(function ($q) use ($safeSearch) {
-                    $q->where('name', 'like', "%{$safeSearch}%")
-                      ->orWhere('email', 'like', "%{$safeSearch}%")
-                      ->orWhere('phone', 'like', "%{$safeSearch}%");
+                $lower = strtolower($safeSearch);
+                $query->where(function ($q) use ($lower) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$lower}%"])
+                      ->orWhereRaw('LOWER(email) LIKE ?', ["%{$lower}%"])
+                      ->orWhereRaw('LOWER(COALESCE(phone, \'\')) LIKE ?', ["%{$lower}%"]);
                 });
             }
         }

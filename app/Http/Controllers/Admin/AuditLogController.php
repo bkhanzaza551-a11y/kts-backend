@@ -38,10 +38,11 @@ class AuditLogController extends Controller
         if ($request->filled('search')) {
             $search = str_replace(['%', '_'], ['\%', '\_'], trim($request->search));
             if ($search !== '') {
-                $query->where(function ($q) use ($search) {
-                    $q->where('description', 'like', "%{$search}%")
-                        ->orWhere('ip_address', 'like', "%{$search}%")
-                        ->orWhere('action', 'like', "%{$search}%");
+                $lower = strtolower($search);
+                $query->where(function ($q) use ($lower) {
+                    $q->whereRaw('LOWER(COALESCE(description, \'\')) LIKE ?', ["%{$lower}%"])
+                        ->orWhereRaw('LOWER(COALESCE(ip_address, \'\')) LIKE ?', ["%{$lower}%"])
+                        ->orWhereRaw('LOWER(COALESCE(action, \'\')) LIKE ?', ["%{$lower}%"]);
                 });
             }
         }
