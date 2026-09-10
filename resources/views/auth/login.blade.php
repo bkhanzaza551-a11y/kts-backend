@@ -46,7 +46,7 @@
                         <label for="email" class="form-label">Email Address</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="admin@example.com" value="{{ old('email') }}" required autofocus>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="admin@example.com" value="{{ old('email') }}" required autofocus autocomplete="username">
                         </div>
                     </div>
 
@@ -54,7 +54,7 @@
                         <label for="password" class="form-label">Password</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
                         </div>
                     </div>
 
