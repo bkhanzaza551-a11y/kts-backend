@@ -16,17 +16,16 @@ class ChatSeeder extends Seeder
 
         $rooms = [
             ['name' => 'Global Chat', 'slug' => 'general', 'description' => 'Global community trading discussion', 'is_active' => true, 'is_public' => true, 'sort_order' => 1],
-            ['name' => 'Signals', 'slug' => 'signals', 'description' => 'Live signal discussions', 'is_active' => true, 'is_public' => true, 'sort_order' => 2],
-            ['name' => 'Support', 'slug' => 'support', 'description' => 'Customer support chat', 'is_active' => true, 'is_public' => true, 'sort_order' => 3],
         ];
 
         foreach ($rooms as $roomData) {
             ChatRoom::updateOrCreate(['slug' => $roomData['slug']], $roomData);
         }
 
+        ChatRoom::where('slug', '!=', 'general')->delete();
+
         $users = \App\Models\User::inRandomOrder()->limit(5)->get();
         $generalRoom = ChatRoom::where('slug', 'general')->first();
-        $signalsRoom = ChatRoom::where('slug', 'signals')->first();
 
         if ($generalRoom && $users->count()) {
             $messages = [
@@ -54,14 +53,6 @@ class ChatSeeder extends Seeder
             }
         }
 
-        if ($signalsRoom && $users->count()) {
-            ChatMessage::create([
-                'room_id' => $signalsRoom->id,
-                'user_id' => $adminId,
-                'message' => 'Signal: EURUSD BUY at 1.0845, TP: 1.0865, SL: 1.0825',
-                'type' => 'text',
-            ]);
-        }
 
         $restrictedWords = [
             ['word' => 'scam', 'replacement' => '***', 'is_active' => true, 'created_by' => $adminId],

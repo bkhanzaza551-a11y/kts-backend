@@ -121,17 +121,17 @@ class TestDataSeeder extends Seeder
 
     private function seedChatRooms(): void
     {
-        if (ChatRoom::count() > 0) return;
-
-        $rooms = [
-            ['name' => 'VIP Signals', 'slug' => 'vip-signals', 'description' => 'Exclusive VIP trading signals', 'is_public' => false, 'is_active' => true, 'sort_order' => 2],
-            ['name' => 'Analysis', 'slug' => 'analysis', 'description' => 'Technical analysis discussions', 'is_public' => true, 'is_active' => true, 'sort_order' => 3],
-            ['name' => 'Beginner Help', 'slug' => 'beginner-help', 'description' => 'Ask questions, get help', 'is_public' => true, 'is_active' => true, 'sort_order' => 4],
-        ];
-
-        foreach ($rooms as $room) {
-            ChatRoom::create($room);
-        }
+        ChatRoom::firstOrCreate(
+            ['slug' => 'general'],
+            [
+                'name' => 'Global Chat',
+                'description' => 'Global community trading discussion',
+                'is_public' => true,
+                'is_active' => true,
+                'sort_order' => 1,
+            ]
+        );
+        ChatRoom::where('slug', '!=', 'general')->delete();
     }
 
     private function seedStickerPacks(): void
