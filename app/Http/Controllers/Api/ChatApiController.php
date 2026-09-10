@@ -53,8 +53,32 @@ class ChatApiController extends Controller
         ]);
     }
 
-    public function messages(Request $request, ChatRoom $room)
+    private function resolveRoom($room): ChatRoom
     {
+        if ($room instanceof ChatRoom) {
+            return $room;
+        }
+
+        $found = ChatRoom::where('slug', $room)->orWhere('id', $room)->first();
+        if ($found) {
+            return $found;
+        }
+
+        return ChatRoom::firstOrCreate(
+            ['slug' => $room === 'general' ? 'general' : Str::slug($room)],
+            [
+                'name' => ucwords(str_replace(['-', '_'], ' ', $room)),
+                'description' => 'Community trading discussion',
+                'is_active' => true,
+                'is_public' => true,
+                'sort_order' => 1,
+            ]
+        );
+    }
+
+    public function messages(Request $request, $room)
+    {
+        $room = $this->resolveRoom($room);
         $user = $request->user();
 
         $isBanned = ChatBannedUser::where('user_id', $user->id)
@@ -141,8 +165,9 @@ class ChatApiController extends Controller
         ]);
     }
 
-    public function send(Request $request, ChatRoom $room)
+    public function send(Request $request, $room)
     {
+        $room = $this->resolveRoom($room);
         $user = $request->user();
 
         $isBanned = ChatBannedUser::where('user_id', $user->id)
@@ -276,8 +301,9 @@ class ChatApiController extends Controller
         ]);
     }
 
-    public function pinnedMessages(ChatRoom $room)
+    public function pinnedMessages($room)
     {
+        $room = $this->resolveRoom($room);
         $messages = $room->messages()
             ->where('is_pinned', true)
             ->with(['user:id,name,chat_badge,badge_color,is_premium', 'sticker:id,name,image_url'])
