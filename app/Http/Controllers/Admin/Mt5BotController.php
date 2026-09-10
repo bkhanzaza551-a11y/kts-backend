@@ -15,150 +15,71 @@ class Mt5BotController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Mt5BotConfig::query();
+        $bot = Mt5BotConfig::first();
 
-        if ($search = trim($request->input('search', ''))) {
-            $safeSearch = addcslashes($search, '%_\\');
-            $query->where(function ($q) use ($safeSearch) {
-                $q->where('name', 'like', "%{$safeSearch}%")
-                  ->orWhere('mt5_account_number', 'like', "%{$safeSearch}%")
-                  ->orWhere('mt5_server', 'like', "%{$safeSearch}%");
-            });
+        if (!$bot) {
+            $bot = Mt5BotConfig::create([
+                'name' => 'KTS10 Pips Bot',
+                'description' => 'Automated Gold (XAUUSD) & Major Forex Pairs High-Precision Trading Bot',
+                'mt5_account_number' => '87654321',
+                'mt5_server' => 'Exness-MT5Real',
+                'status' => 'active',
+                'mode' => 'live',
+                'auto_trade' => true,
+                'lot_size' => 0.01,
+                'base_balance' => 100.00,
+                'base_lot_size' => 0.01,
+                'take_profit_pips' => 10.00,
+                'stop_loss_pips' => 5.00,
+                'max_daily_trades' => 10,
+                'max_daily_loss' => 500.00,
+                'whatsapp_number' => '+923371244640',
+                'balance' => 25000.00,
+                'equity' => 25850.00,
+                'total_profit' => 4500.00,
+                'total_loss' => 950.00,
+                'total_trades' => 128,
+                'winning_trades' => 108,
+                'losing_trades' => 20,
+            ]);
         }
 
-        if ($status = $request->input('status')) {
-            if (in_array($status, ['active', 'inactive', 'error'])) {
-                $query->where('status', $status);
-            }
-        }
+        $bot->load(['creator', 'logs' => function ($q) {
+            $q->latest()->limit(15);
+        }]);
 
-        if ($mode = $request->input('mode')) {
-            if (in_array($mode, ['live', 'demo', 'backtest'])) {
-                $query->where('mode', $mode);
-            }
-        }
+        $tradesCount = $bot->trades()->count();
+        $openTradesCount = $bot->trades()->where('status', 'open')->count();
+        $closedTradesCount = $bot->trades()->where('status', 'closed')->count();
 
-        $bots = $query->latest()->paginate(15)->withQueryString();
+        $recentTrades = $bot->trades()->latest('opened_at')->limit(15)->get();
 
-        $stats = Cache::remember('mt5_bot_stats', 60, function () {
-            $row = DB::table('mt5_bot_configs')
-                ->whereNull('deleted_at')
-                ->selectRaw("
-                    COUNT(*) as total,
-                    SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
-                    SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive,
-                    SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as errors,
-                    COALESCE(SUM(balance), 0) as total_balance,
-                    COALESCE(SUM(equity), 0) as total_equity,
-                    COALESCE(SUM(total_profit), 0) as total_profit,
-                    COALESCE(SUM(total_loss), 0) as total_loss,
-                    COALESCE(SUM(total_trades), 0) as total_trades
-                ")->first();
-
-            return [
-                'total' => (int) $row->total,
-                'active' => (int) $row->active,
-                'inactive' => (int) $row->inactive,
-                'errors' => (int) $row->errors,
-                'total_balance' => (float) $row->total_balance,
-                'total_equity' => (float) $row->total_equity,
-                'total_profit' => (float) $row->total_profit,
-                'total_loss' => (float) $row->total_loss,
-                'total_trades' => (int) $row->total_trades,
-            ];
-        });
-
-        return view('admin.mt5-bot.index', compact('bots', 'stats'));
+        return view('admin.mt5-bot.index', compact('bot', 'tradesCount', 'openTradesCount', 'closedTradesCount', 'recentTrades'));
     }
 
     public function create()
     {
-        return view('admin.mt5-bot.create');
+        return redirect()->route('admin.mt5-bot.index');
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'mt5_account_number' => 'required|string|max:50|unique:mt5_bot_configs,mt5_account_number',
-            'mt5_server' => 'required|string|max:255',
-            'bot_file' => 'nullable|file|max:20480',
-            'api_key' => 'nullable|string|max:255',
-            'api_secret' => 'nullable|string|max:255',
-            'mode' => 'required|in:live,demo,backtest',
-            'take_profit_pips' => 'required|numeric|min:1|max:10000',
-            'stop_loss_pips' => 'required|numeric|min:1|max:10000',
-            'max_daily_trades' => 'required|integer|min:1|max:1000',
-            'max_daily_loss' => 'required|numeric|min:1|max:1000000',
-            'whatsapp_number' => 'nullable|string|max:20',
-            'base_balance' => 'nullable|numeric|min:1|max:1000000',
-            'base_lot_size' => 'nullable|numeric|min:0.01|max:100',
-            'demo_server' => 'nullable|string|max:100',
-            'demo_account' => 'nullable|string|max:50',
-            'demo_email' => 'nullable|email|max:100',
-            'demo_phone' => 'nullable|string|max:20',
-            'demo_deposit' => 'nullable|numeric|min:0|max:100000000',
-        ]);
-
-        if ($request->hasFile('bot_file')) {
-            $validated['bot_file_path'] = $request->file('bot_file')->store('mt5-bots', 'public');
-        }
-        unset($validated['bot_file']);
-
-        if (!empty($validated['api_key'])) {
-            $validated['api_key'] = Crypt::encryptString($validated['api_key']);
+        $bot = Mt5BotConfig::first();
+        if ($bot) {
+            return $this->update($request, $bot);
         }
 
-        if (!empty($validated['api_secret'])) {
-            $validated['api_secret'] = Crypt::encryptString($validated['api_secret']);
-        }
-
-        $validated['created_by'] = auth()->id();
-        $validated['status'] = 'inactive';
-
-        $bot = Mt5BotConfig::create($validated);
-
-        Mt5BotLog::create([
-            'bot_config_id' => $bot->id,
-            'level' => 'info',
-            'action' => 'created',
-            'message' => "Bot configuration created: {$bot->name}",
-        ]);
-
-        ActivityLogger::log('create', 'Mt5BotConfig', $bot->id, "Created MT5 bot config: {$bot->name}");
-        Cache::forget('mt5_bot_stats');
-
-        return redirect()->route('admin.mt5-bot.show', $bot)->with('success', 'Bot configuration created successfully.');
+        return redirect()->route('admin.mt5-bot.index');
     }
 
     public function show(Mt5BotConfig $bot)
     {
-        $bot->load(['creator', 'logs' => function ($q) {
-            $q->latest()->limit(20);
-        }]);
-
-        $counts = $bot->trades()->selectRaw("
-            COUNT(*) as total,
-            SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as open_count,
-            SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed_count
-        ")->first();
-
-        $tradesCount = (int) ($counts->total ?? 0);
-        $openTradesCount = (int) ($counts->open_count ?? 0);
-        $closedTradesCount = (int) ($counts->closed_count ?? 0);
-
-        $recentTrades = $bot->trades()->latest('opened_at')->limit(10)->get();
-
-        return view('admin.mt5-bot.show', compact('bot', 'tradesCount', 'openTradesCount', 'closedTradesCount', 'recentTrades'));
+        return redirect()->route('admin.mt5-bot.index');
     }
 
     public function edit(Mt5BotConfig $bot)
     {
-        $bot->api_key = null;
-        $bot->api_secret = null;
-
-        return view('admin.mt5-bot.edit', compact('bot'));
+        return redirect()->route('admin.mt5-bot.index');
     }
 
     public function update(Request $request, Mt5BotConfig $bot)
@@ -172,19 +93,28 @@ class Mt5BotController extends Controller
             'api_key' => 'nullable|string|max:255',
             'api_secret' => 'nullable|string|max:255',
             'mode' => 'required|in:live,demo,backtest',
-            'auto_trade' => 'boolean',
-            'take_profit_pips' => 'required|numeric|min:1|max:10000',
-            'stop_loss_pips' => 'required|numeric|min:1|max:10000',
+            'status' => 'required|in:active,inactive,error',
+            'auto_trade' => 'nullable|boolean',
+            'take_profit_pips' => 'required|numeric|min:0.1|max:10000',
+            'stop_loss_pips' => 'required|numeric|min:0.1|max:10000',
             'max_daily_trades' => 'required|integer|min:1|max:1000',
             'max_daily_loss' => 'required|numeric|min:1|max:1000000',
-            'whatsapp_number' => 'nullable|string|max:20',
-            'base_balance' => 'nullable|numeric|min:1|max:1000000',
-            'base_lot_size' => 'nullable|numeric|min:0.01|max:100',
+            'whatsapp_number' => 'nullable|string|max:30',
+            'base_balance' => 'required|numeric|min:1|max:1000000',
+            'base_lot_size' => 'required|numeric|min:0.001|max:100',
             'demo_server' => 'nullable|string|max:100',
             'demo_account' => 'nullable|string|max:50',
             'demo_email' => 'nullable|email|max:100',
-            'demo_phone' => 'nullable|string|max:20',
+            'demo_phone' => 'nullable|string|max:30',
             'demo_deposit' => 'nullable|numeric|min:0|max:100000000',
+            // Performance stats overrides
+            'balance' => 'nullable|numeric|min:0|max:100000000',
+            'equity' => 'nullable|numeric|min:0|max:100000000',
+            'total_profit' => 'nullable|numeric|min:0|max:100000000',
+            'total_loss' => 'nullable|numeric|min:0|max:100000000',
+            'total_trades' => 'nullable|integer|min:0',
+            'winning_trades' => 'nullable|integer|min:0',
+            'losing_trades' => 'nullable|integer|min:0',
         ]);
 
         if ($request->hasFile('bot_file')) {
@@ -195,7 +125,7 @@ class Mt5BotController extends Controller
         }
         unset($validated['bot_file']);
 
-        $validated['auto_trade'] = $request->boolean('auto_trade');
+        $validated['auto_trade'] = $request->has('auto_trade') ? $request->boolean('auto_trade') : false;
 
         if (!empty($validated['api_key'])) {
             $validated['api_key'] = Crypt::encryptString($validated['api_key']);
@@ -209,45 +139,28 @@ class Mt5BotController extends Controller
             unset($validated['api_secret']);
         }
 
-        $oldValues = $bot->only(['name', 'mt5_account_number', 'mt5_server', 'mode', 'auto_trade', 'take_profit_pips', 'stop_loss_pips', 'max_daily_trades', 'max_daily_loss', 'whatsapp_number', 'base_balance', 'base_lot_size', 'demo_server', 'demo_account', 'demo_email', 'demo_phone', 'demo_deposit']);
+        $oldValues = $bot->only(['name', 'mt5_account_number', 'mt5_server', 'mode', 'status', 'auto_trade', 'take_profit_pips', 'stop_loss_pips', 'max_daily_trades', 'max_daily_loss', 'whatsapp_number', 'base_balance', 'base_lot_size']);
         $bot->update($validated);
         $newValues = $bot->only(array_keys($oldValues));
 
         ActivityLogger::log('update', 'Mt5BotConfig', $bot->id, "Updated MT5 bot config: {$bot->name}", $oldValues, $newValues);
         Cache::forget('mt5_bot_stats');
 
-        return redirect()->route('admin.mt5-bot.show', $bot)->with('success', 'Bot configuration updated successfully.');
+        return redirect()->route('admin.mt5-bot.index')->with('success', 'KTS Trading Bot configuration updated successfully! Changes are live on the mobile app.');
     }
 
     public function destroy(Mt5BotConfig $bot)
     {
-        $title = $bot->name;
-        $oldValues = $bot->only(['name', 'mt5_account_number', 'status', 'mode']);
-
-        DB::transaction(function () use ($bot) {
-            $bot->logs()->delete();
-            $bot->trades()->delete();
-            $bot->delete();
-        });
-
-        ActivityLogger::log('delete', 'Mt5BotConfig', $bot->id, "Deleted MT5 bot config: {$title}", $oldValues, null);
-        Cache::forget('mt5_bot_stats');
-
-        return redirect()->route('admin.mt5-bot.index')->with('success', 'Bot configuration deleted successfully.');
+        return redirect()->route('admin.mt5-bot.index')->with('info', 'Single master bot cannot be deleted, but can be configured or deactivated.');
     }
 
     public function restore(Mt5BotConfig $bot)
     {
-        if (!$bot->trashed()) {
-            return back()->with('error', 'Bot is not deleted.');
+        if ($bot->trashed()) {
+            $bot->restore();
+            Cache::forget('mt5_bot_stats');
         }
-
-        $bot->restore();
-        Cache::forget('mt5_bot_stats');
-
-        ActivityLogger::log('restore', 'Mt5BotConfig', $bot->id, "Restored MT5 bot config: {$bot->name}");
-
-        return redirect()->route('admin.mt5-bot.show', $bot)->with('success', 'Bot restored successfully.');
+        return redirect()->route('admin.mt5-bot.index')->with('success', 'Bot restored successfully.');
     }
 
     public function logs(Mt5BotConfig $bot)
@@ -283,7 +196,7 @@ class Mt5BotController extends Controller
         ActivityLogger::log('toggle_status', 'Mt5BotConfig', $bot->id, "Toggled bot status: {$bot->name} ({$oldStatus} → {$newStatus})", ['status' => $oldStatus], ['status' => $newStatus]);
         Cache::forget('mt5_bot_stats');
 
-        return back()->with('success', "Bot {$newStatus} successfully.");
+        return back()->with('success', "Bot status changed to {$newStatus} successfully.");
     }
 
     public function toggleAutoTrade(Mt5BotConfig $bot)
@@ -330,6 +243,6 @@ class Mt5BotController extends Controller
 
         Cache::forget('mt5_bot_stats');
 
-        return back()->with('success', 'Stats recalculated successfully.');
+        return back()->with('success', 'Stats recalculated successfully from trade logs.');
     }
 }
