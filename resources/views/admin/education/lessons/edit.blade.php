@@ -53,7 +53,7 @@
                     <div class="p-3 bg-light rounded-3 border mb-3">
                         <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                             <label class="form-label fw-bold text-dark mb-0">
-                                <i class="bi bi-camera-video-fill text-danger me-1"></i>Lesson Video
+                                <i class="bi bi-camera-video-fill text-danger me-1"></i>Lesson Video <span class="text-danger">*</span>
                             </label>
                             {{-- Auto duration indicator badge --}}
                             <div id="durationBadgeContainer" class="{{ ($lesson->duration_minutes || $lesson->video_url) ? '' : 'd-none' }}">
@@ -62,6 +62,12 @@
                                 </span>
                             </div>
                         </div>
+
+                        @error('video_file')
+                        <div class="alert alert-danger p-2 small mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $message }}
+                        </div>
+                        @enderror
 
                         {{-- Current Video Banner (If Exists) --}}
                         @if($lesson->video_url)
@@ -242,6 +248,33 @@ function handleVideoUrlInput(url) {
         };
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('lessonForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('videoFileInput');
+            const urlInput = document.getElementById('videoUrlInput');
+            const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+            const hasUrl = urlInput && urlInput.value.trim().length > 0;
+
+            if (!hasFile && !hasUrl) {
+                e.preventDefault();
+                e.stopPropagation();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Lesson Video Required',
+                    text: 'Please upload a video file (MP4/MOV/WebM) or provide a video URL before updating the lesson.',
+                    confirmButtonText: 'Understood',
+                    customClass: {
+                        confirmButton: 'btn btn-primary px-4'
+                    }
+                });
+                return false;
+            }
+        });
+    }
+});
 </script>
 @endsection
 

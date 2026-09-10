@@ -32,7 +32,7 @@ class LessonController extends Controller
     public function store(Request $request, Course $course)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|min:2|max:255',
             'description' => 'nullable|string|max:1000',
             'content' => 'nullable|string|max:50000',
             'video_url' => 'nullable|string|max:2000',
@@ -41,6 +41,12 @@ class LessonController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_published' => 'boolean',
         ]);
+
+        if (!$request->hasFile('video_file') && empty(trim($request->input('video_url', '')))) {
+            return back()->withErrors([
+                'video_file' => 'A lesson video is required. Please upload a video file or enter a valid video URL.'
+            ])->withInput();
+        }
 
         if ($request->hasFile('video_file')) {
             $file = $request->file('video_file');
@@ -102,7 +108,7 @@ class LessonController extends Controller
             abort(404);
         }
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|min:2|max:255',
             'description' => 'nullable|string|max:1000',
             'content' => 'nullable|string|max:50000',
             'video_url' => 'nullable|string|max:2000',
@@ -111,6 +117,12 @@ class LessonController extends Controller
             'sort_order' => 'nullable|integer|min:0',
             'is_published' => 'boolean',
         ]);
+
+        if (!$request->hasFile('video_file') && empty(trim($request->input('video_url', ''))) && empty($lesson->video_url)) {
+            return back()->withErrors([
+                'video_file' => 'A lesson video is required. Please upload a video file or enter a valid video URL.'
+            ])->withInput();
+        }
 
         if ($request->hasFile('video_file')) {
             if ($lesson->video_url && str_contains($lesson->video_url, 'education/videos/')) {
