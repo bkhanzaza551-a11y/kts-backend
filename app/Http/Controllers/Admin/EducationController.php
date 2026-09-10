@@ -63,7 +63,7 @@ class EducationController extends Controller
         $courses = $query->paginate(15)->withQueryString();
         $categories = EducationCategory::where('is_active', true)->orderBy('name')->get();
 
-        $stats = Cache::remember('education_stats', 60, function () {
+        $stats = Cache::remember('education_stats_v2', 60, function () {
             $total = Course::whereNull('deleted_at')->count();
             $published = Course::whereNull('deleted_at')->where('is_published', true)->count();
             $draft = Course::whereNull('deleted_at')->where('is_published', false)->count();
