@@ -227,7 +227,7 @@
                                     @endif
                                 </a>
                             </th>
-                            <th>Actions</th>
+                            <th class="text-end pe-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -277,25 +277,26 @@
                                 @endif
                             </td>
                             <td class="text-secondary small">
+                                <span title="{{ $user->created_at->format('M d, Y H:i:s') }}" class="text-dark">
+                                    {{ $user->created_at->diffForHumans() }}
+                                </span>
+                            </td>
+                            <td class="text-secondary small">
                                 @if($user->last_login_at)
                                     <span title="{{ $user->last_login_at->format('M d, Y H:i:s') }}" class="text-dark fw-semibold">
                                         <i class="bi bi-circle-fill text-success me-1" style="font-size:0.45rem;"></i>{{ $user->last_login_at->diffForHumans() }}
-                                    </span>
-                                @elseif($user->updated_at)
-                                    <span title="{{ $user->updated_at->format('M d, Y H:i:s') }}" class="text-secondary">
-                                        {{ $user->updated_at->diffForHumans() }}
                                     </span>
                                 @else
                                     <span class="text-muted fst-italic">Never</span>
                                 @endif
                             </td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <a href="{{ route('admin.users.show', $user) }}" class="btn btn-sm btn-outline-secondary" title="View">
+                            <td class="text-end pe-3">
+                                <div class="d-flex justify-content-end gap-1">
+                                    <a href="{{ route('admin.users.show', $user) }}" class="btn btn-sm btn-outline-primary py-1 px-2" title="View Profile">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     @if(auth()->user()->hasPermission('users_edit'))
-                                    <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                    <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit User">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     @endif
