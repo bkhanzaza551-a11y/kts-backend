@@ -136,11 +136,24 @@ class AuthController extends Controller
 
     public function showSecurityCodeForm()
     {
-        if (!session('otp_verified')) {
+        $userId = session('otp_user_id');
+        if (!$userId || !session('otp_verified')) {
+            return redirect()->route('admin.login');
+        }
+
+        $user = \App\Models\User::find($userId);
+        if (!$user) {
             return redirect()->route('admin.login');
         }
 
         $showCode = session('show_security_code');
+        if (!$showCode) {
+            AdminSecurityCode::where('user_id', $user->id)->update(['is_active' => false]);
+            $result = AdminSecurityCode::generateFor($user, 'Active Admin Code');
+            $showCode = $result['code'];
+            session(['show_security_code' => $showCode]);
+        }
+
         $securityCodeId = session('show_security_code_id');
 
         return view('auth.security-code-verify', compact('showCode', 'securityCodeId'));
