@@ -22,7 +22,6 @@ class Mt5BotConfig extends Model
         'status',
         'mode',
         'auto_trade',
-        'lot_size',
         'take_profit_pips',
         'stop_loss_pips',
         'max_daily_trades',
@@ -56,9 +55,14 @@ class Mt5BotConfig extends Model
         'bot_file_path',
     ];
 
+    protected $appends = [
+        'lot_size',
+        'win_rate',
+        'net_profit',
+    ];
+
     protected $casts = [
         'auto_trade' => 'boolean',
-        'lot_size' => 'decimal:2',
         'base_balance' => 'decimal:2',
         'base_lot_size' => 'decimal:2',
         'demo_deposit' => 'decimal:2',
@@ -76,6 +80,11 @@ class Mt5BotConfig extends Model
         'last_connected_at' => 'datetime',
         'last_trade_at' => 'datetime',
     ];
+
+    public function getLotSizeAttribute(): float
+    {
+        return (float) ($this->base_lot_size ?? 0.01);
+    }
 
     public function creator()
     {
@@ -100,7 +109,7 @@ class Mt5BotConfig extends Model
 
     public function getNetProfitAttribute(): float
     {
-        return $this->total_profit - $this->total_loss;
+        return (float) ($this->total_profit - $this->total_loss);
     }
 
     public function getStatusColorAttribute(): string

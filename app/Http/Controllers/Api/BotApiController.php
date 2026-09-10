@@ -14,8 +14,8 @@ class BotApiController extends Controller
     {
         $bot = Mt5BotConfig::select([
             'id', 'name', 'description', 'status', 'mode', 'auto_trade',
-            'lot_size', 'base_balance', 'base_lot_size', 'whatsapp_number',
-                'demo_server', 'demo_account', 'demo_email', 'demo_phone', 'demo_deposit',
+            'base_balance', 'base_lot_size', 'whatsapp_number',
+            'demo_server', 'demo_account', 'demo_email', 'demo_phone', 'demo_deposit',
             'take_profit_pips', 'stop_loss_pips',
             'max_daily_trades', 'max_daily_loss',
             'balance', 'equity', 'total_profit', 'total_loss',
@@ -38,8 +38,8 @@ class BotApiController extends Controller
     {
         $bot = Mt5BotConfig::select([
             'id', 'name', 'description', 'status', 'mode', 'auto_trade',
-            'lot_size', 'base_balance', 'base_lot_size', 'whatsapp_number',
-                'demo_server', 'demo_account', 'demo_email', 'demo_phone', 'demo_deposit',
+            'base_balance', 'base_lot_size', 'whatsapp_number',
+            'demo_server', 'demo_account', 'demo_email', 'demo_phone', 'demo_deposit',
             'take_profit_pips', 'stop_loss_pips',
             'max_daily_trades', 'max_daily_loss',
             'balance', 'equity', 'total_profit', 'total_loss',
@@ -63,7 +63,7 @@ class BotApiController extends Controller
         }
 
         $trades = Mt5BotTrade::where('bot_config_id', $bot->id)
-            ->latest()
+            ->latest('opened_at')
             ->paginate(20);
 
         return response()->json(['success' => true, 'data' => $trades]);
@@ -111,17 +111,16 @@ class BotApiController extends Controller
             'status' => 'sometimes|in:active,inactive,error',
             'mode' => 'sometimes|in:live,demo,backtest',
             'auto_trade' => 'sometimes|boolean',
-            'lot_size' => 'sometimes|nullable|numeric|min:0.01|max:100',
             'base_balance' => 'sometimes|nullable|numeric|min:1|max:1000000',
-            'base_lot_size' => 'sometimes|nullable|numeric|min:0.01|max:100',
-            'whatsapp_number' => 'sometimes|nullable|string|max:20',
+            'base_lot_size' => 'sometimes|nullable|numeric|min:0.001|max:100',
+            'whatsapp_number' => 'sometimes|nullable|string|max:30',
             'demo_server' => 'sometimes|nullable|string|max:100',
             'demo_account' => 'sometimes|nullable|string|max:50',
             'demo_email' => 'sometimes|nullable|string|email|max:100',
-            'demo_phone' => 'sometimes|nullable|string|max:20',
+            'demo_phone' => 'sometimes|nullable|string|max:30',
             'demo_deposit' => 'sometimes|nullable|numeric|min:0|max:100000000',
-            'take_profit_pips' => 'sometimes|nullable|numeric|min:1|max:10000',
-            'stop_loss_pips' => 'sometimes|nullable|numeric|min:1|max:10000',
+            'take_profit_pips' => 'sometimes|nullable|numeric|min:0.1|max:10000',
+            'stop_loss_pips' => 'sometimes|nullable|numeric|min:0.1|max:10000',
             'max_daily_trades' => 'sometimes|nullable|integer|min:1|max:500',
             'max_daily_loss' => 'sometimes|nullable|numeric|min:0|max:100000',
             'balance' => 'sometimes|nullable|numeric|min:0',
@@ -139,16 +138,7 @@ class BotApiController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Bot updated successfully',
-            'data' => $updated->only([
-                'id', 'name', 'description', 'status', 'mode', 'auto_trade',
-                'lot_size', 'base_balance', 'base_lot_size', 'whatsapp_number',
-                'demo_server', 'demo_account', 'demo_email', 'demo_phone', 'demo_deposit',
-                'take_profit_pips', 'stop_loss_pips',
-                'max_daily_trades', 'max_daily_loss',
-                'balance', 'equity', 'total_profit', 'total_loss',
-                'total_trades', 'winning_trades', 'losing_trades',
-                'last_connected_at', 'last_trade_at', 'error_message',
-            ]),
+            'data' => $updated,
         ]);
     }
 }
