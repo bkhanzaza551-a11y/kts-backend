@@ -106,6 +106,11 @@ class UserController extends Controller
             'badge_color' => 'nullable|string|in:primary,secondary,success,danger,warning,info',
             'is_premium' => 'boolean',
             'premium_days' => 'nullable|integer|min:0|max:3650',
+            'broker_name' => 'nullable|string|max:100',
+            'real_account_id' => 'nullable|string|max:50',
+            'real_account_server' => 'nullable|string|max:100',
+            'demo_account_id' => 'nullable|string|max:50',
+            'demo_account_server' => 'nullable|string|max:100',
         ]);
 
         $user = User::create([
@@ -121,6 +126,11 @@ class UserController extends Controller
             'premium_expires_at' => ($validated['is_premium'] ?? false) && ($validated['premium_days'] ?? 0) > 0
                 ? now()->addDays($validated['premium_days'])
                 : null,
+            'broker_name' => $validated['broker_name'] ?? 'Exness',
+            'real_account_id' => $validated['real_account_id'] ?? null,
+            'real_account_server' => $validated['real_account_server'] ?? null,
+            'demo_account_id' => $validated['demo_account_id'] ?? null,
+            'demo_account_server' => $validated['demo_account_server'] ?? null,
         ]);
 
         $user->assignRole('user');
@@ -187,9 +197,14 @@ class UserController extends Controller
             'is_premium' => 'boolean',
             'premium_days' => 'nullable|integer|min:0|max:3650',
             'password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
+            'broker_name' => 'nullable|string|max:100',
+            'real_account_id' => 'nullable|string|max:50',
+            'real_account_server' => 'nullable|string|max:100',
+            'demo_account_id' => 'nullable|string|max:50',
+            'demo_account_server' => 'nullable|string|max:100',
         ]);
 
-        $oldData = $user->only(['name', 'email', 'phone', 'status', 'is_verified', 'chat_badge', 'badge_color', 'is_premium']);
+        $oldData = $user->only(['name', 'email', 'phone', 'status', 'is_verified', 'chat_badge', 'badge_color', 'is_premium', 'real_account_id', 'demo_account_id']);
 
         $updateData = [
             'name' => $validated['name'],
@@ -200,6 +215,11 @@ class UserController extends Controller
             'chat_badge' => $validated['chat_badge'] ?? null,
             'badge_color' => $validated['badge_color'] ?? 'primary',
             'is_premium' => $validated['is_premium'] ?? false,
+            'broker_name' => $validated['broker_name'] ?? ($user->broker_name ?: 'Exness'),
+            'real_account_id' => $validated['real_account_id'] ?? null,
+            'real_account_server' => $validated['real_account_server'] ?? null,
+            'demo_account_id' => $validated['demo_account_id'] ?? null,
+            'demo_account_server' => $validated['demo_account_server'] ?? null,
         ];
 
         if (!empty($validated['password'])) {
@@ -222,7 +242,7 @@ class UserController extends Controller
             $user->id,
             "Updated user: {$user->name}",
             $oldData,
-            $user->only(['name', 'email', 'phone', 'status', 'is_premium'])
+            $user->only(['name', 'email', 'phone', 'status', 'is_premium', 'real_account_id', 'demo_account_id'])
         );
 
         return redirect()->route('admin.users.index')

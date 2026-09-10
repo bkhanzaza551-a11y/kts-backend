@@ -120,47 +120,78 @@
 
     <div class="col-lg-8">
         {{-- Trading Account Details --}}
-        @if($user->demo_account_id || $user->real_account_id || $user->broker_name)
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-robot me-2"></i>Trading Account Details</h6>
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-robot me-2 text-primary"></i>Trading Account Details</h6>
+                @if(auth()->user()->hasPermission('users_edit'))
+                <a href="{{ route('admin.users.edit', $user) }}#tradingAccounts" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil me-1"></i>Edit Accounts
+                </a>
+                @endif
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    @if($user->broker_name)
-                    <div class="col-md-4">
-                        <small class="text-secondary d-block">Broker</small>
-                        <span class="text-dark fw-semibold">{{ $user->broker_name }}</span>
+                    <div class="col-12">
+                        <div class="p-2 px-3 bg-light rounded d-flex align-items-center justify-content-between">
+                            <span class="text-secondary small fw-semibold"><i class="bi bi-bank me-1 text-primary"></i>Trading Broker:</span>
+                            <span class="text-dark fw-bold badge bg-light text-dark border">{{ $user->broker_name ?: 'Exness (Default)' }}</span>
+                        </div>
                     </div>
-                    @endif
-                    @if($user->demo_account_id)
-                    <div class="col-md-4">
-                        <small class="text-secondary d-block">Demo Account ID</small>
-                        <span class="text-info fw-semibold"><i class="bi bi-pc-display me-1"></i>{{ $user->demo_account_id }}</span>
+
+                    {{-- Real Trading Account Card --}}
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded h-100 bg-light-subtle">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-success"><i class="bi bi-shield-check me-1"></i>Real MT5 Account</span>
+                                @if($user->real_account_id)
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Connected</span>
+                                @else
+                                    <span class="badge bg-secondary">Not Linked</span>
+                                @endif
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-secondary d-block">Real Account ID / Number</small>
+                                @if($user->real_account_id)
+                                    <span class="fs-6 text-success fw-bold font-monospace">{{ $user->real_account_id }}</span>
+                                @else
+                                    <span class="text-muted small fst-italic">No real account submitted yet</span>
+                                @endif
+                            </div>
+                            <div>
+                                <small class="text-secondary d-block">Real MT5 Server</small>
+                                <span class="text-dark fw-semibold small">{{ $user->real_account_server ?: 'Exness-MT5Real' }}</span>
+                            </div>
+                        </div>
                     </div>
-                    @endif
-                    @if($user->demo_account_server)
-                    <div class="col-md-4">
-                        <small class="text-secondary d-block">Demo Server</small>
-                        <span class="text-dark">{{ $user->demo_account_server }}</span>
+
+                    {{-- Demo Trading Account Card --}}
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded h-100 bg-light-subtle">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-primary"><i class="bi bi-pc-display me-1"></i>Demo MT5 Account</span>
+                                @if($user->demo_account_id)
+                                    <span class="badge bg-info text-dark"><i class="bi bi-check-circle me-1"></i>Connected</span>
+                                @else
+                                    <span class="badge bg-secondary">Not Linked</span>
+                                @endif
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-secondary d-block">Demo Account ID / Number</small>
+                                @if($user->demo_account_id)
+                                    <span class="fs-6 text-primary fw-bold font-monospace">{{ $user->demo_account_id }}</span>
+                                @else
+                                    <span class="text-muted small fst-italic">No demo account submitted yet</span>
+                                @endif
+                            </div>
+                            <div>
+                                <small class="text-secondary d-block">Demo MT5 Server</small>
+                                <span class="text-dark fw-semibold small">{{ $user->demo_account_server ?: 'Exness-MT5Trial' }}</span>
+                            </div>
+                        </div>
                     </div>
-                    @endif
-                    @if($user->real_account_id)
-                    <div class="col-md-4">
-                        <small class="text-secondary d-block">Real Account ID</small>
-                        <span class="text-success fw-semibold"><i class="bi bi-credit-card me-1"></i>{{ $user->real_account_id }}</span>
-                    </div>
-                    @endif
-                    @if($user->real_account_server)
-                    <div class="col-md-4">
-                        <small class="text-secondary d-block">Real Server</small>
-                        <span class="text-dark">{{ $user->real_account_server }}</span>
-                    </div>
-                    @endif
                 </div>
             </div>
         </div>
-        @endif
 
         <div class="card mb-4">
             <div class="card-header">

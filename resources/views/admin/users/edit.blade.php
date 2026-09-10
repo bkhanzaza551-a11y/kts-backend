@@ -124,6 +124,53 @@
                 </div>
             </div>
 
+            <div class="card mt-3 border-primary-subtle" id="tradingAccounts">
+                <div class="card-header bg-primary-subtle">
+                    <h6 class="mb-0 text-primary fw-bold"><i class="bi bi-robot me-2"></i>Trading Accounts (Real & Demo MT5)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label small text-secondary">Broker Name</label>
+                            <input type="text" name="broker_name" class="form-control @error('broker_name') border-danger @enderror" value="{{ old('broker_name', $user->broker_name ?: 'Exness') }}" placeholder="e.g. Exness">
+                            @error('broker_name') <small class="text-danger">{{ $message }}</small> @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded h-100 bg-light-subtle">
+                                <div class="fw-bold text-success mb-2"><i class="bi bi-shield-check me-1"></i>Real MT5 Account</div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">Real Account ID / Number</label>
+                                    <input type="text" name="real_account_id" class="form-control @error('real_account_id') border-danger @enderror" value="{{ old('real_account_id', $user->real_account_id) }}" placeholder="e.g. 98451203">
+                                    @error('real_account_id') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label small text-secondary">Real MT5 Server</label>
+                                    <input type="text" name="real_account_server" class="form-control @error('real_account_server') border-danger @enderror" value="{{ old('real_account_server', $user->real_account_server ?: 'Exness-MT5Real') }}" placeholder="e.g. Exness-MT5Real">
+                                    @error('real_account_server') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded h-100 bg-light-subtle">
+                                <div class="fw-bold text-primary mb-2"><i class="bi bi-pc-display me-1"></i>Demo MT5 Account</div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-secondary">Demo Account ID / Number</label>
+                                    <input type="text" name="demo_account_id" class="form-control @error('demo_account_id') border-danger @enderror" value="{{ old('demo_account_id', $user->demo_account_id) }}" placeholder="e.g. 502354869">
+                                    @error('demo_account_id') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+                                <div>
+                                    <label class="form-label small text-secondary">Demo MT5 Server</label>
+                                    <input type="text" name="demo_account_server" class="form-control @error('demo_account_server') border-danger @enderror" value="{{ old('demo_account_server', $user->demo_account_server ?: 'Exness-MT5Trial') }}" placeholder="e.g. Exness-MT5Trial">
+                                    @error('demo_account_server') <small class="text-danger">{{ $message }}</small> @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="mt-3 d-flex gap-2">
                 <button type="submit" class="btn btn-warning px-4">
                     <i class="bi bi-check-lg me-1"></i>Update User
