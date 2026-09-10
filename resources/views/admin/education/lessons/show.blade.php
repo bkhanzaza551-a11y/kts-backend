@@ -35,10 +35,33 @@
         </div>
 
         @if($lesson->video_url)
-        <div class="card mb-4">
-            <div class="card-header"><h6 class="mb-0"><i class="bi bi-play-circle me-1"></i>Video</h6></div>
-            <div class="card-body">
-                <a href="{{ $lesson->video_url }}" target="_blank" class="text-primary">{{ $lesson->video_url }}</a>
+        <div class="card mb-4 border-0 shadow-sm" style="border-radius: 14px;">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-play-circle-fill text-danger me-2"></i>Lesson Video</h6>
+                <span class="badge bg-light text-dark border"><i class="bi bi-clock me-1"></i>{{ $lesson->duration_minutes ? $lesson->duration_minutes . ' min' : 'Auto' }}</span>
+            </div>
+            <div class="card-body p-3">
+                @php
+                    $isDirectVideo = preg_match('/\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i', $lesson->video_url) || str_contains($lesson->video_url, '/storage/education/videos/');
+                @endphp
+                @if($isDirectVideo)
+                    <div class="ratio ratio-16x9 bg-black rounded-3 overflow-hidden shadow-sm">
+                        <video controls class="w-100 h-100" preload="metadata">
+                            <source src="{{ $lesson->video_url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                @else
+                    <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3">
+                        <div class="d-flex align-items-center gap-2 overflow-hidden">
+                            <i class="bi bi-link-45deg fs-4 text-primary flex-shrink-0"></i>
+                            <a href="{{ $lesson->video_url }}" target="_blank" class="text-primary text-truncate fw-semibold">{{ $lesson->video_url }}</a>
+                        </div>
+                        <a href="{{ $lesson->video_url }}" target="_blank" class="btn btn-sm btn-primary flex-shrink-0">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>Open Video
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
         @endif

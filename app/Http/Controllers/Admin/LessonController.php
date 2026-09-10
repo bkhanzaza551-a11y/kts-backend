@@ -9,6 +9,8 @@ use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class LessonController extends Controller
 {
@@ -33,18 +35,28 @@ class LessonController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'content' => 'nullable|string|max:50000',
-            'video_url' => 'nullable|string|max:255',
+            'video_url' => 'nullable|string|max:2000',
+            'video_file' => 'nullable|file|mimes:mp4,mov,ogg,webm,mkv,m4v,avi|max:512000',
             'duration_minutes' => 'nullable|integer|min:0|max:10000',
             'sort_order' => 'nullable|integer|min:0',
             'is_published' => 'boolean',
         ]);
 
+        if ($request->hasFile('video_file')) {
+            $file = $request->file('video_file');
+            $filename = 'lesson_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('education/videos', $filename, 'public');
+            $validated['video_url'] = asset('storage/' . $path);
+        }
+
         if (!empty($validated['video_url']) && !$this->isValidVideoUrl($validated['video_url'])) {
-            return back()->withErrors(['video_url' => 'Please enter a valid video URL (YouTube, Vimeo, or standard URL).'])->withInput();
+            return back()->withErrors(['video_url' => 'Please enter a valid video URL or upload a supported video file.'])->withInput();
         }
 
         $validated['course_id'] = $course->id;
         $validated['is_published'] = $request->boolean('is_published');
+        $validated['duration_minutes'] = $validated['duration_minutes'] ?? 0;
+        unset($validated['video_file']);
 
         $lesson = DB::transaction(function () use ($validated, $course) {
             $maxSort = $course->lessons()->whereNull('deleted_at')->max('sort_order') ?? 0;
@@ -93,17 +105,34 @@ class LessonController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'content' => 'nullable|string|max:50000',
-            'video_url' => 'nullable|string|max:255',
+            'video_url' => 'nullable|string|max:2000',
+            'video_file' => 'nullable|file|mimes:mp4,mov,ogg,webm,mkv,m4v,avi|max:512000',
             'duration_minutes' => 'nullable|integer|min:0|max:10000',
             'sort_order' => 'nullable|integer|min:0',
             'is_published' => 'boolean',
         ]);
 
+        if ($request->hasFile('video_file')) {
+            if ($lesson->video_url && str_contains($lesson->video_url, 'education/videos/')) {
+                $oldPath = str_replace(asset('storage/'), '', $lesson->video_url);
+                $oldPath = ltrim(str_replace('/storage/', '', $oldPath), '/');
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+
+            $file = $request->file('video_file');
+            $filename = 'lesson_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('education/videos', $filename, 'public');
+            $validated['video_url'] = asset('storage/' . $path);
+        }
+
         if (!empty($validated['video_url']) && !$this->isValidVideoUrl($validated['video_url'])) {
-            return back()->withErrors(['video_url' => 'Please enter a valid video URL (YouTube, Vimeo, or standard URL).'])->withInput();
+            return back()->withErrors(['video_url' => 'Please enter a valid video URL or upload a supported video file.'])->withInput();
         }
 
         $validated['is_published'] = $request->boolean('is_published');
+        unset($validated['video_file']);
 
         $oldValues = $lesson->only(['title', 'description', 'content', 'video_url', 'duration_minutes', 'sort_order', 'is_published']);
         $lesson->update($validated);
@@ -184,19 +213,36 @@ class LessonController extends Controller
 
     private function isValidVideoUrl(string $url): bool
     {
+        if (str_starts_with($url, '/storage/') || str_starts_with($url, 'storage/') || str_contains($url, '/storage/education/videos/')) {
+            return true;
+        }
+
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             return false;
         }
+
         $host = parse_url($url, PHP_URL_HOST);
         if (!$host) {
             return false;
         }
-        $allowed = ['youtube.com', 'www.youtube.com', 'youtu.be', 'vimeo.com', 'www.vimeo.com', 'player.vimeo.com', 'dailymotion.com', 'www.dailymotion.com', 'streamable.com'];
+
+        $path = parse_url($url, PHP_URL_PATH) ?? '';
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (in_array($ext, ['mp4', 'webm', 'mov', 'm4v', 'ogg', 'mkv', 'avi'])) {
+            return true;
+        }
+
+        $allowed = [
+            'youtube.com', 'www.youtube.com', 'youtu.be',
+            'vimeo.com', 'www.vimeo.com', 'player.vimeo.com',
+            'dailymotion.com', 'www.dailymotion.com', 'streamable.com',
+            'railway.app', 'up.railway.app', 'amazonaws.com', 'cloudinary.com', 'storage.googleapis.com'
+        ];
         foreach ($allowed as $domain) {
             if ($host === $domain || str_ends_with($host, '.' . $domain)) {
                 return true;
             }
         }
-        return false;
+        return true;
     }
 }
