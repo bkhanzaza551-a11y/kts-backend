@@ -371,31 +371,26 @@ class UserController extends Controller
 
     private function getUserStats(): array
     {
-        return User::selectRaw("
-            status,
-            SUM(CASE WHEN is_banned = 1 THEN 1 ELSE 0 END) as banned_count,
-            SUM(CASE WHEN is_premium = 1 THEN 1 ELSE 0 END) as premium_count,
-            SUM(CASE WHEN DATE(created_at) = DATE('now') THEN 1 ELSE 0 END) as new_today
-        ")
-        ->groupBy('status')
-        ->get()
-        ->pipe(function ($results) {
-            $active = $results->where('status', 'active')->first();
-            $inactive = $results->where('status', 'inactive')->first();
-            $suspended = $results->where('status', 'suspended')->first();
+        $today = now()->toDateString();
 
-            return [
-                'total' => $results->sum(fn ($r) => $r->status === 'active' ? $active?->count ?? 0 : 0)
-                    + $results->sum(fn ($r) => $r->status === 'inactive' ? $inactive?->count ?? 0 : 0)
-                    + $results->sum(fn ($r) => $r->status === 'suspended' ? $suspended?->count ?? 0 : 0),
-                'active' => $active?->count ?? 0,
-                'inactive' => $inactive?->count ?? 0,
-                'suspended' => $suspended?->count ?? 0,
-                'banned' => $results->sum('banned_count'),
-                'premium' => $results->sum('premium_count'),
-                'new_today' => $results->sum('new_today'),
-            ];
-        });
+        $statusCounts = User::whereNull('deleted_at')
+            ->selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        $active = (int) ($statusCounts->get('active') ?? 0);
+        $inactive = (int) ($statusCounts->get('inactive') ?? 0);
+        $suspended = (int) ($statusCounts->get('suspended') ?? 0);
+
+        return [
+            'total' => User::whereNull('deleted_at')->count(),
+            'active' => $active,
+            'inactive' => $inactive,
+            'suspended' => $suspended,
+            'banned' => User::whereNull('deleted_at')->where('is_banned', true)->count(),
+            'premium' => User::whereNull('deleted_at')->where('is_premium', true)->count(),
+            'new_today' => User::whereNull('deleted_at')->whereDate('created_at', $today)->count(),
+        ];
     }
 
     private function isValidDate(string $date): bool
