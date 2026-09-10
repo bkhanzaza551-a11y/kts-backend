@@ -24,6 +24,8 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\SupportChatController;
 use App\Http\Controllers\Admin\SignalAnalyticsController;
 use App\Http\Controllers\Admin\Mt5AnalyticsController;
+use App\Http\Controllers\Admin\GlobalSearchController;
+use App\Http\Controllers\Admin\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -169,6 +171,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->middleware(['auth', 'prevent.deleted'])->name('logout');
 
     Route::middleware(['auth', 'admin', 'prevent.deleted'])->group(function () {
+        Route::get('global-search', [GlobalSearchController::class, 'search'])->name('global-search');
+        Route::get('profile', [ProfileController::class, 'index'])->name('profile.index');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('dashboard/stats', [DashboardController::class, 'stats'])
             ->middleware('throttle:30,1')

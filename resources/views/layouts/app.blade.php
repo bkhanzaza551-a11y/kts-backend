@@ -188,13 +188,170 @@
             color: var(--text-primary);
         }
 
-        .topbar {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
+        .admin-topbar {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 1030;
+            height: 64px;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .global-search-wrapper {
+            position: relative;
+            flex: 1;
+            max-width: 520px;
+        }
+        .global-search-input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .global-search-input-group .search-icon {
+            position: absolute;
+            left: 14px;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .global-search-input {
+            width: 100%;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.52rem 4.2rem 0.52rem 2.4rem;
+            font-size: 0.85rem;
+            color: #0f172a;
+            transition: all 0.15s ease;
+        }
+        .global-search-input:focus {
+            background: #ffffff;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+            outline: none;
+        }
+        .search-shortcut-badge {
+            position: absolute;
+            right: 12px;
+            background: #e2e8f0;
+            color: #64748b;
+            font-size: 0.68rem;
+            font-family: inherit;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 5px;
+            pointer-events: none;
+        }
+        .search-spinner {
+            position: absolute;
+            right: 12px;
+            width: 1rem;
+            height: 1rem;
+        }
+        .search-results-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.04);
+            max-height: 440px;
+            overflow-y: auto;
+            z-index: 1050;
+            display: none;
+        }
+        .search-results-dropdown.show {
+            display: block;
+            animation: searchFadeIn 0.16s ease-out;
+        }
+        @keyframes searchFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .search-category-header {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            padding: 0.6rem 0.95rem 0.35rem;
+            background: #f8fafc;
+            border-top: 1px solid #f1f5f9;
+        }
+        .search-category-header:first-child {
+            border-top: none;
+        }
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 0.95rem;
+            text-decoration: none;
+            color: #0f172a;
+            transition: background 0.12s ease;
+            cursor: pointer;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        .search-result-item:hover, .search-result-item.is-selected {
+            background: #f1f5f9;
+        }
+        .search-item-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 0;
+        }
+        .search-item-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .search-item-title {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #0f172a;
+            line-height: 1.25;
+            margin-bottom: 2px;
+        }
+        .search-item-subtitle {
+            font-size: 0.74rem;
+            color: #64748b;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 320px;
+        }
+        .avatar-online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 9px;
+            height: 9px;
+            background-color: #10b981;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
         }
 
         .sidebar-overlay {
@@ -566,56 +723,140 @@
             @endif
         </ul>
         </div>
-
-            <div class="mt-auto pt-3 border-top" style="border-color:var(--border-color)!important;">
-            <div class="px-3 mb-2">
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" style="font-size:0.78rem;">
-                        <i class="bi bi-currency-exchange me-2"></i>Currency: <strong>{{ \App\Services\CurrencyService::getCurrentCurrency() }}</strong>
-                    </button>
-                    <ul class="dropdown-menu shadow-sm" style="min-width:180px;">
-                        <li><a class="dropdown-item currency-option {{ \App\Services\CurrencyService::getCurrentCurrency() === 'USD' ? 'active' : '' }}" href="#" data-currency="USD"><i class="bi bi-currency-dollar me-2"></i>USD - US Dollar</a></li>
-                        <li><a class="dropdown-item currency-option {{ \App\Services\CurrencyService::getCurrentCurrency() === 'USDT' ? 'active' : '' }}" href="#" data-currency="USDT"><i class="bi bi-currency-bitcoin me-2"></i>USDT - Tether</a></li>
-                        <li><a class="dropdown-item currency-option {{ \App\Services\CurrencyService::getCurrentCurrency() === 'PKR' ? 'active' : '' }}" href="#" data-currency="PKR"><i class="bi bi-cash me-2"></i>PKR - Pakistani Rupee</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="d-flex align-items-center px-3 mb-3">
-                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:36px;height:36px;background:var(--primary);">
-                    <span class="text-white fw-bold" style="font-size: 0.85rem;">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
-                </div>
-                <div class="ms-2 overflow-hidden">
-                    <div class="fw-semibold text-truncate small" style="color:var(--text-primary);">{{ auth()->user()->name }}</div>
-                    <div class="text-muted" style="font-size:0.7rem;">{{ auth()->user()->roles->pluck('name')->join(', ') }}</div>
-                </div>
-            </div>
-            <form method="POST" action="{{ route('admin.logout') }}">
-                @csrf
-                <button type="submit" class="nav-link text-danger w-100 text-start border-0 bg-transparent py-2">
-                    <i class="bi bi-box-arrow-left"></i> Logout
-                </button>
-            </form>
-        </div>
     </nav>
     @endauth
 
     <div class="main-content" id="mainContent">
-        <div class="topbar d-flex align-items-center justify-content-between px-4 py-2 d-lg-none">
-            <button class="btn btn-sm border-0" onclick="toggleSidebar()" style="color:var(--text-secondary);">
-                <i class="bi bi-list fs-4"></i>
-            </button>
-            <span class="fw-semibold small" style="color:var(--text-primary);">KTS Markets</span>
-            <div class="dropdown">
-                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" style="font-size:0.75rem;">
-                    <i class="bi bi-currency-exchange me-1"></i>{{ \App\Services\CurrencyService::getCurrentCurrency() }}
+        @auth
+        <header class="admin-topbar">
+            {{-- Left: Mobile Sidebar Toggle + Global Search Bar --}}
+            <div class="d-flex align-items-center gap-2 gap-md-3 flex-grow-1" style="max-width: 580px;">
+                <button class="btn btn-sm btn-light border d-lg-none py-1 px-2" onclick="toggleSidebar()" type="button" aria-label="Toggle sidebar">
+                    <i class="bi bi-list fs-5"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width:160px;">
-                    <li><a class="dropdown-item currency-option {{ \App\Services\CurrencyService::getCurrentCurrency() === 'USD' ? 'active' : '' }}" href="#" data-currency="USD"><i class="bi bi-currency-dollar me-2"></i>USD</a></li>
-                    <li><a class="dropdown-item currency-option {{ \App\Services\CurrencyService::getCurrentCurrency() === 'USDT' ? 'active' : '' }}" href="#" data-currency="USDT"><i class="bi bi-currency-bitcoin me-2"></i>USDT</a></li>
-                    <li><a class="dropdown-item currency-option {{ \App\Services\CurrencyService::getCurrentCurrency() === 'PKR' ? 'active' : '' }}" href="#" data-currency="PKR"><i class="bi bi-cash me-2"></i>PKR</a></li>
-                </ul>
+
+                {{-- Global Search Bar with Live Suggestions --}}
+                <div class="global-search-wrapper" id="globalSearchWrapper">
+                    <div class="global-search-input-group">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="globalSearchInput" class="global-search-input" placeholder="Search users, signals, bots, tickets, pages..." autocomplete="off" spellcheck="false">
+                        <span class="search-shortcut-badge d-none d-md-inline" title="Press Ctrl+K or / to search">Ctrl K</span>
+                        <div class="spinner-border spinner-border-sm text-primary search-spinner d-none" id="searchSpinner" role="status"></div>
+                    </div>
+
+                    {{-- Live Suggestions Floating Dropdown --}}
+                    <div class="search-results-dropdown" id="searchResultsDropdown">
+                        <div id="searchResultsContent"></div>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            {{-- Right: Currency Switcher & Super Admin Profile Dropdown --}}
+            <div class="d-flex align-items-center gap-2">
+                {{-- Currency Switcher Dropdown --}}
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center gap-1 gap-md-2 fw-semibold px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 9px; font-size: 0.82rem;">
+                        <i class="bi bi-currency-exchange text-primary"></i>
+                        <span class="d-none d-sm-inline">{{ \App\Services\CurrencyService::getCurrentCurrency() }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border py-1" style="min-width: 190px; border-radius: 12px;">
+                        <li class="dropdown-header text-uppercase text-secondary fw-bold" style="font-size: 0.68rem; letter-spacing: 0.5px;">Display Currency</li>
+                        <li>
+                            <a class="dropdown-item currency-option d-flex align-items-center justify-content-between py-2 {{ \App\Services\CurrencyService::getCurrentCurrency() === 'USD' ? 'active fw-bold' : '' }}" href="#" data-currency="USD">
+                                <span><i class="bi bi-currency-dollar me-2 text-success"></i>USD (US Dollar)</span>
+                                @if(\App\Services\CurrencyService::getCurrentCurrency() === 'USD')
+                                    <i class="bi bi-check2 text-primary"></i>
+                                @endif
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item currency-option d-flex align-items-center justify-content-between py-2 {{ \App\Services\CurrencyService::getCurrentCurrency() === 'USDT' ? 'active fw-bold' : '' }}" href="#" data-currency="USDT">
+                                <span><i class="bi bi-currency-bitcoin me-2 text-warning"></i>USDT (Tether)</span>
+                                @if(\App\Services\CurrencyService::getCurrentCurrency() === 'USDT')
+                                    <i class="bi bi-check2 text-primary"></i>
+                                @endif
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item currency-option d-flex align-items-center justify-content-between py-2 {{ \App\Services\CurrencyService::getCurrentCurrency() === 'PKR' ? 'active fw-bold' : '' }}" href="#" data-currency="PKR">
+                                <span><i class="bi bi-cash me-2 text-info"></i>PKR (Pak Rupee)</span>
+                                @if(\App\Services\CurrencyService::getCurrentCurrency() === 'PKR')
+                                    <i class="bi bi-check2 text-primary"></i>
+                                @endif
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                {{-- Super Admin Profile Dropdown --}}
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center gap-2 p-1 pe-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 25px;">
+                        <div class="position-relative">
+                            @if(auth()->user()->avatar)
+                                <img src="{{ asset('storage/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                            @else
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                </div>
+                            @endif
+                            <span class="avatar-online-dot"></span>
+                        </div>
+                        <div class="text-start d-none d-md-block pe-1">
+                            <div class="fw-bold text-dark lh-1" style="font-size: 0.82rem;">{{ auth()->user()->name }}</div>
+                            <small class="text-secondary" style="font-size: 0.68rem;">{{ auth()->user()->roles->pluck('name')->first() ?? 'Admin' }}</small>
+                        </div>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border p-2" style="min-width: 240px; border-radius: 14px;">
+                        <li class="px-3 py-2 bg-light rounded-3 mb-2">
+                            <div class="fw-bold text-dark text-truncate">{{ auth()->user()->name }}</div>
+                            <div class="text-secondary small text-truncate">{{ auth()->user()->email }}</div>
+                            <div class="mt-1">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.68rem;">
+                                    <i class="bi bi-shield-check me-1"></i>{{ auth()->user()->roles->pluck('name')->join(', ') }}
+                                </span>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center" href="{{ route('admin.profile.index') }}">
+                                <i class="bi bi-person-circle text-primary me-2 fs-6"></i>
+                                <span>My Admin Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center" href="{{ route('admin.security.change-form') }}">
+                                <i class="bi bi-shield-lock text-warning me-2 fs-6"></i>
+                                <span>Security PIN & OTP</span>
+                            </a>
+                        </li>
+                        @if(auth()->user()->hasPermission('settings_view'))
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center" href="{{ route('admin.settings.index') }}">
+                                <i class="bi bi-gear text-secondary me-2 fs-6"></i>
+                                <span>System Settings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-2 py-2 d-flex align-items-center" href="{{ route('admin.audit-logs.index') }}">
+                                <i class="bi bi-journal-text text-info me-2 fs-6"></i>
+                                <span>Activity & Audit Logs</span>
+                            </a>
+                        </li>
+                        @endif
+                        <li><hr class="dropdown-divider my-2"></li>
+                        <li>
+                            <form method="POST" action="{{ route('admin.logout') }}" id="topbarLogoutForm">
+                                @csrf
+                                <button type="submit" class="dropdown-item rounded-2 py-2 text-danger fw-semibold d-flex align-items-center">
+                                    <i class="bi bi-box-arrow-left me-2 fs-6"></i>
+                                    <span>Sign Out</span>
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+        @endauth
 
         <div class="p-4">
             @if(session('success'))
@@ -813,6 +1054,165 @@
                     .catch(err => console.error('Currency switch failed:', err));
                 });
             });
+
+            // Global Search Suggestions & Keyboard Navigation
+            (function() {
+                const searchInput = document.getElementById('globalSearchInput');
+                const searchWrapper = document.getElementById('globalSearchWrapper');
+                const resultsDropdown = document.getElementById('searchResultsDropdown');
+                const resultsContent = document.getElementById('searchResultsContent');
+                const searchSpinner = document.getElementById('searchSpinner');
+
+                if (!searchInput || !resultsDropdown || !resultsContent) return;
+
+                let debounceTimer = null;
+                let selectedIndex = -1;
+                let currentItems = [];
+
+                // Keyboard shortcut: Ctrl+K, Cmd+K, or / to focus search
+                document.addEventListener('keydown', function(e) {
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+                        e.preventDefault();
+                        searchInput.focus();
+                        searchInput.select();
+                    } else if (e.key === '/' && document.activeElement !== searchInput && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                        e.preventDefault();
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                });
+
+                function escapeHtml(str) {
+                    if (!str) return '';
+                    return String(str)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#039;');
+                }
+
+                function showResults(data) {
+                    if (!data || !data.results || data.results.length === 0) {
+                        resultsContent.innerHTML = `
+                            <div class="text-center py-4 px-3 text-secondary">
+                                <i class="bi bi-search fs-3 text-muted mb-2 d-block"></i>
+                                <div class="fw-semibold text-dark small">No matching results found</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Try searching for user name, signal symbol, ticket #, or module.</div>
+                            </div>
+                        `;
+                        resultsDropdown.classList.add('show');
+                        currentItems = [];
+                        selectedIndex = -1;
+                        return;
+                    }
+
+                    let html = '';
+                    currentItems = [];
+
+                    data.results.forEach(category => {
+                        html += `<div class="search-category-header"><i class="bi ${category.icon || 'bi-folder'} me-1"></i>${category.category}</div>`;
+                        if (category.items && category.items.length > 0) {
+                            category.items.forEach(item => {
+                                const itemIndex = currentItems.length;
+                                currentItems.push(item);
+                                html += `
+                                    <a href="${item.url}" class="search-result-item" data-index="${itemIndex}">
+                                        <div class="search-item-left">
+                                            <div class="search-item-icon">
+                                                <i class="bi ${item.icon || 'bi-arrow-right'}"></i>
+                                            </div>
+                                            <div style="min-width: 0;">
+                                                <div class="search-item-title">${escapeHtml(item.title)}</div>
+                                                <div class="search-item-subtitle">${escapeHtml(item.subtitle || '')}</div>
+                                            </div>
+                                        </div>
+                                        ${item.badge ? `<span class="badge ${item.badge_class || 'bg-light text-secondary border'} px-2 py-1 ms-2 flex-shrink-0" style="font-size:0.68rem;">${escapeHtml(item.badge)}</span>` : ''}
+                                    </a>
+                                `;
+                            });
+                        }
+                    });
+
+                    resultsContent.innerHTML = html;
+                    resultsDropdown.classList.add('show');
+                    selectedIndex = -1;
+                }
+
+                function fetchSuggestions(query) {
+                    if (searchSpinner) searchSpinner.classList.remove('d-none');
+                    fetch(`{{ route('admin.global-search') }}?q=${encodeURIComponent(query)}`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (searchSpinner) searchSpinner.classList.add('d-none');
+                        showResults(data);
+                    })
+                    .catch(err => {
+                        if (searchSpinner) searchSpinner.classList.add('d-none');
+                        console.error('Search error:', err);
+                    });
+                }
+
+                searchInput.addEventListener('focus', function() {
+                    fetchSuggestions(this.value.trim());
+                });
+
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    const q = this.value.trim();
+                    debounceTimer = setTimeout(() => {
+                        fetchSuggestions(q);
+                    }, 160);
+                });
+
+                searchInput.addEventListener('keydown', function(e) {
+                    if (!resultsDropdown.classList.contains('show')) return;
+                    const domItems = resultsContent.querySelectorAll('.search-result-item');
+                    if (domItems.length === 0) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        selectedIndex = (selectedIndex + 1) % domItems.length;
+                        updateSelection(domItems);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        selectedIndex = (selectedIndex - 1 + domItems.length) % domItems.length;
+                        updateSelection(domItems);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (selectedIndex >= 0 && selectedIndex < domItems.length) {
+                            domItems[selectedIndex].click();
+                        } else if (domItems.length > 0) {
+                            domItems[0].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        resultsDropdown.classList.remove('show');
+                        searchInput.blur();
+                    }
+                });
+
+                function updateSelection(domItems) {
+                    domItems.forEach((el, idx) => {
+                        if (idx === selectedIndex) {
+                            el.classList.add('is-selected');
+                            el.scrollIntoView({ block: 'nearest' });
+                        } else {
+                            el.classList.remove('is-selected');
+                        }
+                    });
+                }
+
+                document.addEventListener('click', function(e) {
+                    if (!searchWrapper.contains(e.target)) {
+                        resultsDropdown.classList.remove('show');
+                    }
+                });
+            })();
         });
     </script>
     @stack('scripts')
