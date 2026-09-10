@@ -26,20 +26,29 @@
                         @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label text-secondary">Icon (Bootstrap)</label>
-                            <input type="text" name="icon" class="form-control" value="{{ old('icon') }}" placeholder="e.g. currency-dollar" maxlength="50">
-                            <small class="text-secondary">Bootstrap icon name (without bi- prefix)</small>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label text-secondary">Color <span class="text-danger">*</span></label>
+                        <div class="col-md-5">
+                            <label class="form-label text-secondary fw-semibold">Icon (Bootstrap)</label>
                             <div class="input-group">
-                                <input type="color" name="color" class="form-control form-control-color" value="{{ old('color', '#0d6efd') }}">
-                                <input type="text" class="form-control" value="{{ old('color', '#0d6efd') }}" id="colorText" maxlength="7" oninput="document.querySelector('[name=color]').value=this.value">
+                                <span class="input-group-text bg-white" id="iconPreviewWrapper" style="width: 44px; justify-content: center;">
+                                    <i class="bi bi-{{ old('icon', 'graph-up') }}" id="iconPreviewIcon" style="color: {{ old('color', '#0d6efd') }};"></i>
+                                </span>
+                                <input type="text" name="icon" id="iconInput" class="form-control @error('icon') is-invalid @enderror" value="{{ old('icon') }}" placeholder="e.g. currency-dollar" maxlength="50">
+                                <button class="btn btn-outline-primary fw-semibold" type="button" data-bs-toggle="modal" data-bs-target="#iconPickerModal">
+                                    <i class="bi bi-grid-3x3-gap me-1"></i>Select
+                                </button>
                             </div>
+                            @error('icon')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label text-secondary">Sort Order</label>
+                            <label class="form-label text-secondary fw-semibold">Color <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="color" name="color" class="form-control form-control-color @error('color') is-invalid @enderror" value="{{ old('color', '#0d6efd') }}" id="colorPicker">
+                                <input type="text" class="form-control font-monospace" value="{{ old('color', '#0d6efd') }}" id="colorText" maxlength="7" oninput="document.querySelector('[name=color]').value=this.value">
+                            </div>
+                            @error('color')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-secondary fw-semibold">Sort Order</label>
                             <input type="number" name="sort_order" class="form-control" value="{{ old('sort_order', 0) }}" min="0">
                         </div>
                     </div>
@@ -62,4 +71,6 @@
         </div>
     </div>
 </form>
+
+@include('admin.components.icon-picker-modal')
 @endsection
