@@ -7,6 +7,7 @@
     <title>@yield('title', 'Admin Panel') - KTS Markets</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -28,6 +29,66 @@
             --border-color: #e2e8f0;
         }
         * { font-family: 'Inter', sans-serif; }
+
+        /* Custom SweetAlert2 Theme */
+        div.swal2-container {
+            backdrop-filter: blur(5px) !important;
+            -webkit-backdrop-filter: blur(5px) !important;
+            background: rgba(15, 23, 42, 0.5) !important;
+            z-index: 99999 !important;
+        }
+        div.swal2-popup.custom-swal-modal {
+            border-radius: 20px !important;
+            padding: 2rem 1.75rem !important;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35) !important;
+            font-family: 'Inter', sans-serif !important;
+            border: 1px solid rgba(226, 232, 240, 0.9) !important;
+            background: #ffffff !important;
+        }
+        div.swal2-icon {
+            margin: 0.5rem auto 1.25rem !important;
+            scale: 0.95;
+            border-width: 3px !important;
+        }
+        .swal2-title.custom-swal-title {
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            padding: 0 0 0.5rem 0 !important;
+            line-height: 1.4 !important;
+        }
+        .swal2-html-container.custom-swal-content {
+            font-size: 0.92rem !important;
+            color: #64748b !important;
+            margin: 0 0 1.5rem 0 !important;
+            line-height: 1.55 !important;
+        }
+        .custom-swal-confirm {
+            border-radius: 10px !important;
+            padding: 0.65rem 1.5rem !important;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
+            transition: all 0.15s ease !important;
+        }
+        .custom-swal-confirm:hover {
+            transform: translateY(-1px);
+        }
+        .custom-swal-cancel {
+            border-radius: 10px !important;
+            padding: 0.65rem 1.4rem !important;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+            color: #475569 !important;
+            background-color: #f1f5f9 !important;
+            border: 1px solid #e2e8f0 !important;
+            margin-right: 0.75rem !important;
+            transition: all 0.15s ease !important;
+        }
+        .custom-swal-cancel:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
         body { 
             background-color: var(--body-bg); 
             color: var(--text-primary); 
@@ -589,6 +650,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -596,6 +658,136 @@
             sidebar.classList.toggle('show');
             overlay.classList.toggle('show');
         }
+
+        // Global Beautiful SweetAlert2 Confirm Handler
+        (function() {
+            function showStyledConfirm(message, onConfirm) {
+                const lowerMsg = (message || '').toLowerCase();
+                let icon = 'question';
+                let iconColor = '#0d6efd';
+                let confirmBtnClass = 'btn btn-primary custom-swal-confirm';
+                let confirmBtnText = 'Yes, Confirm';
+                let title = message || 'Are you sure?';
+                let subtitle = 'Please confirm if you would like to proceed.';
+
+                if (lowerMsg.includes('approve') || lowerMsg.includes('activate') || lowerMsg.includes('restore') || lowerMsg.includes('unban') || lowerMsg.includes('resume') || lowerMsg.includes('publish') || lowerMsg.includes('link')) {
+                    icon = 'success';
+                    iconColor = '#10b981';
+                    confirmBtnClass = 'btn btn-success custom-swal-confirm';
+                    confirmBtnText = lowerMsg.includes('approve') ? 'Yes, Approve' : (lowerMsg.includes('publish') ? 'Yes, Publish' : (lowerMsg.includes('link') ? 'Yes, Link Account' : 'Yes, Confirm'));
+                    subtitle = 'This action will approve the request and update the status immediately.';
+                } else if (lowerMsg.includes('delete') || lowerMsg.includes('permanently') || lowerMsg.includes('ban') || lowerMsg.includes('destroy') || lowerMsg.includes('clear') || lowerMsg.includes('remove')) {
+                    icon = 'warning';
+                    iconColor = '#ef4444';
+                    confirmBtnClass = 'btn btn-danger custom-swal-confirm';
+                    confirmBtnText = lowerMsg.includes('delete') ? 'Yes, Delete' : (lowerMsg.includes('ban') ? 'Yes, Ban User' : 'Yes, Remove');
+                    subtitle = lowerMsg.includes('permanently') ? 'Warning: This action is permanent and cannot be undone.' : 'Are you sure you want to proceed with this deletion?';
+                } else if (lowerMsg.includes('reject') || lowerMsg.includes('pause') || lowerMsg.includes('disable') || lowerMsg.includes('unpublish') || lowerMsg.includes('close') || lowerMsg.includes('stop')) {
+                    icon = 'warning';
+                    iconColor = '#f59e0b';
+                    confirmBtnClass = 'btn btn-warning text-dark custom-swal-confirm';
+                    confirmBtnText = lowerMsg.includes('reject') ? 'Yes, Reject' : (lowerMsg.includes('pause') ? 'Yes, Pause' : 'Yes, Proceed');
+                    subtitle = 'This will update the record and apply changes immediately.';
+                }
+
+                Swal.fire({
+                    title: title,
+                    text: subtitle,
+                    icon: icon,
+                    iconColor: iconColor,
+                    showCancelButton: true,
+                    confirmButtonText: confirmBtnText,
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    focusCancel: false,
+                    customClass: {
+                        popup: 'custom-swal-modal',
+                        title: 'custom-swal-title',
+                        htmlContainer: 'custom-swal-content',
+                        confirmButton: confirmBtnClass,
+                        cancelButton: 'custom-swal-cancel'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed && typeof onConfirm === 'function') {
+                        onConfirm();
+                    }
+                });
+            }
+
+            // Expose globally for manual calls
+            window.showStyledConfirm = showStyledConfirm;
+
+            // Intercept form submissions
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                if (form.dataset.swalConfirmed === 'true') {
+                    return;
+                }
+
+                const onsubmitAttr = form.getAttribute('onsubmit') || '';
+                const match = onsubmitAttr.match(/confirm\(['"`](.*?)['"`]\)/i);
+                let message = null;
+
+                if (match && match[1]) {
+                    message = match[1];
+                } else if (form.dataset.confirm) {
+                    message = form.dataset.confirm;
+                }
+
+                if (message) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+
+                    showStyledConfirm(message, function() {
+                        form.dataset.swalConfirmed = 'true';
+                        form.submit();
+                    });
+                    return false;
+                }
+            }, true);
+
+            // Intercept button/link clicks
+            document.addEventListener('click', function(e) {
+                const target = e.target.closest('button, a, input[type="submit"]');
+                if (!target) return;
+
+                if (target.dataset.swalConfirmed === 'true') {
+                    return;
+                }
+
+                const onclickAttr = target.getAttribute('onclick') || '';
+                const match = onclickAttr.match(/confirm\(['"`](.*?)['"`]\)/i);
+                let message = null;
+
+                if (match && match[1]) {
+                    message = match[1];
+                } else if (target.dataset.confirm) {
+                    message = target.dataset.confirm;
+                }
+
+                if (message) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+
+                    showStyledConfirm(message, function() {
+                        target.dataset.swalConfirmed = 'true';
+                        if (target.type === 'submit' && target.form) {
+                            target.form.dataset.swalConfirmed = 'true';
+                            target.form.submit();
+                        } else if (target.tagName === 'A' && target.href) {
+                            window.location.href = target.href;
+                        } else {
+                            target.click();
+                        }
+                    });
+                    return false;
+                }
+            }, true);
+        })();
+
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.stat-card').forEach((card, i) => {
                 card.style.animationDelay = (i * 0.05) + 's';

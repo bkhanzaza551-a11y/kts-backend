@@ -10,12 +10,12 @@
     </div>
     <div class="d-flex gap-2">
         @if($demoRequest->status === 'pending')
-        <form method="POST" action="{{ route('admin.demo-accounts.reject', $demoRequest) }}" onsubmit="return confirm('Reject this request?')">
+        <form method="POST" action="{{ route('admin.demo-accounts.reject', $demoRequest) }}" onsubmit="return confirm('Reject Demo Account Request?')">
             @csrf
             <input type="hidden" name="admin_notes" value="Rejected by admin">
             <button type="submit" class="btn btn-danger"><i class="bi bi-x-lg me-1"></i>Reject</button>
         </form>
-        <form method="POST" action="{{ route('admin.demo-accounts.approve', $demoRequest) }}">
+        <form method="POST" action="{{ route('admin.demo-accounts.approve', $demoRequest) }}" onsubmit="return confirm('Approve Demo Account Request?')">
             @csrf
             <div class="input-group">
                 <input type="text" name="admin_notes" class="form-control" placeholder="Notes (optional)" style="width:200px;">

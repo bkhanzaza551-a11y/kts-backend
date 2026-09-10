@@ -151,9 +151,9 @@
                     <td class="text-end">
                         <a href="{{ route('admin.demo-accounts.show', $req) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
                         @if($req->status === 'pending')
-                        <form method="POST" action="{{ route('admin.demo-accounts.approve', $req) }}" class="d-inline" onsubmit="return confirm('Approve this request?')">
+                        <form method="POST" action="{{ route('admin.demo-accounts.approve', $req) }}" class="d-inline" onsubmit="return confirm('Approve Demo Account Request?')">
                             @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i></button>
+                            <button type="submit" class="btn btn-sm btn-outline-success" title="Approve Request"><i class="bi bi-check-lg"></i></button>
                         </form>
                         @endif
                     </td>
