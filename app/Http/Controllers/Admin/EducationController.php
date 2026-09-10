@@ -64,26 +64,21 @@ class EducationController extends Controller
         $categories = EducationCategory::where('is_active', true)->orderBy('name')->get();
 
         $stats = Cache::remember('education_stats', 60, function () {
-            $row = DB::table('courses')
-                ->whereNull('deleted_at')
-                ->selectRaw("
-                    COUNT(*) as total,
-                    SUM(CASE WHEN is_published = 1 THEN 1 ELSE 0 END) as published,
-                    SUM(CASE WHEN is_published = 0 THEN 1 ELSE 0 END) as draft,
-                    SUM(CASE WHEN is_featured = 1 THEN 1 ELSE 0 END) as featured,
-                    COALESCE(SUM(views_count), 0) as total_views,
-                    COALESCE(SUM(enrollments_count), 0) as total_enrollments
-                ")->first();
-
+            $total = Course::whereNull('deleted_at')->count();
+            $published = Course::whereNull('deleted_at')->where('is_published', true)->count();
+            $draft = Course::whereNull('deleted_at')->where('is_published', false)->count();
+            $featured = Course::whereNull('deleted_at')->where('is_featured', true)->count();
+            $totalViews = (int) Course::whereNull('deleted_at')->sum('views_count');
+            $totalEnrollments = (int) Course::whereNull('deleted_at')->sum('enrollments_count');
             $lessonsCount = DB::table('lessons')->whereNull('deleted_at')->count();
 
             return [
-                'total' => (int) $row->total,
-                'published' => (int) $row->published,
-                'draft' => (int) $row->draft,
-                'featured' => (int) $row->featured,
-                'total_views' => (int) $row->total_views,
-                'total_enrollments' => (int) $row->total_enrollments,
+                'total' => $total,
+                'published' => $published,
+                'draft' => $draft,
+                'featured' => $featured,
+                'total_views' => $totalViews,
+                'total_enrollments' => $totalEnrollments,
                 'total_lessons' => $lessonsCount,
             ];
         });
