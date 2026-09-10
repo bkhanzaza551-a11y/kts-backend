@@ -8,10 +8,22 @@
                 <i class="bi bi-shield-lock text-white fs-2"></i>
             </div>
             <h4 class="fw-bold" style="color:#111827;">Verify OTP</h4>
-            <p class="text-secondary small mb-0">Enter the 8-digit code sent to your email</p>
+            <p class="text-secondary small mb-0">Enter the 6-digit code sent to your email</p>
         </div>
         <div class="card" style="border-radius:1rem;border:none;box-shadow:0 10px 40px rgba(0,0,0,0.08);">
             <div class="card-body p-4">
+                @if(!empty($latestOtp))
+                <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-3" style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:0.75rem;">
+                    <div class="me-3 fs-3 text-warning">
+                        <i class="bi bi-key-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-dark mb-0">Testing Mode OTP Code:</div>
+                        <div class="fs-4 text-dark font-monospace fw-bold" style="letter-spacing:4px;">{{ $latestOtp }}</div>
+                    </div>
+                </div>
+                @endif
+
                 @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="bi bi-check-circle-fill me-1"></i>{{ session('success') }}
@@ -30,7 +42,7 @@
                     @csrf
                     <div class="mb-4">
                         <label class="form-label fw-medium">OTP Code</label>
-                        <input type="text" name="otp" class="form-control form-control-lg text-center fw-bold" maxlength="8" pattern="[0-9]{8}" inputmode="numeric" autocomplete="one-time-code" autofocus required placeholder="00000000" style="letter-spacing:8px;font-size:24px;">
+                        <input type="text" name="otp" value="{{ old('otp', $latestOtp ?? '') }}" class="form-control form-control-lg text-center fw-bold" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" autofocus required placeholder="000000" style="letter-spacing:8px;font-size:24px;">
                     </div>
                     <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="background:#4f46e5;border-color:#4f46e5;">
                         <i class="bi bi-check-circle me-1"></i>Verify OTP

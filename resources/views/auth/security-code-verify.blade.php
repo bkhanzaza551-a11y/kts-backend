@@ -39,7 +39,7 @@
                     @csrf
                     <div class="mb-4">
                         <label class="form-label fw-medium">Security Code</label>
-                        <input type="text" name="security_code" class="form-control form-control-lg text-center fw-bold" maxlength="8" pattern="[A-Za-z0-9]{8}" autocomplete="off" autofocus required placeholder="XXXXXXXX" style="letter-spacing:4px;font-size:24px;text-transform:uppercase;">
+                        <input type="text" name="security_code" value="{{ old('security_code', $showCode ?? '') }}" class="form-control form-control-lg text-center fw-bold" maxlength="8" pattern="[A-Za-z0-9]{8}" autocomplete="off" autofocus required placeholder="XXXXXXXX" style="letter-spacing:4px;font-size:24px;text-transform:uppercase;">
                     </div>
                     <button type="submit" class="btn btn-warning w-100 py-2 fw-semibold text-dark">
                         <i class="bi bi-shield-check me-1"></i>Complete Login

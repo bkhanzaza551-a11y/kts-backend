@@ -74,11 +74,18 @@ class AuthController extends Controller
 
     public function showOtpForm()
     {
-        if (!session('otp_user_id')) {
+        $userId = session('otp_user_id');
+        if (!$userId) {
             return redirect()->route('admin.login');
         }
 
-        return view('auth.otp-verify');
+        $latestOtp = AdminOtp::where('user_id', $userId)
+            ->where('is_used', false)
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->value('otp');
+
+        return view('auth.otp-verify', compact('latestOtp'));
     }
 
     public function verifyOtp(Request $request)
