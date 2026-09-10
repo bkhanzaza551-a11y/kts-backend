@@ -59,15 +59,18 @@ class ChatApiController extends Controller
             return $room;
         }
 
-        $found = ChatRoom::where('slug', $room)->orWhere('id', $room)->first();
+        $found = is_numeric($room)
+            ? ChatRoom::where('id', (int) $room)->first()
+            : ChatRoom::where('slug', (string) $room)->first();
+
         if ($found) {
             return $found;
         }
 
         return ChatRoom::firstOrCreate(
-            ['slug' => $room === 'general' ? 'general' : Str::slug($room)],
+            ['slug' => $room === 'general' ? 'general' : Str::slug((string) $room)],
             [
-                'name' => ucwords(str_replace(['-', '_'], ' ', $room)),
+                'name' => ucwords(str_replace(['-', '_'], ' ', (string) $room)),
                 'description' => 'Community trading discussion',
                 'is_active' => true,
                 'is_public' => true,
