@@ -448,13 +448,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Support Chat
         Route::middleware('permission:chat_view')->group(function () {
-            Route::get('support-chat', [SupportChatController::class, 'index'])->name('admin.support-chat.index');
-            Route::get('support-chat/{ticket}', [SupportChatController::class, 'show'])->name('admin.support-chat.show');
+            Route::get('support-chat', [SupportChatController::class, 'index'])->name('support-chat.index');
+            Route::get('support-chat/{ticket}', [SupportChatController::class, 'show'])->name('support-chat.show');
         });
         Route::middleware('permission:chat_moderate')->group(function () {
-            Route::post('support-chat/{ticket}/reply', [SupportChatController::class, 'reply'])->name('admin.support-chat.reply');
-            Route::post('support-chat/{ticket}/close', [SupportChatController::class, 'close'])->name('admin.support-chat.close');
-            Route::post('support-chat/{ticket}/reopen', [SupportChatController::class, 'reopen'])->name('admin.support-chat.reopen');
+            Route::post('support-chat/{ticket}/reply', [SupportChatController::class, 'reply'])->name('support-chat.reply');
+            Route::post('support-chat/{ticket}/close', [SupportChatController::class, 'close'])->name('support-chat.close');
+            Route::post('support-chat/{ticket}/reopen', [SupportChatController::class, 'reopen'])->name('support-chat.reopen');
         });
 
         // Notifications

@@ -217,7 +217,7 @@
 @push('scripts')
 <script>
 function loadStats() {
-    fetch('{{ route("notification-settings.stats") }}')
+    fetch('{{ route("admin.notification-settings.stats") }}')
         .then(r => r.json())
         .then(data => {
             document.getElementById('statTotal').textContent = data.total;
@@ -249,7 +249,7 @@ function toggleSetting(slug, enabled) {
 }
 
 function toggleCategory(category, isEnabled) {
-    fetch('{{ route("notification-settings.toggle-all") }}', {
+    fetch('{{ route("admin.notification-settings.toggle-all") }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
