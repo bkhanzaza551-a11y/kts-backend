@@ -58,18 +58,18 @@
 
                     <div class="row g-3 mt-1">
                         <div class="col-md-4">
-                            <label class="form-label text-secondary">Entry Price</label>
-                            <input type="number" name="entry_price" class="form-control @error('entry_price') is-invalid @enderror" value="{{ old('entry_price', $signal->entry_price) }}" step="0.00001" min="0">
+                            <label class="form-label text-dark fw-semibold">Entry Price <span class="text-danger">*</span></label>
+                            <input type="number" name="entry_price" class="form-control @error('entry_price') is-invalid @enderror" value="{{ old('entry_price', $signal->entry_price) }}" step="any" min="0.00000001" required placeholder="e.g. 64250.50">
                             @error('entry_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label text-secondary">Take Profit</label>
-                            <input type="number" name="take_profit" class="form-control @error('take_profit') is-invalid @enderror" value="{{ old('take_profit', $signal->take_profit) }}" step="0.00001" min="0">
+                            <label class="form-label text-dark fw-semibold">Take Profit (TP) <span class="text-danger">*</span></label>
+                            <input type="number" name="take_profit" class="form-control @error('take_profit') is-invalid @enderror" value="{{ old('take_profit', $signal->take_profit) }}" step="any" min="0.00000001" required placeholder="e.g. 65800.00">
                             @error('take_profit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label text-secondary">Stop Loss</label>
-                            <input type="number" name="stop_loss" class="form-control @error('stop_loss') is-invalid @enderror" value="{{ old('stop_loss', $signal->stop_loss) }}" step="0.00001" min="0">
+                            <label class="form-label text-dark fw-semibold">Stop Loss (SL) <span class="text-danger">*</span></label>
+                            <input type="number" name="stop_loss" class="form-control @error('stop_loss') is-invalid @enderror" value="{{ old('stop_loss', $signal->stop_loss) }}" step="any" min="0.00000001" required placeholder="e.g. 63500.00">
                             @error('stop_loss')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
@@ -91,7 +91,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label text-secondary">Close Price</label>
-                            <input type="number" name="close_price" class="form-control" value="{{ old('close_price', $signal->close_price) }}" step="0.00001" min="0">
+                            <input type="number" name="close_price" class="form-control" value="{{ old('close_price', $signal->close_price) }}" step="any" min="0">
                         </div>
                     </div>
                     @endif
@@ -132,9 +132,15 @@
                 </div>
             </div>
 
-            <div class="card mb-4">
-                <div class="card-header"><h6 class="mb-0">Categories</h6></div>
+            <div class="card mb-4 @error('categories') border-danger @enderror">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Categories <span class="text-danger">*</span></h6>
+                    <small class="text-muted">Select at least 1</small>
+                </div>
                 <div class="card-body">
+                    @error('categories')
+                    <div class="alert alert-danger py-1 px-2 small mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $message }}</div>
+                    @enderror
                     @foreach($categories as $cat)
                     <div class="form-check mb-2">
                         <input type="checkbox" name="categories[]" value="{{ $cat->id }}" class="form-check-input" id="cat{{ $cat->id }}" {{ in_array($cat->id, old('categories', $selectedCategories)) ? 'checked' : '' }}>

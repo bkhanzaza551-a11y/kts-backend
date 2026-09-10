@@ -104,20 +104,60 @@ class SignalController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'title' => 'required|string|min:3|max:255',
             'description' => 'nullable|string|max:5000',
-            'symbol' => 'required|string|max:20',
+            'symbol' => 'required|string|min:2|max:20',
             'direction' => 'required|in:buy,sell',
-            'entry_price' => 'nullable|numeric|min:0',
-            'take_profit' => 'nullable|numeric|min:0',
-            'stop_loss' => 'nullable|numeric|min:0',
+            'entry_price' => 'required|numeric|gt:0',
+            'take_profit' => 'required|numeric|gt:0',
+            'stop_loss' => 'required|numeric|gt:0',
             'status' => 'required|in:draft,pending,active',
             'is_featured' => 'boolean',
             'expires_at' => 'nullable|date|after:now',
-            'categories' => 'nullable|array',
+            'categories' => 'required|array|min:1',
             'categories.*' => 'exists:signal_categories,id',
+        ], [
+            'title.required' => 'Signal title is mandatory.',
+            'title.min' => 'Signal title must be at least 3 characters.',
+            'symbol.required' => 'Please select or enter a trading symbol/coin pair (e.g. BTCUSDT, XAUUSD).',
+            'direction.required' => 'Please select signal direction (Buy or Sell).',
+            'entry_price.required' => 'Entry Price is mandatory and cannot be empty.',
+            'entry_price.gt' => 'Entry Price must be greater than 0.',
+            'take_profit.required' => 'Take Profit (TP) target is mandatory.',
+            'take_profit.gt' => 'Take Profit must be greater than 0.',
+            'stop_loss.required' => 'Stop Loss (SL) is mandatory.',
+            'stop_loss.gt' => 'Stop Loss must be greater than 0.',
+            'categories.required' => 'Please select at least one signal category (e.g. Crypto, Forex).',
+            'categories.min' => 'Please select at least one signal category.',
         ]);
+
+        $validator->after(function ($v) use ($request) {
+            $dir = $request->input('direction');
+            $entry = (float) $request->input('entry_price');
+            $tp = (float) $request->input('take_profit');
+            $sl = (float) $request->input('stop_loss');
+
+            if ($entry > 0 && $tp > 0 && $sl > 0) {
+                if ($dir === 'buy') {
+                    if ($tp <= $entry) {
+                        $v->errors()->add('take_profit', "For a BUY signal, Take Profit ({$tp}) must be higher than Entry Price ({$entry}).");
+                    }
+                    if ($sl >= $entry) {
+                        $v->errors()->add('stop_loss', "For a BUY signal, Stop Loss ({$sl}) must be lower than Entry Price ({$entry}).");
+                    }
+                } elseif ($dir === 'sell') {
+                    if ($tp >= $entry) {
+                        $v->errors()->add('take_profit', "For a SELL signal, Take Profit ({$tp}) must be lower than Entry Price ({$entry}).");
+                    }
+                    if ($sl <= $entry) {
+                        $v->errors()->add('stop_loss', "For a SELL signal, Stop Loss ({$sl}) must be higher than Entry Price ({$entry}).");
+                    }
+                }
+            }
+        });
+
+        $validated = $validator->validate();
 
         $validated['created_by'] = auth()->id();
         $validated['is_featured'] = $request->boolean('is_featured');
@@ -172,23 +212,64 @@ class SignalController extends Controller
 
     public function update(Request $request, Signal $signal)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'title' => 'required|string|min:3|max:255',
             'description' => 'nullable|string|max:5000',
-            'symbol' => 'required|string|max:20',
+            'symbol' => 'required|string|min:2|max:20',
             'direction' => 'required|in:buy,sell',
-            'entry_price' => 'nullable|numeric|min:0',
-            'take_profit' => 'nullable|numeric|min:0',
-            'stop_loss' => 'nullable|numeric|min:0',
+            'entry_price' => 'required|numeric|gt:0',
+            'take_profit' => 'required|numeric|gt:0',
+            'stop_loss' => 'required|numeric|gt:0',
             'status' => 'required|in:draft,pending,active,closed,cancelled',
             'result' => 'required_if:status,closed|nullable|in:win,loss,breakeven',
             'pips_result' => 'nullable|numeric',
-            'close_price' => 'nullable|numeric|min:0',
+            'close_price' => 'required_if:status,closed|nullable|numeric|gt:0',
             'is_featured' => 'boolean',
             'expires_at' => 'nullable|date',
-            'categories' => 'nullable|array',
+            'categories' => 'required|array|min:1',
             'categories.*' => 'exists:signal_categories,id',
+        ], [
+            'title.required' => 'Signal title is mandatory.',
+            'symbol.required' => 'Please select or enter a coin/pair symbol.',
+            'direction.required' => 'Signal direction (Buy or Sell) is required.',
+            'entry_price.required' => 'Entry Price is mandatory and cannot be empty.',
+            'entry_price.gt' => 'Entry Price must be greater than 0.',
+            'take_profit.required' => 'Take Profit (TP) target is mandatory.',
+            'take_profit.gt' => 'Take Profit must be greater than 0.',
+            'stop_loss.required' => 'Stop Loss (SL) is mandatory.',
+            'stop_loss.gt' => 'Stop Loss must be greater than 0.',
+            'categories.required' => 'Please select at least one signal category.',
+            'categories.min' => 'Please select at least one signal category.',
+            'result.required_if' => 'Closing result (Win/Loss/Breakeven) is required when closing a signal.',
+            'close_price.required_if' => 'Close Price is required when closing a signal.',
         ]);
+
+        $validator->after(function ($v) use ($request) {
+            $dir = $request->input('direction');
+            $entry = (float) $request->input('entry_price');
+            $tp = (float) $request->input('take_profit');
+            $sl = (float) $request->input('stop_loss');
+
+            if ($entry > 0 && $tp > 0 && $sl > 0) {
+                if ($dir === 'buy') {
+                    if ($tp <= $entry) {
+                        $v->errors()->add('take_profit', "For a BUY signal, Take Profit ({$tp}) must be higher than Entry Price ({$entry}).");
+                    }
+                    if ($sl >= $entry) {
+                        $v->errors()->add('stop_loss', "For a BUY signal, Stop Loss ({$sl}) must be lower than Entry Price ({$entry}).");
+                    }
+                } elseif ($dir === 'sell') {
+                    if ($tp >= $entry) {
+                        $v->errors()->add('take_profit', "For a SELL signal, Take Profit ({$tp}) must be lower than Entry Price ({$entry}).");
+                    }
+                    if ($sl <= $entry) {
+                        $v->errors()->add('stop_loss', "For a SELL signal, Stop Loss ({$sl}) must be higher than Entry Price ({$entry}).");
+                    }
+                }
+            }
+        });
+
+        $validated = $validator->validate();
 
         $validated['is_featured'] = $request->boolean('is_featured');
         $validated['expires_at'] = $request->filled('expires_at') ? $request->input('expires_at') : null;
