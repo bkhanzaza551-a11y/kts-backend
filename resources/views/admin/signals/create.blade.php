@@ -174,11 +174,69 @@ let searchTimeout = null;
 let selectedSymbol = null;
 let lastTicker = null;
 
+const POPULAR_SYMBOLS = [
+    { symbol: 'BTCUSDT', base_asset: 'BTC', quote_asset: 'USDT', name: 'Bitcoin' },
+    { symbol: 'ETHUSDT', base_asset: 'ETH', quote_asset: 'USDT', name: 'Ethereum' },
+    { symbol: 'SOLUSDT', base_asset: 'SOL', quote_asset: 'USDT', name: 'Solana' },
+    { symbol: 'BNBUSDT', base_asset: 'BNB', quote_asset: 'USDT', name: 'BNB' },
+    { symbol: 'XRPUSDT', base_asset: 'XRP', quote_asset: 'USDT', name: 'XRP' },
+    { symbol: 'DOGEUSDT', base_asset: 'DOGE', quote_asset: 'USDT', name: 'Dogecoin' },
+    { symbol: 'ADAUSDT', base_asset: 'ADA', quote_asset: 'USDT', name: 'Cardano' },
+    { symbol: 'AVAXUSDT', base_asset: 'AVAX', quote_asset: 'USDT', name: 'Avalanche' },
+    { symbol: 'LINKUSDT', base_asset: 'LINK', quote_asset: 'USDT', name: 'Chainlink' },
+    { symbol: 'DOTUSDT', base_asset: 'DOT', quote_asset: 'USDT', name: 'Polkadot' },
+    { symbol: 'NEARUSDT', base_asset: 'NEAR', quote_asset: 'USDT', name: 'NEAR Protocol' },
+    { symbol: 'MATICUSDT', base_asset: 'MATIC', quote_asset: 'USDT', name: 'Polygon' },
+    { symbol: 'PEPEUSDT', base_asset: 'PEPE', quote_asset: 'USDT', name: 'Pepe' },
+    { symbol: 'SUIUSDT', base_asset: 'SUI', quote_asset: 'USDT', name: 'Sui' },
+    { symbol: 'XAUUSD', base_asset: 'XAU', quote_asset: 'USD', name: 'Gold / USD' },
+    { symbol: 'EURUSD', base_asset: 'EUR', quote_asset: 'USD', name: 'Euro / USD' },
+    { symbol: 'GBPUSD', base_asset: 'GBP', quote_asset: 'USD', name: 'GBP / USD' },
+    { symbol: 'USDJPY', base_asset: 'USD', quote_asset: 'JPY', name: 'USD / JPY' },
+    { symbol: 'US30', base_asset: 'US30', quote_asset: 'USD', name: 'Dow Jones 30' },
+    { symbol: 'NAS100', base_asset: 'NAS100', quote_asset: 'USD', name: 'Nasdaq 100' },
+];
+
 const symbolInput = document.getElementById('symbolInput');
 const dropdown = document.getElementById('symbolDropdown');
 
+function renderDropdown(items) {
+    if (!items || items.length === 0) {
+        dropdown.innerHTML = '<div class="px-3 py-2 text-secondary small">No matching symbols found</div>';
+        dropdown.classList.remove('d-none');
+        return;
+    }
+
+    dropdown.innerHTML = items.map(s => `
+        <div class="px-3 py-2 border-bottom symbol-option" style="cursor:pointer;" data-symbol="${s.symbol}" data-name="${s.name}">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fw-semibold text-dark">${s.symbol}</span>
+                    <small class="text-secondary ms-1">${s.name}</small>
+                </div>
+                <span class="badge bg-secondary-subtle text-dark">${s.quote_asset || 'USDT'}</span>
+            </div>
+        </div>
+    `).join('');
+
+    dropdown.querySelectorAll('.symbol-option').forEach(opt => {
+        opt.addEventListener('click', function() {
+            const symbol = this.dataset.symbol;
+            const name = this.dataset.name;
+            symbolInput.value = symbol;
+            const dir = document.getElementById('directionSelect')?.value === 'sell' ? 'Sell' : 'Buy';
+            document.getElementById('titleInput').value = `${symbol} ${dir} Signal`;
+            dropdown.classList.add('d-none');
+            selectedSymbol = symbol;
+            loadMarketData(symbol);
+        });
+    });
+
+    dropdown.classList.remove('d-none');
+}
+
 symbolInput?.addEventListener('input', function() {
-    const query = this.value.trim();
+    const query = this.value.trim().toUpperCase();
     clearTimeout(searchTimeout);
 
     if (query.length < 1) {
@@ -186,46 +244,29 @@ symbolInput?.addEventListener('input', function() {
         return;
     }
 
+    // 1. Instant 0ms Local match
+    const localMatches = POPULAR_SYMBOLS.filter(s => 
+        s.symbol.includes(query) || 
+        s.base_asset.includes(query) || 
+        s.name.toUpperCase().includes(query)
+    );
+    if (localMatches.length > 0) {
+        renderDropdown(localMatches);
+    }
+
+    // 2. Fast background server query
     searchTimeout = setTimeout(() => {
         fetch(`{{ route('admin.market.search') }}?q=${encodeURIComponent(query)}`)
             .then(r => r.json())
             .then(data => {
                 if (data.data && data.data.length > 0) {
-                    dropdown.innerHTML = data.data.map(s => `
-                        <div class="px-3 py-2 border-bottom symbol-option" style="cursor:pointer;" data-symbol="${s.symbol}" data-name="${s.name}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <span class="fw-semibold text-dark">${s.base_asset}</span>
-                                    <small class="text-secondary ms-1">${s.name}</small>
-                                </div>
-                                <span class="badge bg-secondary">${s.quote_asset}</span>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    dropdown.querySelectorAll('.symbol-option').forEach(opt => {
-                        opt.addEventListener('click', function() {
-                            const symbol = this.dataset.symbol;
-                            const name = this.dataset.name;
-                            symbolInput.value = symbol;
-                            document.getElementById('titleInput').value = symbol + ' Signal';
-                            dropdown.classList.add('d-none');
-                            selectedSymbol = symbol;
-                            loadMarketData(symbol);
-                        });
-                    });
-
-                    dropdown.classList.remove('d-none');
-                } else {
-                    dropdown.innerHTML = '<div class="px-3 py-2 text-secondary small">No symbols found</div>';
-                    dropdown.classList.remove('d-none');
+                    renderDropdown(data.data);
+                } else if (localMatches.length === 0) {
+                    renderDropdown([]);
                 }
             })
-            .catch(() => {
-                dropdown.innerHTML = '<div class="px-3 py-2 text-danger small">Search failed. Try again.</div>';
-                dropdown.classList.remove('d-none');
-            });
-    }, 300);
+            .catch(() => {});
+    }, 100);
 });
 
 document.addEventListener('click', function(e) {
@@ -235,7 +276,7 @@ document.addEventListener('click', function(e) {
 });
 
 symbolInput?.addEventListener('blur', function() {
-    setTimeout(() => dropdown.classList.add('d-none'), 200);
+    setTimeout(() => dropdown.classList.add('d-none'), 250);
 });
 
 function loadMarketData(symbol) {
