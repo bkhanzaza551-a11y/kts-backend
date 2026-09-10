@@ -54,7 +54,7 @@ class SupportChatController extends Controller
 
     public function show(Request $request, SupportTicket $ticket)
     {
-        $ticket->load(['user:id,name,email,phone', 'replies.user:id,name']);
+        $ticket->load(['user', 'replies.user']);
 
         $replies = $ticket->replies()->oldest()->get();
 
