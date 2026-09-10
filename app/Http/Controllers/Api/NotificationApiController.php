@@ -12,21 +12,42 @@ use Illuminate\Http\Request;
 
 class NotificationApiController extends Controller
 {
+    private function applyUserFilter($query, $user)
+    {
+        $userId = $user->id;
+        $isPremium = (bool) $user->is_premium;
+        $roleIds = $user->roles ? $user->roles->pluck('id')->toArray() : [];
+
+        return $query->where(function ($q) use ($userId, $isPremium, $roleIds) {
+            $q->where('target', 'all')
+                ->orWhere(function($sub) use ($userId) {
+                    $sub->whereIn('target', ['specific', 'user'])->where('target_user_id', $userId);
+                });
+
+            if ($isPremium) {
+                $q->orWhere('target', 'premium');
+            } else {
+                $q->orWhere('target', 'free');
+            }
+
+            if (!empty($roleIds)) {
+                $q->orWhere(function($sub) use ($roleIds) {
+                    $sub->where('target', 'role')->whereIn('target_role_id', $roleIds);
+                });
+            }
+        });
+    }
+
     public function index(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
-        $notifications = AdminNotification::where('is_sent', true)
-            ->where(function ($q) use ($userId) {
-                $q->where('target', 'all')
-                    ->orWhere(function($sub) use ($userId) {
-                        $sub->where('target', 'specific')->where('target_user_id', $userId);
-                    });
-            })
+        $user = $request->user();
+        $query = AdminNotification::where('is_sent', true);
+        $notifications = $this->applyUserFilter($query, $user)
             ->latest()
             ->paginate(20);
 
         $readIds = \DB::table('admin_notification_reads')
-            ->where('user_id', $userId)
+            ->where('user_id', $user->id)
             ->whereIn('admin_notification_id', $notifications->pluck('id'))
             ->pluck('admin_notification_id')
             ->toArray();
@@ -44,16 +65,12 @@ class NotificationApiController extends Controller
 
     public function unread(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
-        $count = AdminNotification::where('is_sent', true)
-            ->where(function ($q) use ($userId) {
-                $q->where('target', 'all')
-                    ->orWhere(function($sub) use ($userId) {
-                        $sub->where('target', 'specific')->where('target_user_id', $userId);
-                    });
-            })
-            ->whereNotIn('id', function ($query) use ($userId) {
-                $query->select('admin_notification_id')
+        $user = $request->user();
+        $userId = $user->id;
+        $query = AdminNotification::where('is_sent', true);
+        $count = $this->applyUserFilter($query, $user)
+            ->whereNotIn('id', function ($q) use ($userId) {
+                $q->select('admin_notification_id')
                     ->from('admin_notification_reads')
                     ->where('user_id', $userId);
             })
@@ -80,15 +97,10 @@ class NotificationApiController extends Controller
 
     public function markAllAsRead(Request $request): JsonResponse
     {
-        $userId = $request->user()->id;
-        $notificationIds = AdminNotification::where('is_sent', true)
-            ->where(function ($q) use ($userId) {
-                $q->where('target', 'all')
-                    ->orWhere(function($sub) use ($userId) {
-                        $sub->where('target', 'specific')->where('target_user_id', $userId);
-                    });
-            })
-            ->pluck('id');
+        $user = $request->user();
+        $userId = $user->id;
+        $query = AdminNotification::where('is_sent', true);
+        $notificationIds = $this->applyUserFilter($query, $user)->pluck('id');
 
         foreach ($notificationIds as $id) {
             \DB::table('admin_notification_reads')->updateOrInsert(
