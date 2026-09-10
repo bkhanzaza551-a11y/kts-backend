@@ -391,9 +391,4 @@ class SignalController extends Controller
 
         return response()->json($symbols);
     }
-
-    private function isValidDate(string $date): bool
-    {
-        return strtotime($date) !== false;
-    }
 }

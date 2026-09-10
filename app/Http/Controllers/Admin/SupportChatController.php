@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketReply;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class SupportChatController extends Controller
 {
@@ -14,7 +15,9 @@ class SupportChatController extends Controller
         $query = SupportTicket::with(['user:id,name,email', 'replies']);
 
         if ($status = $request->input('status')) {
-            $query->where('status', $status);
+            if (in_array($status, ['open', 'closed', 'in_progress'])) {
+                $query->where('status', $status);
+            }
         }
 
         if ($search = trim($request->input('search', ''))) {
@@ -29,9 +32,24 @@ class SupportChatController extends Controller
             });
         }
 
-        $tickets = $query->latest()->paginate(20);
+        if ($request->filled('date_from') && $this->isValidDate($request->input('date_from'))) {
+            $query->where('created_at', '>=', Carbon::parse($request->input('date_from'))->startOfDay());
+        }
 
-        return view('admin.support-chat.index', compact('tickets'));
+        if ($request->filled('date_to') && $this->isValidDate($request->input('date_to'))) {
+            $query->where('created_at', '<=', Carbon::parse($request->input('date_to'))->endOfDay());
+        }
+
+        $tickets = $query->latest()->paginate(20)->withQueryString();
+
+        $stats = [
+            'total' => SupportTicket::count(),
+            'open' => SupportTicket::where('status', 'open')->count(),
+            'closed' => SupportTicket::where('status', 'closed')->count(),
+            'ai_chatbot' => SupportTicket::where('source', 'ai_chatbot')->count(),
+        ];
+
+        return view('admin.support-chat.index', compact('tickets', 'stats'));
     }
 
     public function show(Request $request, SupportTicket $ticket)

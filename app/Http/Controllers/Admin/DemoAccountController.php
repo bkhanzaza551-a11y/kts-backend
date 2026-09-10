@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DemoAccountRequest;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class DemoAccountController extends Controller
 {
@@ -25,6 +26,14 @@ class DemoAccountController extends Controller
                     ->orWhere('demo_phone', 'like', "%{$search}%")
                     ->orWhere('exness_account_number', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->filled('date_from') && $this->isValidDate($request->input('date_from'))) {
+            $query->where('created_at', '>=', Carbon::parse($request->input('date_from'))->startOfDay());
+        }
+
+        if ($request->filled('date_to') && $this->isValidDate($request->input('date_to'))) {
+            $query->where('created_at', '<=', Carbon::parse($request->input('date_to'))->endOfDay());
         }
 
         $requests = $query->latest()->paginate(20)->withQueryString();

@@ -20,20 +20,31 @@ class StaffController extends Controller
             });
 
         if ($search = $request->input('search')) {
-            $safeSearch = str_replace(['%', '_'], ['\%', '\_'], $search);
-            $query->where(function ($q) use ($safeSearch) {
-                $q->where('name', 'like', "%{$safeSearch}%")
-                  ->orWhere('email', 'like', "%{$safeSearch}%");
-            });
+            $safeSearch = str_replace(['%', '_'], ['\%', '\_'], trim($search));
+            if ($safeSearch !== '') {
+                $query->where(function ($q) use ($safeSearch) {
+                    $q->where('name', 'like', "%{$safeSearch}%")
+                      ->orWhere('email', 'like', "%{$safeSearch}%");
+                });
+            }
         }
 
         if ($status = $request->input('status')) {
-            $query->where('status', $status);
+            if (in_array($status, ['active', 'inactive', 'suspended'])) {
+                $query->where('status', $status);
+            }
         }
 
-        $staff = $query->latest()->paginate(20);
+        if ($request->filled('role')) {
+            $query->whereHas('roles', function ($q) use ($request) {
+                $q->where('slug', $request->input('role'));
+            });
+        }
 
-        return view('admin.staff.index', compact('staff'));
+        $staff = $query->latest()->paginate(20)->withQueryString();
+        $roles = Role::where('slug', '!=', 'user')->orderBy('name')->get();
+
+        return view('admin.staff.index', compact('staff', 'roles'));
     }
 
     public function create()

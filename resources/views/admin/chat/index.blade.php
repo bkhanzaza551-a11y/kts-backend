@@ -44,41 +44,50 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label small text-secondary fw-medium">Room</label>
-                <select name="room_id" class="form-select">
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2 align-items-end" id="chatFilterForm">
+            <div class="col-xl-3 col-lg-3 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Room</label>
+                <select name="room_id" class="form-select form-select-sm">
                     <option value="">All Rooms</option>
                     @foreach($rooms as $room)
                     <option value="{{ $room->id }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>{{ $room->name }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-3">
-                <label class="form-label small text-secondary fw-medium">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Search messages..." value="{{ request('search') }}">
+            <div class="col-xl-3 col-lg-3 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Message or user..." value="{{ request('search') }}">
+                </div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary fw-medium">Flagged</label>
-                <select name="flagged" class="form-select">
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Flagged</label>
+                <select name="flagged" class="form-select form-select-sm">
                     <option value="">All</option>
                     <option value="1" {{ request('flagged') === '1' ? 'selected' : '' }}>Flagged Only</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary fw-medium">Status</label>
-                <select name="deleted" class="form-select">
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Status</label>
+                <select name="deleted" class="form-select form-select-sm">
                     <option value="">All</option>
                     <option value="0" {{ request('deleted') === '0' ? 'selected' : '' }}>Active</option>
                     <option value="1" {{ request('deleted') === '1' ? 'selected' : '' }}>Deleted</option>
                 </select>
             </div>
-            <div class="col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-search me-1"></i>Filter</button>
-                @if(request()->hasAny(['room_id','search','flagged','deleted']))
-                <a href="{{ route('admin.chat.index') }}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+            <div class="col-auto d-flex gap-2 ms-auto pt-2 pt-md-0">
+                <button type="submit" class="btn btn-sm btn-primary px-3"><i class="bi bi-funnel me-1"></i>Filter</button>
+                @php
+                    $hasActiveFilters = filled(request('room_id')) ||
+                                        filled(request('search')) ||
+                                        filled(request('flagged')) ||
+                                        (request('deleted') !== null && request('deleted') !== '');
+                @endphp
+                @if($hasActiveFilters)
+                <a href="{{ route('admin.chat.index') }}" class="btn btn-sm btn-outline-secondary px-3" title="Clear all filters"><i class="bi bi-x-circle me-1"></i>Reset</a>
                 @endif
             </div>
         </form>

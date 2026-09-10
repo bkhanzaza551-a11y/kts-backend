@@ -44,17 +44,19 @@
     </div>
 </div>
 
-{{-- Filters --}}
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label text-secondary small">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Name, email, phone, account..." value="{{ request('search') }}">
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2 align-items-end" id="demoAccountFilterForm">
+            <div class="col-xl-4 col-lg-4 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Name, email, phone, account #..." value="{{ request('search') }}">
+                </div>
             </div>
-            <div class="col-md-3">
-                <label class="form-label text-secondary small">Status</label>
-                <select name="status" class="form-select">
+            <div class="col-xl-2 col-lg-3 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm">
                     <option value="">All Status</option>
                     <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                     <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
@@ -62,11 +64,29 @@
                     <option value="linked" {{ request('status') === 'linked' ? 'selected' : '' }}>Linked</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Filter</button>
+            <div class="col-xl-3 col-lg-3 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Requested Between</label>
+                <div class="input-group input-group-sm">
+                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" title="Date From">
+                    <span class="input-group-text bg-light text-muted">to</span>
+                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" title="Date To">
+                </div>
             </div>
-            <div class="col-md-2">
-                <a href="{{ route('admin.demo-accounts.index') }}" class="btn btn-outline-secondary w-100">Clear</a>
+            <div class="col-auto d-flex gap-2 ms-auto pt-2 pt-md-0">
+                <button type="submit" class="btn btn-sm btn-primary px-3">
+                    <i class="bi bi-funnel me-1"></i>Filter
+                </button>
+                @php
+                    $hasActiveFilters = filled(request('search')) ||
+                                        filled(request('status')) ||
+                                        filled(request('date_from')) ||
+                                        filled(request('date_to'));
+                @endphp
+                @if($hasActiveFilters)
+                <a href="{{ route('admin.demo-accounts.index') }}" class="btn btn-sm btn-outline-secondary px-3" title="Clear all filters">
+                    <i class="bi bi-x-circle me-1"></i>Reset
+                </a>
+                @endif
             </div>
         </form>
     </div>

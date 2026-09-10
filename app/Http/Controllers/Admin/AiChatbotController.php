@@ -7,6 +7,7 @@ use App\Models\AiChatLog;
 use App\Models\AiChatbotSetting;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class AiChatbotController extends Controller
@@ -15,7 +16,7 @@ class AiChatbotController extends Controller
         'openai/gpt-oss-120b', 'openai/gpt-oss-20b',
         'llama-3.3-70b-versatile', 'llama-3.1-8b-instant',
         'llama3-70b-8192', 'llama3-8b-8192',
-        'qwen/qwen3.6-27b', 'qwen/qwen3.8-27b',
+        'qwen/qwen3.8-27b', 'qwen/qwen3.6-27b',
         'mixtral-8x7b-32768', 'gemma2-9b-it',
         'deepseek-r1-distill-llama-70b', 'groq/compound',
         'gpt-4o', 'gpt-4o-mini',
@@ -81,6 +82,14 @@ class AiChatbotController extends Controller
             if (in_array($role, ['user', 'assistant', 'system'])) {
                 $query->where('role', $role);
             }
+        }
+
+        if ($request->filled('date_from') && $this->isValidDate($request->input('date_from'))) {
+            $query->where('created_at', '>=', Carbon::parse($request->input('date_from'))->startOfDay());
+        }
+
+        if ($request->filled('date_to') && $this->isValidDate($request->input('date_to'))) {
+            $query->where('created_at', '<=', Carbon::parse($request->input('date_to'))->endOfDay());
         }
 
         $logs = $query->latest()->paginate(30)->withQueryString();

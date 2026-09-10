@@ -5,23 +5,83 @@
     <h4 class="mb-0 fw-bold"><i class="bi bi-headset me-2 text-success"></i>Support Chats</h4>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label fw-semibold">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Ticket #, name, email..." value="{{ request('search') }}">
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body p-3 text-center">
+                <h3 class="text-dark mb-0 fw-bold">{{ number_format($stats['total']) }}</h3>
+                <small class="text-secondary">Total Tickets</small>
             </div>
-            <div class="col-md-2">
-                <label class="form-label fw-semibold">Status</label>
-                <select name="status" class="form-select">
-                    <option value="">All</option>
-                    <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>Open</option>
-                    <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>Closed</option>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body p-3 text-center">
+                <h3 class="text-warning mb-0 fw-bold">{{ number_format($stats['open']) }}</h3>
+                <small class="text-secondary">Open</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body p-3 text-center">
+                <h3 class="text-success mb-0 fw-bold">{{ number_format($stats['closed']) }}</h3>
+                <small class="text-secondary">Closed</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card border-0 h-100">
+            <div class="card-body p-3 text-center">
+                <h3 class="text-info mb-0 fw-bold">{{ number_format($stats['ai_chatbot']) }}</h3>
+                <small class="text-secondary">AI Bot Handled</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2 align-items-end" id="supportFilterForm">
+            <div class="col-xl-4 col-lg-4 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Ticket #, subject, user..." value="{{ request('search') }}">
+                </div>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Status</option>
+                    <option value="open" {{ request('status') === 'open' ? 'selected' : '' }}>Open</option>
+                    <option value="closed" {{ request('status') === 'closed' ? 'selected' : '' }}>Closed</option>
+                    <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Filter</button>
+            <div class="col-xl-3 col-lg-3 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Created Between</label>
+                <div class="input-group input-group-sm">
+                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" title="Date From">
+                    <span class="input-group-text bg-light text-muted">to</span>
+                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" title="Date To">
+                </div>
+            </div>
+            <div class="col-auto d-flex gap-2 ms-auto pt-2 pt-md-0">
+                <button type="submit" class="btn btn-sm btn-primary px-3">
+                    <i class="bi bi-funnel me-1"></i>Filter
+                </button>
+                @php
+                    $hasActiveFilters = filled(request('search')) ||
+                                        filled(request('status')) ||
+                                        filled(request('date_from')) ||
+                                        filled(request('date_to'));
+                @endphp
+                @if($hasActiveFilters)
+                <a href="{{ route('admin.support-chat.index') }}" class="btn btn-sm btn-outline-secondary px-3" title="Clear all filters">
+                    <i class="bi bi-x-circle me-1"></i>Reset
+                </a>
+                @endif
             </div>
         </form>
     </div>

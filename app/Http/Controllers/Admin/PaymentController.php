@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -35,6 +36,14 @@ class PaymentController extends Controller
                 $q->where('transaction_id', 'like', "%{$safeSearch}%")
                   ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', "%{$safeSearch}%")->orWhere('email', 'like', "%{$safeSearch}%"));
             });
+        }
+
+        if ($request->filled('date_from') && $this->isValidDate($request->input('date_from'))) {
+            $query->where('created_at', '>=', Carbon::parse($request->input('date_from'))->startOfDay());
+        }
+
+        if ($request->filled('date_to') && $this->isValidDate($request->input('date_to'))) {
+            $query->where('created_at', '<=', Carbon::parse($request->input('date_to'))->endOfDay());
         }
 
         $transactions = $query->latest()->paginate(20)->withQueryString();

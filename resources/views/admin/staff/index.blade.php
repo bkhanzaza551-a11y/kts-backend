@@ -82,37 +82,48 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-lg-5 col-md-6">
-                <label class="form-label small text-secondary fw-medium">Search</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" name="search" class="form-control" placeholder="Search by name or email..." value="{{ request('search') }}">
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2 align-items-end" id="staffFilterForm">
+            <div class="col-xl-4 col-lg-4 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Search by name or email..." value="{{ request('search') }}">
                 </div>
             </div>
-            <div class="col-lg-3 col-md-4">
-                <label class="form-label small text-secondary fw-medium">Status</label>
-                <select name="status" class="form-select">
+            <div class="col-xl-3 col-lg-3 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm">
                     <option value="">All Status</option>
                     <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                     <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
                 </select>
             </div>
-            <div class="col-lg-2 col-md-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary flex-grow-1">
-                    <i class="bi bi-search me-1"></i>Search
+            <div class="col-xl-3 col-lg-3 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Role</label>
+                <select name="role" class="form-select form-select-sm">
+                    <option value="">All Staff Roles</option>
+                    @foreach($roles as $r)
+                    <option value="{{ $r->slug }}" {{ request('role') === $r->slug ? 'selected' : '' }}>{{ $r->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto d-flex gap-2 ms-auto pt-2 pt-md-0">
+                <button type="submit" class="btn btn-sm btn-primary px-3">
+                    <i class="bi bi-funnel me-1"></i>Filter
                 </button>
-                @if(request('search') || request('status'))
-                <a href="{{ route('admin.staff.index') }}" class="btn btn-outline-secondary" title="Clear">
-                    <i class="bi bi-x-lg"></i>
+                @php
+                    $hasActiveFilters = filled(request('search')) ||
+                                        filled(request('status')) ||
+                                        filled(request('role'));
+                @endphp
+                @if($hasActiveFilters)
+                <a href="{{ route('admin.staff.index') }}" class="btn btn-sm btn-outline-secondary px-3" title="Clear all filters">
+                    <i class="bi bi-x-circle me-1"></i>Reset
                 </a>
                 @endif
-            </div>
-            <div class="col-lg-2 col-md-12 text-lg-end">
-                <small class="text-secondary">{{ $staff->total() }} results</small>
             </div>
         </form>
     </div>

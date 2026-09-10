@@ -63,57 +63,78 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label small text-secondary">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Name, email, phone..." value="{{ request('search') }}">
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2 align-items-end" id="userFilterForm">
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Name, email, phone..." value="{{ request('search') }}">
+                </div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Status</label>
-                <select name="status" class="form-select">
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm">
                     <option value="">All Status</option>
                     <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                     <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Banned</label>
-                <select name="is_banned" class="form-select">
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Role</label>
+                <select name="role" class="form-select form-select-sm">
+                    <option value="">All Roles</option>
+                    @foreach($roles as $r)
+                    <option value="{{ $r->slug }}" {{ request('role') === $r->slug ? 'selected' : '' }}>{{ $r->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-xl-1 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Banned</label>
+                <select name="is_banned" class="form-select form-select-sm">
                     <option value="">All</option>
                     <option value="1" {{ request('is_banned') === '1' ? 'selected' : '' }}>Yes</option>
                     <option value="0" {{ request('is_banned') === '0' ? 'selected' : '' }}>No</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Premium</label>
-                <select name="is_premium" class="form-select">
+            <div class="col-xl-1 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Premium</label>
+                <select name="is_premium" class="form-select form-select-sm">
                     <option value="">All</option>
                     <option value="1" {{ request('is_premium') === '1' ? 'selected' : '' }}>Yes</option>
                     <option value="0" {{ request('is_premium') === '0' ? 'selected' : '' }}>No</option>
                 </select>
             </div>
-            <div class="col-md-1">
-                <label class="form-label small text-secondary">From</label>
-                <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Joined Between</label>
+                <div class="input-group input-group-sm">
+                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" title="Date From">
+                    <span class="input-group-text bg-light text-muted">to</span>
+                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" title="Date To">
+                </div>
             </div>
-            <div class="col-md-1">
-                <label class="form-label small text-secondary">To</label>
-                <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-            </div>
-            <div class="col-md-1 d-grid">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+            <div class="col-auto d-flex gap-2 ms-auto pt-2 pt-md-0">
+                <button type="submit" class="btn btn-sm btn-primary px-3">
+                    <i class="bi bi-funnel me-1"></i>Filter
+                </button>
+                @php
+                    $hasActiveFilters = filled(request('search')) ||
+                                        filled(request('status')) ||
+                                        filled(request('role')) ||
+                                        (request('is_banned') !== null && request('is_banned') !== '') ||
+                                        (request('is_premium') !== null && request('is_premium') !== '') ||
+                                        filled(request('date_from')) ||
+                                        filled(request('date_to'));
+                @endphp
+                @if($hasActiveFilters)
+                <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary px-3" title="Clear all filters">
+                    <i class="bi bi-x-circle me-1"></i>Reset
+                </a>
+                @endif
             </div>
         </form>
-        @if(request()->hasAny(['search', 'status', 'is_banned', 'is_premium', 'date_from', 'date_to']))
-        <div class="mt-2">
-            <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-x-lg me-1"></i>Clear Filters
-            </a>
-        </div>
-        @endif
     </div>
 </div>
 

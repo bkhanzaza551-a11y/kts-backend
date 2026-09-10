@@ -57,64 +57,89 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Title, symbol..." value="{{ request('search') }}">
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2 align-items-end" id="signalFilterForm">
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Title, description..." value="{{ request('search') }}">
+                </div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Status</label>
-                <select name="status" class="form-select">
-                    <option value="">All</option>
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Status</option>
                     @foreach(['draft','pending','active','closed','cancelled'] as $s)
                     <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Direction</label>
-                <select name="direction" class="form-select">
+            <div class="col-xl-1 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Direction</label>
+                <select name="direction" class="form-select form-select-sm">
                     <option value="">All</option>
                     <option value="buy" {{ request('direction') === 'buy' ? 'selected' : '' }}>Buy</option>
                     <option value="sell" {{ request('direction') === 'sell' ? 'selected' : '' }}>Sell</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Result</label>
-                <select name="result" class="form-select">
-                    <option value="">All</option>
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Result</label>
+                <select name="result" class="form-select form-select-sm">
+                    <option value="">All Results</option>
                     @foreach(['win','loss','breakeven','pending'] as $r)
                     <option value="{{ $r }}" {{ request('result') === $r ? 'selected' : '' }}>{{ ucfirst($r) }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Category</label>
-                <select name="category_id" class="form-select">
-                    <option value="">All</option>
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Category</label>
+                <select name="category_id" class="form-select form-select-sm">
+                    <option value="">All Categories</option>
                     @foreach($categories as $cat)
                     <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Symbol</label>
-                <select name="symbol" class="form-select">
-                    <option value="">All</option>
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Symbol</label>
+                <select name="symbol" class="form-select form-select-sm">
+                    <option value="">All Symbols</option>
                     @foreach($symbols as $sym)
                     <option value="{{ $sym }}" {{ request('symbol') === $sym ? 'selected' : '' }}>{{ $sym }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-1 d-grid">
-                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button>
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Created Between</label>
+                <div class="input-group input-group-sm">
+                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" title="Date From">
+                    <span class="input-group-text bg-light text-muted">to</span>
+                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" title="Date To">
+                </div>
+            </div>
+            <div class="col-auto d-flex gap-2 ms-auto pt-2 pt-md-0">
+                <button type="submit" class="btn btn-sm btn-primary px-3">
+                    <i class="bi bi-funnel me-1"></i>Filter
+                </button>
+                @php
+                    $hasActiveFilters = filled(request('search')) ||
+                                        filled(request('status')) ||
+                                        filled(request('direction')) ||
+                                        filled(request('result')) ||
+                                        filled(request('category_id')) ||
+                                        filled(request('symbol')) ||
+                                        filled(request('date_from')) ||
+                                        filled(request('date_to'));
+                @endphp
+                @if($hasActiveFilters)
+                <a href="{{ route('admin.signals.index') }}" class="btn btn-sm btn-outline-secondary px-3" title="Clear all filters">
+                    <i class="bi bi-x-circle me-1"></i>Reset
+                </a>
+                @endif
             </div>
         </form>
-        @if(request()->hasAny(['search','status','direction','result','category_id','symbol']))
-        <div class="mt-2"><a href="{{ route('admin.signals.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg me-1"></i>Clear</a></div>
-        @endif
     </div>
 </div>
 

@@ -39,34 +39,54 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label small text-secondary">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Message or user..." value="{{ request('search') }}">
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body p-3">
+        <form method="GET" class="row g-2 align-items-end" id="aiChatFilterForm">
+            <div class="col-xl-3 col-lg-3 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="Message or user..." value="{{ request('search') }}">
+                </div>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Role</label>
-                <select name="role" class="form-select">
-                    <option value="">All</option>
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Role</label>
+                <select name="role" class="form-select form-select-sm">
+                    <option value="">All Roles</option>
                     <option value="user" {{ request('role') === 'user' ? 'selected' : '' }}>User</option>
                     <option value="assistant" {{ request('role') === 'assistant' ? 'selected' : '' }}>Assistant</option>
                     <option value="system" {{ request('role') === 'system' ? 'selected' : '' }}>System</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small text-secondary">Flagged</label>
-                <select name="flagged" class="form-select">
+            <div class="col-xl-2 col-lg-2 col-md-3 col-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Flagged</label>
+                <select name="flagged" class="form-select form-select-sm">
                     <option value="">All</option>
                     <option value="1" {{ request('flagged') === '1' ? 'selected' : '' }}>Flagged Only</option>
                 </select>
             </div>
-            <div class="col-md-2 d-grid"><button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i></button></div>
+            <div class="col-xl-3 col-lg-3 col-md-6">
+                <label class="form-label small text-secondary fw-semibold mb-1">Created Between</label>
+                <div class="input-group input-group-sm">
+                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}" title="Date From">
+                    <span class="input-group-text bg-light text-muted">to</span>
+                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}" title="Date To">
+                </div>
+            </div>
+            <div class="col-auto d-flex gap-2 ms-auto pt-2 pt-md-0">
+                <button type="submit" class="btn btn-sm btn-primary px-3"><i class="bi bi-funnel me-1"></i>Filter</button>
+                @php
+                    $hasActiveFilters = filled(request('search')) ||
+                                        filled(request('role')) ||
+                                        filled(request('flagged')) ||
+                                        filled(request('date_from')) ||
+                                        filled(request('date_to'));
+                @endphp
+                @if($hasActiveFilters)
+                <a href="{{ route('admin.ai-chatbot.chat-logs') }}" class="btn btn-sm btn-outline-secondary px-3" title="Clear all filters"><i class="bi bi-x-circle me-1"></i>Reset</a>
+                @endif
+            </div>
         </form>
-        @if(request()->hasAny(['search','role','flagged']))
-        <div class="mt-2"><a href="{{ route('admin.ai-chatbot.chat-logs') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-lg me-1"></i>Clear</a></div>
-        @endif
     </div>
 </div>
 

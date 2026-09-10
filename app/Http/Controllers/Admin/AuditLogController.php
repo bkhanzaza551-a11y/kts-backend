@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class AuditLogController extends Controller
@@ -26,21 +27,23 @@ class AuditLogController extends Controller
             $query->where('model', $request->model);
         }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+        if ($request->filled('date_from') && $this->isValidDate($request->input('date_from'))) {
+            $query->where('created_at', '>=', Carbon::parse($request->input('date_from'))->startOfDay());
         }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+        if ($request->filled('date_to') && $this->isValidDate($request->input('date_to'))) {
+            $query->where('created_at', '<=', Carbon::parse($request->input('date_to'))->endOfDay());
         }
 
         if ($request->filled('search')) {
-            $search = str_replace(['%', '_'], ['\%', '\_'], $request->search);
-            $query->where(function ($q) use ($search) {
-                $q->where('description', 'like', "%{$search}%")
-                    ->orWhere('ip_address', 'like', "%{$search}%")
-                    ->orWhere('action', 'like', "%{$search}%");
-            });
+            $search = str_replace(['%', '_'], ['\%', '\_'], trim($request->search));
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('description', 'like', "%{$search}%")
+                        ->orWhere('ip_address', 'like', "%{$search}%")
+                        ->orWhere('action', 'like', "%{$search}%");
+                });
+            }
         }
 
         $logs = $query->latest()->paginate(25)->withQueryString();

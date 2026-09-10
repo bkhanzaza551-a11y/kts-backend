@@ -68,13 +68,23 @@
                         value="{{ request('date_to') }}">
                 </div>
             </div>
-            <div class="d-flex gap-2 mt-3">
-                <button type="submit" class="btn btn-primary btn-sm">
-                    <i class="bi bi-search me-1"></i>Apply Filters
+            <div class="d-flex gap-2 mt-3 align-items-center">
+                <button type="submit" class="btn btn-primary btn-sm px-3">
+                    <i class="bi bi-funnel me-1"></i>Apply Filters
                 </button>
-                <a href="{{ route('admin.audit-logs.index') }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-x-circle me-1"></i>Clear
+                @php
+                    $hasActiveFilters = filled(request('search')) ||
+                                        filled(request('user_id')) ||
+                                        filled(request('action')) ||
+                                        filled(request('model')) ||
+                                        filled(request('date_from')) ||
+                                        filled(request('date_to'));
+                @endphp
+                @if($hasActiveFilters)
+                <a href="{{ route('admin.audit-logs.index') }}" class="btn btn-outline-secondary btn-sm px-3" title="Clear all filters">
+                    <i class="bi bi-x-circle me-1"></i>Reset
                 </a>
+                @endif
             </div>
         </form>
     </div>

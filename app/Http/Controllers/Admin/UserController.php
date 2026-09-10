@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
@@ -33,12 +35,26 @@ class UserController extends Controller
             }
         }
 
-        if ($request->filled('is_banned')) {
-            $query->where('is_banned', $request->boolean('is_banned'));
+        if ($request->has('is_banned') && $request->input('is_banned') !== '' && $request->input('is_banned') !== null) {
+            $isBanned = filter_var($request->input('is_banned'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($isBanned === true) {
+                $query->where('is_banned', true);
+            } elseif ($isBanned === false) {
+                $query->where(function ($q) {
+                    $q->where('is_banned', false)->orWhereNull('is_banned');
+                });
+            }
         }
 
-        if ($request->filled('is_premium')) {
-            $query->where('is_premium', $request->boolean('is_premium'));
+        if ($request->has('is_premium') && $request->input('is_premium') !== '' && $request->input('is_premium') !== null) {
+            $isPremium = filter_var($request->input('is_premium'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($isPremium === true) {
+                $query->where('is_premium', true);
+            } elseif ($isPremium === false) {
+                $query->where(function ($q) {
+                    $q->where('is_premium', false)->orWhereNull('is_premium');
+                });
+            }
         }
 
         if ($request->filled('role')) {
@@ -48,11 +64,11 @@ class UserController extends Controller
         }
 
         if ($request->filled('date_from') && $this->isValidDate($request->input('date_from'))) {
-            $query->whereDate('created_at', '>=', $request->input('date_from'));
+            $query->where('created_at', '>=', Carbon::parse($request->input('date_from'))->startOfDay());
         }
 
         if ($request->filled('date_to') && $this->isValidDate($request->input('date_to'))) {
-            $query->whereDate('created_at', '<=', $request->input('date_to'));
+            $query->where('created_at', '<=', Carbon::parse($request->input('date_to'))->endOfDay());
         }
 
         $sortBy = $request->input('sort', 'created_at');
@@ -67,8 +83,9 @@ class UserController extends Controller
 
         $users = $query->paginate(20)->withQueryString();
         $stats = $this->getUserStats();
+        $roles = Role::orderBy('name')->get();
 
-        return view('admin.users.index', compact('users', 'stats'));
+        return view('admin.users.index', compact('users', 'stats', 'roles'));
     }
 
     public function create()
@@ -391,11 +408,5 @@ class UserController extends Controller
             'premium' => User::whereNull('deleted_at')->where('is_premium', true)->count(),
             'new_today' => User::whereNull('deleted_at')->whereDate('created_at', $today)->count(),
         ];
-    }
-
-    private function isValidDate(string $date): bool
-    {
-        $d = \DateTime::createFromFormat('Y-m-d', $date);
-        return $d && $d->format('Y-m-d') === $date;
     }
 }

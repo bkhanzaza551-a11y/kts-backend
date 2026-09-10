@@ -37,12 +37,26 @@ class EducationController extends Controller
             }
         }
 
-        if ($request->has('is_published') && $request->input('is_published') !== '') {
-            $query->where('is_published', $request->boolean('is_published'));
+        if ($request->has('is_published') && $request->input('is_published') !== '' && $request->input('is_published') !== null) {
+            $isPublished = filter_var($request->input('is_published'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($isPublished === true) {
+                $query->where('is_published', true);
+            } elseif ($isPublished === false) {
+                $query->where(function ($q) {
+                    $q->where('is_published', false)->orWhereNull('is_published');
+                });
+            }
         }
 
-        if ($request->has('is_featured') && $request->input('is_featured') !== '') {
-            $query->where('is_featured', $request->boolean('is_featured'));
+        if ($request->has('is_featured') && $request->input('is_featured') !== '' && $request->input('is_featured') !== null) {
+            $isFeatured = filter_var($request->input('is_featured'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($isFeatured === true) {
+                $query->where('is_featured', true);
+            } elseif ($isFeatured === false) {
+                $query->where(function ($q) {
+                    $q->where('is_featured', false)->orWhereNull('is_featured');
+                });
+            }
         }
 
         if ($request->filled('date_from') && $this->isValidDate($request->input('date_from'))) {
@@ -234,10 +248,5 @@ class EducationController extends Controller
         Cache::forget('education_stats');
 
         return back()->with('success', 'Course unpublished successfully.');
-    }
-
-    private function isValidDate(string $date): bool
-    {
-        return strtotime($date) !== false;
     }
 }
