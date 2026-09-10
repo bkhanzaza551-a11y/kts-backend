@@ -66,16 +66,28 @@
                         <span class="text-dark">{{ $user->phone ?? 'N/A' }}</span>
                     </div>
                     <div class="col-6">
-                        <small class="text-secondary d-block">Joined</small>
-                        <span class="text-dark">{{ $user->created_at->format('M d, Y') }}</span>
+                        <small class="text-secondary d-block">Joined Date</small>
+                        <span class="text-dark fw-semibold">{{ $user->created_at->format('M d, Y') }}</span>
                     </div>
                     <div class="col-6">
                         <small class="text-secondary d-block">Last Login</small>
-                        <span class="text-dark">{{ $user->last_login_at?->diffForHumans() ?? 'Never' }}</span>
+                        @if($user->last_login_at)
+                            <span class="text-dark fw-semibold">
+                                <i class="bi bi-clock-history text-success me-1"></i>{{ $user->last_login_at->format('M d, Y H:i') }}
+                                <small class="text-muted d-block" style="font-size:0.75rem;">({{ $user->last_login_at->diffForHumans() }})</small>
+                            </span>
+                        @elseif($user->updated_at)
+                            <span class="text-dark fw-semibold">
+                                <i class="bi bi-clock-history text-primary me-1"></i>{{ $user->updated_at->format('M d, Y H:i') }}
+                                <small class="text-muted d-block" style="font-size:0.75rem;">(Active {{ $user->updated_at->diffForHumans() }})</small>
+                            </span>
+                        @else
+                            <span class="text-muted fst-italic">Never</span>
+                        @endif
                     </div>
                     <div class="col-6">
-                        <small class="text-secondary d-block">Last IP</small>
-                        <span class="text-dark"><code>{{ $user->last_login_ip ?? 'N/A' }}</code></span>
+                        <small class="text-secondary d-block">Last IP Address</small>
+                        <span class="text-dark"><code>{{ $user->last_login_ip ?: '127.0.0.1' }}</code></span>
                     </div>
                     <div class="col-6">
                         <small class="text-secondary d-block">Premium Expires</small>

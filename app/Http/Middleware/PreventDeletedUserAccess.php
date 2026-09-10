@@ -31,6 +31,17 @@ class PreventDeletedUserAccess
                 ->withErrors(['email' => 'Your account has been deleted.']);
         }
 
+        // Track last login / last active timestamp automatically for authenticated users
+        if ($request->user() && !$request->user()->trashed()) {
+            $user = $request->user();
+            if (!$user->last_login_at || $user->last_login_at->diffInMinutes(now()) >= 2) {
+                $user->update([
+                    'last_login_at' => now(),
+                    'last_login_ip' => $request->ip(),
+                ]);
+            }
+        }
+
         return $next($request);
     }
 }

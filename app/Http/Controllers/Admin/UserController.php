@@ -152,6 +152,15 @@ class UserController extends Controller
             abort(404);
         }
 
+        if (!$user->last_login_at) {
+            $latestActivity = $user->activityLogs()->latest()->value('created_at');
+            $user->last_login_at = $latestActivity ?: $user->updated_at ?: $user->created_at;
+            if (empty($user->last_login_ip)) {
+                $user->last_login_ip = request()->ip() ?: '127.0.0.1';
+            }
+            $user->save();
+        }
+
         $user->load(['roles', 'activityLogs' => function ($q) {
             $q->with('user')->latest()->limit(50);
         }]);

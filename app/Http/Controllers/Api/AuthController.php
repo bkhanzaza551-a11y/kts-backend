@@ -119,6 +119,8 @@ class AuthController extends Controller
         $user->update([
             'email_verified_at' => now(),
             'status' => 'active',
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
         ]);
 
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -444,6 +446,11 @@ class AuthController extends Controller
 
         ActivityLogger::log('verify_otp', 'User', $user->id, 'OTP verified via API');
 
+        $user->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
+        ]);
+
         if ($hasSecurityCode) {
             return response()->json([
                 'success' => true,
@@ -492,6 +499,11 @@ class AuthController extends Controller
         if (!$securityCode->verify($validated['security_code'])) {
             return response()->json(['success' => false, 'message' => 'Invalid security code.'], 422);
         }
+
+        $user->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
+        ]);
 
         $token = $user->createToken('auth-token')->plainTextToken;
 

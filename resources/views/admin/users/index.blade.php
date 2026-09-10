@@ -276,8 +276,19 @@
                                     <span class="text-secondary small">-</span>
                                 @endif
                             </td>
-                            <td class="text-secondary small">{{ $user->created_at->format('M d, Y') }}</td>
-                            <td class="text-secondary small">{{ $user->last_login_at?->diffForHumans() ?? 'Never' }}</td>
+                            <td class="text-secondary small">
+                                @if($user->last_login_at)
+                                    <span title="{{ $user->last_login_at->format('M d, Y H:i:s') }}" class="text-dark fw-semibold">
+                                        <i class="bi bi-circle-fill text-success me-1" style="font-size:0.45rem;"></i>{{ $user->last_login_at->diffForHumans() }}
+                                    </span>
+                                @elseif($user->updated_at)
+                                    <span title="{{ $user->updated_at->format('M d, Y H:i:s') }}" class="text-secondary">
+                                        {{ $user->updated_at->diffForHumans() }}
+                                    </span>
+                                @else
+                                    <span class="text-muted fst-italic">Never</span>
+                                @endif
+                            </td>
                             <td>
                                 <div class="d-flex gap-1">
                                     <a href="{{ route('admin.users.show', $user) }}" class="btn btn-sm btn-outline-secondary" title="View">
