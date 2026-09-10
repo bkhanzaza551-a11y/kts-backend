@@ -12,6 +12,7 @@ class EducationApiController extends Controller
     public function courses(\Illuminate\Http\Request $request): JsonResponse
     {
         $query = Course::with('category')
+            ->withCount(['lessons' => fn($q) => $q->where('is_published', true)])
             ->where('is_published', true);
 
         if ($categoryId = $request->input('category_id')) {
