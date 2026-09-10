@@ -117,13 +117,28 @@ class DashboardController extends Controller
         });
     }
 
+    private function dateFormatSql(string $column, string $format = 'YYYY-MM'): string
+    {
+        $driver = DB::getDriverName();
+        if ($driver === 'pgsql') {
+            return "TO_CHAR({$column}, '{$format}')";
+        }
+        if ($driver === 'sqlite') {
+            $sqliteFormat = $format === 'YYYY-MM' ? '%Y-%m' : ($format === 'YYYY-MM-DD' ? '%Y-%m-%d' : '%Y-%m');
+            return "strftime('{$sqliteFormat}', {$column})";
+        }
+        $mysqlFormat = $format === 'YYYY-MM' ? '%Y-%m' : ($format === 'YYYY-MM-DD' ? '%Y-%m-%d' : '%Y-%m');
+        return "DATE_FORMAT({$column}, '{$mysqlFormat}')";
+    }
+
     private function getUserGrowthData(): array
     {
         $days = 30;
         $startDate = Carbon::now()->subDays($days - 1)->startOfDay();
+        $dateExpr = $this->dateFormatSql('created_at', 'YYYY-MM-DD');
 
         $dailyCounts = User::whereBetween('created_at', [$startDate, Carbon::now()->endOfDay()])
-            ->selectRaw("DATE(created_at) as date, COUNT(*) as count")
+            ->selectRaw("{$dateExpr} as date, COUNT(*) as count")
             ->groupBy('date')
             ->pluck('count', 'date')
             ->mapWithKeys(fn ($count, $date) => [Carbon::parse($date)->format('M d') => $count]);
@@ -161,7 +176,9 @@ class DashboardController extends Controller
             ]);
         }
 
-        $counts = User::selectRaw("strftime('%Y-%m', created_at) as ym, COUNT(*) as count")
+        $ymExpr = $this->dateFormatSql('created_at', 'YYYY-MM');
+
+        $counts = User::selectRaw("{$ymExpr} as ym, COUNT(*) as count")
             ->where('created_at', '>=', Carbon::now()->subMonths(5)->startOfMonth())
             ->groupBy('ym')
             ->pluck('count', 'ym');
@@ -184,9 +201,11 @@ class DashboardController extends Controller
             ]);
         }
 
+        $ymExpr = $this->dateFormatSql('created_at', 'YYYY-MM');
+
         $revenue = Transaction::where('status', 'approved')
             ->where('created_at', '>=', Carbon::now()->subMonths(5)->startOfMonth())
-            ->selectRaw("strftime('%Y-%m', created_at) as ym, SUM(amount) as total")
+            ->selectRaw("{$ymExpr} as ym, SUM(amount) as total")
             ->groupBy('ym')
             ->pluck('total', 'ym');
 

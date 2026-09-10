@@ -119,6 +119,20 @@ class SignalAnalyticsController extends Controller
             ->toArray();
     }
 
+    private function dateFormatSql(string $column, string $format = 'YYYY-MM'): string
+    {
+        $driver = DB::getDriverName();
+        if ($driver === 'pgsql') {
+            return "TO_CHAR({$column}, '{$format}')";
+        }
+        if ($driver === 'sqlite') {
+            $sqliteFormat = $format === 'YYYY-MM' ? '%Y-%m' : '%Y-%m-%d';
+            return "strftime('{$sqliteFormat}', {$column})";
+        }
+        $mysqlFormat = $format === 'YYYY-MM' ? '%Y-%m' : '%Y-%m-%d';
+        return "DATE_FORMAT({$column}, '{$mysqlFormat}')";
+    }
+
     private function getMonthlyPerformance(): array
     {
         $months = collect();
@@ -131,10 +145,12 @@ class SignalAnalyticsController extends Controller
             ]);
         }
 
+        $ymExpr = $this->dateFormatSql('closed_at', 'YYYY-MM');
+
         $data = Signal::where('status', 'closed')
             ->where('closed_at', '>=', Carbon::now()->subMonths(5)->startOfMonth())
             ->selectRaw("
-                strftime('%Y-%m', closed_at) as ym,
+                {$ymExpr} as ym,
                 COUNT(*) as total,
                 SUM(CASE WHEN result = 'win' THEN 1 ELSE 0 END) as wins,
                 SUM(COALESCE(pips_result, 0)) as total_pips
