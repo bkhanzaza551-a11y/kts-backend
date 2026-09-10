@@ -466,22 +466,72 @@
         .badge.bg-warning { background-color: #f59e0b !important; color: #fff; }
         .badge.bg-secondary { background-color: #f1f5f9 !important; color: #475569 !important; border: 1px solid #e2e8f0; }
 
-        .pagination .page-link {
+        /* Enhanced Modern Pagination & Fallback SVG Constraint */
+        nav[aria-label*="Pagination"] svg,
+        .pagination svg,
+        .card-footer svg {
+            width: 16px !important;
+            height: 16px !important;
+            max-width: 16px !important;
+            max-height: 16px !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+        }
+        nav[aria-label*="Pagination"] .relative.inline-flex,
+        nav[aria-label*="Pagination"] div {
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }
+        nav[aria-label*="Pagination"] span, 
+        nav[aria-label*="Pagination"] a {
+            font-size: 0.82rem !important;
+            line-height: 1 !important;
+            padding: 0.45rem 0.75rem !important;
+            border-radius: 8px !important;
+            text-decoration: none !important;
+        }
+        .pagination {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 0;
+            padding-left: 0;
+            list-style: none;
+            align-items: center;
+        }
+        .pagination .page-item .page-link {
             border-color: var(--border-color);
             color: var(--text-secondary);
-            border-radius: 0.375rem;
+            border-radius: 8px !important;
             margin: 0 2px;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            font-weight: 500;
+            padding: 0.4rem 0.75rem;
+            min-width: 32px;
+            text-align: center;
+            background: #ffffff;
+            transition: all 0.15s ease;
         }
-        .pagination .page-link:hover {
+        .pagination .page-item .page-link:hover {
             background-color: var(--sidebar-hover);
             border-color: #cbd5e1;
             color: var(--text-primary);
+            transform: translateY(-1px);
         }
         .pagination .page-item.active .page-link {
-            background-color: var(--primary);
-            border-color: var(--primary);
-            color: #fff;
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #94a3b8;
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            cursor: not-allowed;
         }
 
         .input-group-text {
