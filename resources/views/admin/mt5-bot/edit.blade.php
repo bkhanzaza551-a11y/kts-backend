@@ -4,14 +4,6 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0 fw-bold"><i class="bi bi-robot me-2 text-primary"></i>Edit: {{ $bot->name }}</h4>
     <div class="d-flex gap-2">
-        @if(auth()->user()->hasPermission('mt5_bot_manage'))
-        <form method="POST" action="{{ route('admin.mt5-bot.toggle-status', $bot) }}" class="d-inline" onsubmit="return confirm('{{ $bot->status === 'active' ? 'Stop this bot?' : 'Start this bot?' }}')">
-            @csrf @method('PATCH')
-            <button type="submit" class="btn btn-sm {{ $bot->status === 'active' ? 'btn-outline-danger' : 'btn-outline-success' }}">
-                <i class="bi bi-{{ $bot->status === 'active' ? 'stop-circle' : 'play-circle' }} me-1"></i>{{ $bot->status === 'active' ? 'Stop' : 'Start' }}
-            </button>
-        </form>
-        @endif
         <a href="{{ route('admin.mt5-bot.show', $bot) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
     </div>
 </div>

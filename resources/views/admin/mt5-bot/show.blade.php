@@ -5,18 +5,6 @@
     <h4 class="mb-0 fw-bold"><i class="bi bi-robot me-2 text-primary"></i>{{ $bot->name }}</h4>
     <div class="d-flex gap-2">
         @if(auth()->user()->hasPermission('mt5_bot_manage'))
-        <form method="POST" action="{{ route('admin.mt5-bot.toggle-status', $bot) }}" class="d-inline" onsubmit="return confirm('{{ $bot->status === 'active' ? 'Stop this bot? Trading will be paused.' : 'Start this bot?' }}')">
-            @csrf @method('PATCH')
-            <button type="submit" class="btn btn-sm {{ $bot->status === 'active' ? 'btn-outline-danger' : 'btn-outline-success' }}">
-                <i class="bi bi-{{ $bot->status === 'active' ? 'stop-circle' : 'play-circle' }} me-1"></i>{{ $bot->status === 'active' ? 'Stop' : 'Start' }}
-            </button>
-        </form>
-        <form method="POST" action="{{ route('admin.mt5-bot.toggle-auto-trade', $bot) }}" class="d-inline" onsubmit="return confirm('{{ $bot->auto_trade ? 'Disable auto-trade?' : 'Enable auto-trade? Bot will execute trades automatically.' }}')">
-            @csrf @method('PATCH')
-            <button type="submit" class="btn btn-sm {{ $bot->auto_trade ? 'btn-outline-warning' : 'btn-outline-info' }}">
-                <i class="bi bi-{{ $bot->auto_trade ? 'pause-circle' : 'play-circle' }} me-1"></i>{{ $bot->auto_trade ? 'Disable Auto' : 'Enable Auto' }}
-            </button>
-        </form>
         <a href="{{ route('admin.mt5-bot.edit', $bot) }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil me-1"></i>Edit</a>
         <form method="POST" action="{{ route('admin.mt5-bot.recalculate-stats', $bot) }}" class="d-inline" onsubmit="return confirm('Recalculate bot statistics from trade data?')">
             @csrf

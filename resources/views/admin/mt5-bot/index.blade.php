@@ -10,20 +10,6 @@
     </div>
     <div class="d-flex gap-2 flex-wrap align-items-center">
         @if(auth()->user()->hasPermission('mt5_bot_manage'))
-        <form method="POST" action="{{ route('admin.mt5-bot.toggle-status', $bot) }}" class="d-inline" onsubmit="return confirm('{{ $bot->status === 'active' ? 'Stop this bot? Trading will be paused.' : 'Start this bot?' }}')">
-            @csrf @method('PATCH')
-            <button type="submit" class="btn btn-sm {{ $bot->status === 'active' ? 'btn-outline-danger' : 'btn-outline-success' }} fw-semibold">
-                <i class="bi bi-{{ $bot->status === 'active' ? 'stop-circle' : 'play-circle' }} me-1"></i>{{ $bot->status === 'active' ? 'Stop Bot' : 'Start Bot' }}
-            </button>
-        </form>
-
-        <form method="POST" action="{{ route('admin.mt5-bot.toggle-auto-trade', $bot) }}" class="d-inline" onsubmit="return confirm('{{ $bot->auto_trade ? 'Disable auto-trade?' : 'Enable auto-trade?' }}')">
-            @csrf @method('PATCH')
-            <button type="submit" class="btn btn-sm {{ $bot->auto_trade ? 'btn-success' : 'btn-outline-secondary' }} fw-semibold">
-                <i class="bi bi-cpu me-1"></i>Auto-Trade: {{ $bot->auto_trade ? 'ON' : 'OFF' }}
-            </button>
-        </form>
-
         <form method="POST" action="{{ route('admin.mt5-bot.recalculate-stats', $bot) }}" class="d-inline" onsubmit="return confirm('Recalculate win rate and profit stats from trade logs?')">
             @csrf
             <button type="submit" class="btn btn-sm btn-outline-info fw-semibold">
