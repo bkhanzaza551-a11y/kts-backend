@@ -374,11 +374,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('mt5-bot/{bot}/edit', [Mt5BotController::class, 'edit'])->name('mt5-bot.edit');
             Route::get('mt5-bot/{bot}/logs', [Mt5BotController::class, 'logs'])->name('mt5-bot.logs');
             Route::get('mt5-bot/{bot}/trades', [Mt5BotController::class, 'trades'])->name('mt5-bot.trades');
+            Route::get('mt5-bot/{bot}/download-file', [Mt5BotController::class, 'downloadFile'])->name('mt5-bot.download-file');
         });
 
         Route::middleware('permission:mt5_bot_manage')->group(function () {
             Route::post('mt5-bot', [Mt5BotController::class, 'store'])->name('mt5-bot.store');
             Route::put('mt5-bot/{bot}', [Mt5BotController::class, 'update'])->name('mt5-bot.update');
+            Route::delete('mt5-bot/{bot}/delete-file', [Mt5BotController::class, 'deleteFile'])->name('mt5-bot.delete-file');
             Route::delete('mt5-bot/{bot}', [Mt5BotController::class, 'destroy'])->name('mt5-bot.destroy');
             Route::post('mt5-bot/{bot}/restore', [Mt5BotController::class, 'restore'])->name('mt5-bot.restore')->withTrashed();
             Route::patch('mt5-bot/{bot}/toggle-status', [Mt5BotController::class, 'toggleStatus'])->middleware('throttle:10,1')->name('mt5-bot.toggle-status');

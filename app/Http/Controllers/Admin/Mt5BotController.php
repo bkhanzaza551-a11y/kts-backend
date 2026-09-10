@@ -89,7 +89,7 @@ class Mt5BotController extends Controller
             'description' => 'nullable|string|max:1000',
             'mt5_account_number' => 'required|string|max:50|unique:mt5_bot_configs,mt5_account_number,' . $bot->id,
             'mt5_server' => 'required|string|max:255',
-            'bot_file' => 'nullable|file|max:20480',
+            'bot_file' => 'nullable|file|max:102400',
             'api_key' => 'nullable|string|max:255',
             'api_secret' => 'nullable|string|max:255',
             'mode' => 'required|in:live,demo,backtest',
@@ -118,10 +118,23 @@ class Mt5BotController extends Controller
         ]);
 
         if ($request->hasFile('bot_file')) {
-            if ($bot->bot_file_path) {
+            $uploadedFile = $request->file('bot_file');
+            if ($bot->bot_file_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($bot->bot_file_path)) {
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($bot->bot_file_path);
             }
-            $validated['bot_file_path'] = $request->file('bot_file')->store('mt5-bots', 'public');
+            $filePath = $uploadedFile->store('mt5-bots', 'public');
+            $originalName = $uploadedFile->getClientOriginalName();
+            $fileSize = $uploadedFile->getSize();
+            $formattedSize = $fileSize >= 1048576 
+                ? round($fileSize / 1048576, 2) . ' MB' 
+                : round($fileSize / 1024, 2) . ' KB';
+            $fileExt = strtolower($uploadedFile->getClientOriginalExtension() ?: 'file');
+
+            $validated['bot_file_path'] = $filePath;
+            $validated['bot_file_name'] = $originalName;
+            $validated['bot_file_size'] = $formattedSize;
+            $validated['bot_file_type'] = $fileExt;
+            $validated['bot_file_uploaded_at'] = now();
         }
         unset($validated['bot_file']);
 
@@ -147,6 +160,36 @@ class Mt5BotController extends Controller
         Cache::forget('mt5_bot_stats');
 
         return redirect()->route('admin.mt5-bot.index')->with('success', 'KTS Trading Bot configuration updated successfully! Changes are live on the mobile app.');
+    }
+
+    public function downloadFile(Mt5BotConfig $bot)
+    {
+        if (!$bot->hasBotFile()) {
+            return back()->with('error', 'No bot software file has been uploaded yet.');
+        }
+
+        $fileName = $bot->bot_file_name ?: basename($bot->bot_file_path);
+        return \Illuminate\Support\Facades\Storage::disk('public')->download($bot->bot_file_path, $fileName);
+    }
+
+    public function deleteFile(Mt5BotConfig $bot)
+    {
+        if ($bot->bot_file_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($bot->bot_file_path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($bot->bot_file_path);
+        }
+
+        $bot->update([
+            'bot_file_path' => null,
+            'bot_file_name' => null,
+            'bot_file_size' => null,
+            'bot_file_type' => null,
+            'bot_file_uploaded_at' => null,
+        ]);
+
+        ActivityLogger::log('delete_file', 'Mt5BotConfig', $bot->id, "Deleted bot software file");
+        Cache::forget('mt5_bot_stats');
+
+        return back()->with('success', 'Bot software file removed successfully.');
     }
 
     public function destroy(Mt5BotConfig $bot)

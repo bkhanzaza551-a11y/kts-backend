@@ -119,6 +119,9 @@ Route::prefix('v1')->group(function () {
     // Payment Plans (public - mobile shows before login)
     Route::get('payments/plans', [PaymentApiController::class, 'plans'])->name('api.payments.plans');
 
+    // Bot Secure Download (authenticates via Bearer Token or ?token= query parameter)
+    Route::get('bot/download', [BotApiController::class, 'download'])->name('api.bots.download');
+
     Route::middleware(['auth:sanctum', 'prevent.deleted'])->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('api.logout');
         Route::get('profile', [AuthController::class, 'profile'])->name('api.profile');

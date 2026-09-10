@@ -131,12 +131,51 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label text-dark fw-semibold">Upload Bot File (.ex5, .set, .mq5)</label>
-                            <input type="file" name="bot_file" class="form-control @error('bot_file') is-invalid @enderror" accept=".ex5,.mq5,.set,.xml,.json,.txt">
-                            @if($bot->bot_file_path)
-                            <div class="form-text text-success"><i class="bi bi-file-earmark-check me-1"></i>File uploaded ({{ basename($bot->bot_file_path) }})</div>
-                            @endif
+                            <label class="form-label text-dark fw-semibold">Upload Bot File (.exe, .ex5, .txt, .zip, etc.)</label>
+                            <input type="file" name="bot_file" class="form-control @error('bot_file') is-invalid @enderror" accept=".exe,.ex5,.ex4,.txt,.zip,.rar,.set,.mq5,.mq4,.dll,.json">
+                            <div class="form-text small">Accepted: <code>.exe, .ex5, .ex4, .txt, .zip, .rar, .set, .mq5, .mq4</code> (Max: 100MB)</div>
                             @error('bot_file')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        {{-- Uploaded Bot File Details Card --}}
+                        <div class="col-12">
+                            @if($bot->hasBotFile())
+                            <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                        <i class="bi bi-file-earmark-code fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark mb-0">
+                                            {{ $bot->bot_file_name ?: basename($bot->bot_file_path) }}
+                                            <span class="badge bg-success ms-2"><i class="bi bi-shield-check me-1"></i>Available for Approved Users</span>
+                                        </div>
+                                        <div class="text-secondary small">
+                                            <span><i class="bi bi-hdd me-1"></i>Size: <strong>{{ $bot->bot_file_size ?: 'Uploaded' }}</strong></span>
+                                            @if($bot->bot_file_uploaded_at)
+                                            <span class="ms-3"><i class="bi bi-calendar3 me-1"></i>Uploaded: {{ $bot->bot_file_uploaded_at->format('M d, Y H:i') }}</span>
+                                            @endif
+                                            <span class="ms-3 badge bg-light text-dark border text-uppercase">{{ $bot->bot_file_type ?: 'File' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ route('admin.mt5-bot.download-file', $bot) }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-download me-1"></i>Download File
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="if(confirm('Are you sure you want to delete the bot software file? Users will not be able to download it until re-uploaded.')) { document.getElementById('delete-bot-file-form').submit(); }">
+                                        <i class="bi bi-trash me-1"></i>Remove
+                                    </button>
+                                </div>
+                            </div>
+                            @else
+                            <div class="p-3 bg-light-subtle rounded border border-dashed text-secondary small d-flex align-items-center gap-2">
+                                <i class="bi bi-info-circle fs-5 text-primary"></i>
+                                <div>
+                                    <strong>No bot file uploaded yet.</strong> Upload an <code>.exe</code>, <code>.ex5</code>, <code>.txt</code>, or <code>.zip</code> file above so approved Demo & Real account users can download it inside the mobile app.
+                                </div>
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -484,4 +523,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
+
+@if(auth()->user()->hasPermission('mt5_bot_manage'))
+<form id="delete-bot-file-form" action="{{ route('admin.mt5-bot.delete-file', $bot) }}" method="POST" class="d-none">
+    @csrf
+    @method('DELETE')
+</form>
+@endif
+
 @endsection

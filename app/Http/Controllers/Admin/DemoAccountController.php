@@ -69,6 +69,24 @@ class DemoAccountController extends Controller
             'reviewed_by' => auth()->id(),
         ]);
 
+        // Sync with user's profile trading account details
+        $user = $demoRequest->user;
+        if ($user) {
+            $updateUser = [];
+            if (empty($user->demo_account_id)) {
+                $updateUser['demo_account_id'] = $demoRequest->exness_account_number;
+            }
+            if (empty($user->demo_account_server)) {
+                $updateUser['demo_account_server'] = 'Exness-MT5Trial';
+            }
+            if (empty($user->broker_name)) {
+                $updateUser['broker_name'] = 'Exness';
+            }
+            if (!empty($updateUser)) {
+                $user->update($updateUser);
+            }
+        }
+
         ActivityLogger::log(
             'approve',
             'DemoAccountRequest',
@@ -77,7 +95,7 @@ class DemoAccountController extends Controller
         );
 
         return redirect()->route('admin.demo-accounts.show', $demoRequest)
-            ->with('success', 'Demo account request approved successfully.');
+            ->with('success', 'Demo account request approved successfully! User now has access to download the Trading Bot.');
     }
 
     public function reject(Request $request, DemoAccountRequest $demoRequest)

@@ -17,6 +17,10 @@ class Mt5BotConfig extends Model
         'mt5_account_number',
         'mt5_server',
         'bot_file_path',
+        'bot_file_name',
+        'bot_file_size',
+        'bot_file_type',
+        'bot_file_uploaded_at',
         'api_key',
         'api_secret',
         'status',
@@ -79,7 +83,46 @@ class Mt5BotConfig extends Model
         'losing_trades' => 'integer',
         'last_connected_at' => 'datetime',
         'last_trade_at' => 'datetime',
+        'bot_file_uploaded_at' => 'datetime',
     ];
+
+    public function hasBotFile(): bool
+    {
+        return !empty($this->bot_file_path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->bot_file_path);
+    }
+
+    public function getBotFileInfo(): ?array
+    {
+        if (!$this->hasBotFile()) {
+            return null;
+        }
+
+        $extension = pathinfo($this->bot_file_name ?: $this->bot_file_path, PATHINFO_EXTENSION) ?: 'file';
+
+        return [
+            'available' => true,
+            'file_name' => $this->bot_file_name ?: basename($this->bot_file_path),
+            'file_size' => $this->bot_file_size ?: $this->calculateFileSize(),
+            'file_type' => strtoupper($this->bot_file_type ?: $extension),
+            'file_extension' => strtolower($extension),
+            'uploaded_at' => $this->bot_file_uploaded_at?->toISOString() ?: $this->updated_at?->toISOString(),
+        ];
+    }
+
+    protected function calculateFileSize(): string
+    {
+        try {
+            $bytes = \Illuminate\Support\Facades\Storage::disk('public')->size($this->bot_file_path);
+            if ($bytes >= 1048576) {
+                return round($bytes / 1048576, 2) . ' MB';
+            } elseif ($bytes >= 1024) {
+                return round($bytes / 1024, 2) . ' KB';
+            }
+            return $bytes . ' B';
+        } catch (\Throwable $e) {
+            return 'Unknown Size';
+        }
+    }
 
     public function getLotSizeAttribute(): float
     {
