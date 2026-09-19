@@ -105,7 +105,7 @@ class LegalPageSeeder extends Seeder
 <p>In full compliance with Google Play's User Data and Account Deletion policy, users have the absolute right to permanently delete their account and associated data at any time:</p>
 <ul>
 <li><strong>In-App Deletion (Instant):</strong> Open the KTS Markets app &gt; Profile &gt; Settings &gt; Tap <strong>"Delete Account"</strong> and confirm. Your account and personal data are immediately deleted.</li>
-<li><strong>Web Deletion Request:</strong> Visit our direct web deletion URL: <a href="https://kts-backend-production.up.railway.app/delete-account" target="_blank">https://kts-backend-production.up.railway.app/delete-account</a> or email <a href="mailto:privacy@ktsmarkets.com">privacy@ktsmarkets.com</a>.</li>
+<li><strong>Web Deletion Request:</strong> Visit our direct web deletion URL: <a href="https://kts-backend-production.up.railway.app/delete-account" target="_blank">https://kts-backend-production.up.railway.app/delete-account</a> or email <a href="mailto:ktsfxtraining@gmail.com">ktsfxtraining@gmail.com</a>.</li>
 <li><strong>Data Purged:</strong> Profile details, email, phone, authentication credentials, MT5 IDs, chat history, and notification tokens are completely expunged. Residual backups are erased within 30 days.</li>
 </ul>
 
@@ -118,7 +118,7 @@ class LegalPageSeeder extends Seeder
 </ul>
 
 <h3>8. Your Privacy Rights (GDPR, CCPA & Global)</h3>
-<p>You have the right to access, rectify, port, restrict, or completely delete your personal data. To exercise any privacy rights, contact our Data Protection team at <strong>privacy@ktsmarkets.com</strong>. All requests are processed within 30 days free of charge.</p>
+<p>You have the right to access, rectify, port, restrict, or completely delete your personal data. To exercise any privacy rights, contact our Data Protection team at <strong>ktsfxtraining@gmail.com</strong>. All requests are processed within 30 days free of charge.</p>
 
 <h3>9. Age Limitations (Strict 18+ Policy)</h3>
 <p>KTS Markets is strictly designed for individuals aged <strong>18 and older</strong>. We do not knowingly collect personal data from anyone under 18 years of age. If we learn that an individual under 18 has registered an account, we will immediately delete their account and all associated information.</p>
@@ -129,8 +129,7 @@ class LegalPageSeeder extends Seeder
 <h3>11. Contact Information</h3>
 <p>For any privacy inquiries or compliance requests, contact us at:</p>
 <p><strong>KTS Markets Compliance Team</strong><br>
-Email: <a href="mailto:privacy@ktsmarkets.com">privacy@ktsmarkets.com</a><br>
-Support: <a href="mailto:support@ktsmarkets.com">support@ktsmarkets.com</a><br>
+Email: <a href="mailto:ktsfxtraining@gmail.com">ktsfxtraining@gmail.com</a><br>
 Website: <a href="https://ktsmarkets.com" target="_blank">https://ktsmarkets.com</a><br>
 WhatsApp: +92 337 1244640</p>
 HTML;

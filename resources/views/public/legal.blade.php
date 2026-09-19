@@ -215,7 +215,7 @@
                 <!-- Page Footer -->
                 <div class="text-center mt-4 text-secondary small">
                     <p class="mb-1">© 2026 KTS Markets. All rights reserved.</p>
-                    <p>Inquiries: <a href="mailto:privacy@ktsmarkets.com" class="text-gold text-decoration-none">privacy@ktsmarkets.com</a> | WhatsApp: +92 337 1244640</p>
+                    <p>Inquiries: <a href="mailto:ktsfxtraining@gmail.com" class="text-gold text-decoration-none">ktsfxtraining@gmail.com</a> | WhatsApp: +92 337 1244640</p>
                 </div>
 
             </div>
