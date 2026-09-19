@@ -122,6 +122,14 @@ Route::prefix('v1')->group(function () {
     // Bot Secure Download (authenticates via Bearer Token or ?token= query parameter)
     Route::get('bot/download', [BotApiController::class, 'download'])->name('api.bots.download');
 
+    // PUBLIC Routes for Website (no auth needed)
+    Route::get('market/ticker', [MarketDataApiController::class, 'getTicker'])->name('api.market.ticker');
+    Route::get('market/overview', [MarketDataApiController::class, 'getMarketOverview'])->name('api.market.overview');
+    Route::get('signals/latest', [SignalApiController::class, 'latest'])->name('api.signals.latest');
+    Route::get('courses', [EducationApiController::class, 'courses'])->name('api.courses.index');
+    Route::get('courses/{id}', [EducationApiController::class, 'course'])->name('api.courses.show');
+    Route::get('bot', [BotApiController::class, 'show'])->name('api.bots.show');
+
     Route::middleware(['auth:sanctum', 'prevent.deleted'])->group(function () {
         Route::post('logout', [AuthController::class, 'logout'])->name('api.logout');
         Route::get('profile', [AuthController::class, 'profile'])->name('api.profile');
@@ -154,9 +162,8 @@ Route::prefix('v1')->group(function () {
         Route::get('demo-account/requests', [DemoAccountApiController::class, 'myRequests'])->name('api.demo.my-requests');
         Route::get('demo-account/requests/{demoRequest}', [DemoAccountApiController::class, 'show'])->name('api.demo.show');
 
-        // Signals
+        // Signals (authenticated)
         Route::get('signals', [SignalApiController::class, 'index'])->name('api.signals.index');
-        Route::get('signals/latest', [SignalApiController::class, 'latest'])->name('api.signals.latest');
         Route::get('signals/closed', [SignalApiController::class, 'closed'])->name('api.signals.closed');
         Route::get('signals/{signal}', [SignalApiController::class, 'show'])->name('api.signals.show');
 
@@ -179,14 +186,11 @@ Route::prefix('v1')->group(function () {
         Route::post('support/tickets/{id}/reply', [SupportTicketApiController::class, 'reply'])->middleware('throttle:30,1');
         Route::post('support/tickets/{id}/close', [SupportTicketApiController::class, 'close']);
 
-        // Education
-        Route::get('courses', [EducationApiController::class, 'courses'])->name('api.courses.index');
-        Route::get('courses/{id}', [EducationApiController::class, 'course'])->name('api.courses.show');
+        // Education (admin only write, read is public)
         Route::get('education/categories', [EducationApiController::class, 'categories'])->name('api.education.categories');
 
-        // MT5 Bot (Single Bot)
+        // MT5 Bot (Single Bot - authenticated write operations)
         Route::get('bots', [BotApiController::class, 'index'])->name('api.bots.index');
-        Route::get('bot', [BotApiController::class, 'show'])->name('api.bots.show');
         Route::get('bot/trades', [BotApiController::class, 'trades'])->name('api.bots.trades');
         Route::post('bot/toggle', [BotApiController::class, 'toggle'])->name('api.bots.toggle');
         Route::put('bot', [BotApiController::class, 'update'])->name('api.bots.update');
@@ -200,10 +204,6 @@ Route::prefix('v1')->group(function () {
         Route::get('ai-chat/status', [AiChatbotApiController::class, 'status'])->name('api.ai-chat.status');
         Route::get('ai-chat/stats', [AiChatbotApiController::class, 'stats'])->name('api.ai-chat.stats');
         Route::post('ai-chat/report', [AiChatbotApiController::class, 'report'])->middleware('throttle:10,1')->name('api.ai-chat.report');
-
-        // Market Data
-        Route::get('market/ticker', [MarketDataApiController::class, 'getTicker'])->name('api.market.ticker');
-        Route::get('market/overview', [MarketDataApiController::class, 'getMarketOverview'])->name('api.market.overview');
     });
 });
 
