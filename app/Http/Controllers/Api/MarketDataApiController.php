@@ -13,10 +13,11 @@ class MarketDataApiController extends Controller
     public function getTicker(Request $request)
     {
         $validated = $request->validate([
-            'symbol' => 'required|string|max:20',
+            'symbol' => 'nullable|string|max:20',
         ]);
 
-        $ticker = $this->marketData->getTicker($validated['symbol']);
+        $symbol = $validated['symbol'] ?? 'XAUUSD';
+        $ticker = $this->marketData->getTicker($symbol);
 
         if (!$ticker) {
             return response()->json(['success' => false, 'message' => 'Unable to fetch ticker data'], 404);
@@ -28,10 +29,11 @@ class MarketDataApiController extends Controller
     public function getMarketOverview(Request $request)
     {
         $validated = $request->validate([
-            'symbol' => 'required|string|max:20',
+            'symbol' => 'nullable|string|max:20',
         ]);
 
-        $overview = $this->marketData->getMarketOverview($validated['symbol']);
+        $symbol = $validated['symbol'] ?? 'XAUUSD';
+        $overview = $this->marketData->getMarketOverview($symbol);
 
         if (!$overview) {
             return response()->json(['success' => false, 'message' => 'Unable to fetch market data'], 404);
