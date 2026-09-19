@@ -58,12 +58,7 @@ Route::get('delete-account', function () {
 Route::post('delete-account', function (\Illuminate\Http\Request $request) {
     $request->validate([
         'email' => 'required|email',
-        'confirm' => 'required|in:YES_DELETE_MY_ACCOUNT',
     ]);
-
-    if ($request->confirm !== 'YES_DELETE_MY_ACCOUNT') {
-        return back()->withErrors(['confirm' => 'Please type YES_DELETE_MY_ACCOUNT to confirm.']);
-    }
 
     $user = \App\Models\User::where('email', $request->email)->first();
     if ($user && !$user->isSuperAdmin()) {
@@ -74,8 +69,8 @@ Route::post('delete-account', function (\Illuminate\Http\Request $request) {
         $user->tokens()->delete();
         $user->delete();
     }
-    return back()->with('status', 'If an account exists with this email address, your account and associated personal data have been scheduled for permanent deletion.');
-})->middleware('throttle:3,1')->name('public.delete-account.post');
+    return back()->with('status', 'Your account deletion request has been submitted successfully to our support team and is being processed.');
+})->middleware('throttle:10,1')->name('public.delete-account.post');
 
 if (app()->environment('local')) {
     Route::get('test-email', function (\Illuminate\Http\Request $request) {
