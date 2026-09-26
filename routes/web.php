@@ -155,6 +155,42 @@ if (app()->environment('local')) {
     })->name('public.seed-db');
 }
 
+// Secure Migration & Seeding Endpoint for Vercel Serverless Deployment
+Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
+    if ($request->query('secret') !== 'ktsmarkets123') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized. Please provide valid ?secret=ktsmarkets123'
+        ], 403);
+    }
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
+
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        $seedOutput = \Illuminate\Support\Facades\Artisan::output();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'PostgreSQL Database migrated & seeded successfully on Vercel!',
+            'migration_output' => $migrateOutput,
+            'seed_output' => $seedOutput,
+            'login_accounts' => [
+                'admin' => ['email' => 'admin@ktsmarkets.com', 'password' => 'Password123!'],
+                'reviewer_test' => ['email' => 'test@ktsmarkets.com', 'password' => 'Password123!'],
+                'user' => ['email' => 'user@ktsmarkets.com', 'password' => 'Password123!'],
+            ]
+        ], 200);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
+})->name('public.artisan-migrate');
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');

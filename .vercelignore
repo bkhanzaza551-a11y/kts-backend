@@ -1,0 +1,15 @@
+﻿.git
+.github
+.dockerignore
+.railwayignore
+Dockerfile
+railway.json
+tests
+node_modules
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+*.csx
+*.sql
+*.md
