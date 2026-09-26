@@ -163,11 +163,29 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
             'message' => 'Unauthorized. Please provide valid ?secret=ktsmarkets123'
         ], 403);
     }
+    
+    // Clean up any dangling aborted transactions
     try {
-        $isFresh = $request->query('fresh', '1') !== '0';
-        $command = $isFresh ? 'migrate:fresh' : 'migrate';
+        while (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+            \Illuminate\Support\Facades\DB::rollBack();
+        }
+    } catch (\Throwable $t) {}
 
-        \Illuminate\Support\Facades\Artisan::call($command, ['--force' => true]);
+    // Clean schema reset to eliminate aborted locks/partial tables
+    $resetDone = false;
+    if ($request->query('reset', '1') !== '0') {
+        try {
+            \Illuminate\Support\Facades\DB::statement('DROP SCHEMA IF EXISTS public CASCADE');
+            \Illuminate\Support\Facades\DB::statement('CREATE SCHEMA public');
+            \Illuminate\Support\Facades\DB::statement('GRANT ALL ON SCHEMA public TO public');
+            $resetDone = true;
+        } catch (\Throwable $t) {
+            $resetDone = false;
+        }
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
 
         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
@@ -176,7 +194,7 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
         return response()->json([
             'success' => true,
             'message' => 'PostgreSQL Database migrated & seeded successfully on Vercel!',
-            'command_used' => $command,
+            'schema_reset' => $resetDone,
             'migration_output' => $migrateOutput,
             'seed_output' => $seedOutput,
             'login_accounts' => [
@@ -186,11 +204,15 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
             ]
         ], 200);
     } catch (\Throwable $e) {
+        $prev = $e->getPrevious();
         return response()->json([
             'success' => false,
             'error' => $e->getMessage(),
+            'previous_error' => $prev ? $prev->getMessage() : null,
             'file' => $e->getFile(),
             'line' => $e->getLine(),
+            'schema_reset' => $resetDone,
+            'artisan_output' => \Illuminate\Support\Facades\Artisan::output(),
         ], 500);
     }
 })->name('public.artisan-migrate');
