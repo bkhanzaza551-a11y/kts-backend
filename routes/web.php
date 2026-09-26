@@ -164,7 +164,10 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
         ], 403);
     }
     try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $isFresh = $request->query('fresh', '1') !== '0';
+        $command = $isFresh ? 'migrate:fresh' : 'migrate';
+
+        \Illuminate\Support\Facades\Artisan::call($command, ['--force' => true]);
         $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
 
         \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
@@ -173,6 +176,7 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
         return response()->json([
             'success' => true,
             'message' => 'PostgreSQL Database migrated & seeded successfully on Vercel!',
+            'command_used' => $command,
             'migration_output' => $migrateOutput,
             'seed_output' => $seedOutput,
             'login_accounts' => [
