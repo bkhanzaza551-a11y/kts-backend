@@ -86,10 +86,11 @@ return [
             'driver' => 'pgsql',
             'url' => (function () {
                 $candidates = [
+                    env('DATABASE_URL_UNPOOLED'),
+                    env('POSTGRES_URL_NON_POOLING'),
                     env('DATABASE_URL'),
                     env('POSTGRES_URL'),
                     env('POSTGRES_PRISMA_URL'),
-                    env('POSTGRES_URL_NON_POOLING'),
                     env('DB_URL'),
                 ];
                 foreach ($candidates as $candidateUrl) {
