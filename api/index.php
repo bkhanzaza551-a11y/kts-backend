@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 // Serverless entrypoint for Vercel Deployment
 
@@ -19,6 +19,9 @@ foreach ($ephemeralPaths as $dir) {
         @mkdir($dir, 0755, true);
     }
 }
+
+// Normalize SCRIPT_NAME so Symfony does not strip /api prefix from routes
+$_SERVER['SCRIPT_NAME'] = '/index.php';
 
 // Forward request to Laravel's public/index.php
 require __DIR__ . '/../public/index.php';
