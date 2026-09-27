@@ -217,6 +217,53 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
     }
 })->name('public.artisan-migrate');
 
+Route::get('test-smtp', function (\Illuminate\Http\Request $request) {
+    if ($request->query('secret') !== 'ktsmarkets123') {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+    
+    $recipient = $request->query('to', 'ahmedbilalkhangl09@gmail.com');
+    $testOtp = sprintf("%06d", mt_rand(100000, 999999));
+    
+    try {
+        \Illuminate\Support\Facades\Mail::raw("Your KTS Markets verification code is: {$testOtp}\n\nThis is a test OTP to verify email deliverability from Vercel.", function ($message) use ($recipient) {
+            $message->to($recipient)
+                ->subject("KTS Markets - Test Verification Code [{$GLOBALS['ts'] ?? time()}]");
+        });
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Test email with OTP {$testOtp} sent successfully to {$recipient}!",
+            'smtp_config' => [
+                'mailer' => config('mail.default'),
+                'host' => config('mail.mailers.smtp.host'),
+                'port' => config('mail.mailers.smtp.port'),
+                'encryption' => config('mail.mailers.smtp.encryption'),
+                'username' => config('mail.mailers.smtp.username'),
+                'from_address' => config('mail.from.address'),
+                'from_name' => config('mail.from.name'),
+            ],
+            'sent_otp' => $testOtp,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'smtp_config' => [
+                'mailer' => config('mail.default'),
+                'host' => config('mail.mailers.smtp.host'),
+                'port' => config('mail.mailers.smtp.port'),
+                'encryption' => config('mail.mailers.smtp.encryption'),
+                'username' => config('mail.mailers.smtp.username'),
+                'from_address' => config('mail.from.address'),
+                'from_name' => config('mail.from.name'),
+            ],
+        ], 500);
+    }
+})->name('public.test-smtp');
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
