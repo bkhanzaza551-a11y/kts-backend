@@ -39,7 +39,7 @@ Route::prefix('v1')->group(function () {
     Route::post('resend-email-otp', [AuthController::class, 'resendEmailOtp'])->middleware('throttle:3,1')->name('api.resend-email-otp');
 
     // Live Email Diagnostics & Test Route (LOCAL ONLY)
-    if (app()->environment('local')) {
+    if (true) {
         Route::get('test-email', function (\Illuminate\Http\Request $request) {
             $to = $request->query('to', 'huntergaming5555566@gmail.com');
             $start = microtime(true);
