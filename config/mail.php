@@ -39,11 +39,11 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => env('MAIL_SCHEME'),
+            'scheme' => in_array(env('MAIL_SCHEME'), ['smtp', 'smtps']) ? env('MAIL_SCHEME') : null,
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', 'smtp.gmail.com'),
-            'port' => (int) (env('MAIL_PORT') == 465 ? 587 : env('MAIL_PORT', 587)),
-            'encryption' => (env('MAIL_ENCRYPTION') === 'ssl' ? 'tls' : (env('MAIL_ENCRYPTION') ?: 'tls')),
+            'port' => (int) (env('MAIL_PORT') ?: 587),
+            'encryption' => env('MAIL_ENCRYPTION') === 'ssl' ? 'tls' : (env('MAIL_ENCRYPTION') ?: 'tls'),
             'username' => env('MAIL_USERNAME', 'ahmedbilalkhangl09@gmail.com'),
             'password' => env('MAIL_PASSWORD', 'pvrahwujjucsqwlo'),
             'timeout' => 15,
