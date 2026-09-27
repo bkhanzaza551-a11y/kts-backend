@@ -39,15 +39,15 @@ return [
 
         'smtp' => [
             'transport' => 'smtp',
-            'scheme' => in_array(env('MAIL_SCHEME'), ['smtp', 'smtps']) ? env('MAIL_SCHEME') : null,
-            'url' => env('MAIL_URL'),
+            'scheme' => 'smtp',
+            'url' => null,
             'host' => env('MAIL_HOST', 'smtp.gmail.com'),
-            'port' => (int) (env('MAIL_PORT') ?: 587),
-            'encryption' => env('MAIL_ENCRYPTION') === 'ssl' ? 'tls' : (env('MAIL_ENCRYPTION') ?: 'tls'),
+            'port' => 587,
+            'encryption' => 'tls',
             'username' => env('MAIL_USERNAME', 'ahmedbilalkhangl09@gmail.com'),
             'password' => env('MAIL_PASSWORD', 'pvrahwujjucsqwlo'),
             'timeout' => 15,
-            'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'local_domain' => parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),
         ],
 
         'ses' => [
