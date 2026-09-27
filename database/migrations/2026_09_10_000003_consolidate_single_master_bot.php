@@ -21,6 +21,9 @@ return new class extends Migration
             }
         }
 
+        $adminUser = \App\Models\User::first();
+        $creatorId = $adminUser ? $adminUser->id : 1;
+
         $bot = Mt5BotConfig::first();
         if ($bot) {
             $bot->update([
@@ -60,6 +63,7 @@ return new class extends Migration
                 'total_trades' => 128,
                 'winning_trades' => 108,
                 'losing_trades' => 20,
+                'created_by' => $creatorId,
             ]);
         }
     }
