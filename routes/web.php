@@ -226,9 +226,10 @@ Route::get('test-smtp', function (\Illuminate\Http\Request $request) {
     $testOtp = sprintf("%06d", mt_rand(100000, 999999));
     
     try {
-        \Illuminate\Support\Facades\Mail::raw("Your KTS Markets verification code is: {$testOtp}\n\nThis is a test OTP to verify email deliverability from Vercel.", function ($message) use ($recipient) {
+        $subject = 'KTS Markets - Test Verification Code [' . time() . ']';
+        \Illuminate\Support\Facades\Mail::raw("Your KTS Markets verification code is: {$testOtp}\n\nThis is a test OTP to verify email deliverability from Vercel.", function ($message) use ($recipient, $subject) {
             $message->to($recipient)
-                ->subject("KTS Markets - Test Verification Code [{$GLOBALS['ts'] ?? time()}]");
+                ->subject($subject);
         });
         
         return response()->json([
