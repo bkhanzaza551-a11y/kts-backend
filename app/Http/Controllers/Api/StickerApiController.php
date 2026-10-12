@@ -40,7 +40,7 @@ class StickerApiController extends Controller
         return response()->json([
             'success' => true,
             'data' => $packs,
-        ]);
+        ])->header('Cache-Control', 'public, max-age=3600');
     }
 
     public function store(Request $request)

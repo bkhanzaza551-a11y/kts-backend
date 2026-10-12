@@ -33,7 +33,7 @@ class LegalPageApiController extends Controller
                 'summary' => $page->summary,
                 'last_updated' => $page->updated_at->toISOString(),
             ],
-        ]);
+        ])->header('Cache-Control', 'public, max-age=3600');
     }
 
     public function list()
@@ -45,6 +45,6 @@ class LegalPageApiController extends Controller
         return response()->json([
             'success' => true,
             'data' => $pages,
-        ]);
+        ])->header('Cache-Control', 'public, max-age=3600');
     }
 }
