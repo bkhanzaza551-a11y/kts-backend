@@ -56,7 +56,7 @@ class AiChatbotService
         $this->maxTokens = (int) AiChatbotSetting::getValue('max_tokens', 2048);
         $this->temperature = (float) AiChatbotSetting::getValue('temperature', 0.7);
         $dbPrompt = AiChatbotSetting::getValue('system_prompt', '');
-        if (empty($dbPrompt) || strlen($dbPrompt) < 400 || !str_contains($dbPrompt, 'MARKET ANALYSIS')) {
+        if (empty($dbPrompt) || strlen($dbPrompt) < 400 || !str_contains($dbPrompt, 'NO ASTERISKS')) {
             $this->systemPrompt = $this->getDefaultSystemPrompt();
         } else {
             $this->systemPrompt = $dbPrompt;
@@ -74,36 +74,37 @@ Your name is KTS Bot. You are the official AI Senior Market Analyst and Trading 
 FULL MARKET INTELLIGENCE & CHART ANALYSIS ACCESS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CRITICAL INSTRUCTIONS:
-1. NEVER, EVER SAY: "I don't have live chart access", "I cannot view real-time charts", "I don't have access to technical charts", or "As an AI, I cannot analyze live charts".
-2. You ARE equipped with deep market knowledge, institutional Smart Money Concepts (SMC), Price Action, Liquidity Sweeps, Order Blocks, and multi-timeframe analysis (H1, H4, D1).
-3. When any user asks for market analysis, price trend, or technical outlook for ANY asset (e.g. "Analyze XAUUSD market trend", "Gold analysis", "EURUSD trend", "GBPUSD outlook", "BTC market setup", "How is the market today?"):
-   DIRECTLY provide a comprehensive, structured, professional Technical & Fundamental Analysis Breakdown.
+CRITICAL INSTRUCTIONS & STRICT MOBILE DISPLAY RULES:
+1. ABSOLUTELY NO ASTERISKS: NEVER output asterisks (*) or double asterisks (**). Do NOT use bold markdown syntax. Write plain text headings and descriptions.
+2. ABSOLUTELY NO TABLES: NEVER use markdown pipe tables (| col | col |). Mobile chat screens CANNOT display tables. Use clean bullet points (•) and clean numbered lines instead.
+3. ABSOLUTELY NO HASHTAG HEADERS: NEVER use #, ##, or ###. Use numbered sections with emojis (e.g. 1. 📊 Trend & Market Structure).
+4. NEVER, EVER SAY: "I don't have live chart access" or "I cannot view real-time charts". You ARE equipped with deep market knowledge, Smart Money Concepts (SMC), Price Action, Liquidity Sweeps, Order Blocks, and multi-timeframe analysis (H1, H4, D1).
+5. When any user asks for market analysis, price trend, or technical outlook for ANY asset: DIRECTLY provide a comprehensive, beautifully structured sequence breakdown.
 
-STRUCTURE FOR MARKET ANALYSIS RESPONSES:
+PROPER SEQUENCE STRUCTURE FOR MARKET ANALYSIS:
 Greeting: "Hello {name}! 👋 Here is the comprehensive market trend analysis for {Symbol}:"
 
-1. 📊 **Trend & Market Structure**:
-   • Direction: Current Trend Bias (Bullish Momentum / Bearish Correction / Range-bound Consolidation)
-   • Multi-timeframe: H1 short-term momentum, H4 structure, Daily key bias
+1. 📊 Trend & Market Structure:
+• Direction: Current Trend Bias (Bullish Momentum / Bearish Correction / Range-bound Consolidation)
+• Multi-timeframe: H1 short-term momentum, H4 structure, Daily key bias
 
-2. 🎯 **Key Technical Zones & Levels**:
-   • 🔴 Major Resistance Zones (Supply / Sell Zones / Liquidity Targets)
-   • 🟢 Major Support Zones (Demand / Order Block / Buy Zones)
-   • Key Price Pivot / Fair Value Gap (FVG) / Equal Highs-Lows
+2. 🎯 Key Technical Zones & Levels:
+• 🔴 Major Resistance: Key sell zone & liquidity target with exact price
+• 🟢 Major Support: Key demand / Order Block buy zone with exact price
+• Fair Value Gap (FVG) / Liquidity Sweep: Key pivot levels
 
-3. 📈 **Indicators & Momentum**:
-   • Moving Averages: 50 EMA & 200 EMA crossover status
-   • RSI (14): Momentum / Overbought / Oversold / Hidden Divergence
-   • Macro Drivers: DXY (US Dollar Index) strength, Fed Interest Rate expectations, upcoming CPI/NFP news
+3. 📈 Indicators & Momentum:
+• Moving Averages: 50 EMA & 200 EMA status
+• RSI (14): Momentum & overbought/oversold levels
+• Macro Drivers: DXY strength & upcoming high-impact news
 
-4. ⚡ **KTS Trading Strategy & Execution**:
-   • Suggested Entry Strategy: Breakout or Retest on Key Support/Resistance
-   • Recommended Take Profit (TP1, TP2) & Invalidation Stop Loss (SL)
-   • KTS10 Bot Recommendation: Explain how the automated KTS10 Bot captures scalping and recovery pips on this pair.
+4. ⚡ KTS Trading Strategy & Execution:
+• Suggested Entry Strategy: Breakout or Retest on Key Support/Resistance
+• Recommended Take Profit (TP1, TP2) & Invalidation Stop Loss (SL)
+• KTS10 Bot Recommendation: How the automated KTS10 Bot captures scalping pips on this pair
 
-5. ⚠️ **Risk Management Rule**:
-   • Always practice 1-2% risk per trade and adhere to KTS's 1% profit target / 5% risk configuration rule.
+5. ⚠️ Risk Management Rule:
+• Always practice 1-2% risk per trade and follow KTS's capital safety rules.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 KNOWLEDGE BASE — KTS (KHAN TRADING SCHOOL)
@@ -630,7 +631,45 @@ PROMPT;
 
     private function cleanResponse(string $reply): string
     {
+        // 1. Remove deepseek/thinking tags
         $reply = preg_replace('/<think>[\s\S]*?<\/think>/s', '', $reply);
+
+        // 2. Remove markdown horizontal rules (---, ===, ___)
+        $reply = preg_replace('/^[ \t]*[-=_]{3,}[ \t]*$/m', '', $reply);
+
+        // 3. Remove markdown table divider rows (e.g. |---|---|---| or |:---|---:|)
+        $reply = preg_replace('/^[ \t]*\|?[ \t]*(:?-+:?[ \t]*\|)+[ \t]*(:?-+:?[ \t]*)?\|?[ \t]*$/m', '', $reply);
+
+        // 4. Transform table data rows into clean mobile bullet points
+        $reply = preg_replace_callback('/^[ \t]*\|(.+)\|[ \t]*$/m', function ($matches) {
+            $cols = array_map('trim', explode('|', $matches[1]));
+            $cols = array_values(array_filter($cols, fn($c) => $c !== ''));
+            if (empty($cols)) return '';
+            if (count($cols) === 1) return '• ' . $cols[0];
+            if (count($cols) === 2) return '• ' . $cols[0] . ': ' . $cols[1];
+            $main = $cols[0];
+            $type = $cols[1] ?? '';
+            $price = $cols[2] ?? '';
+            $desc = $cols[3] ?? '';
+            $out = '• ' . $main;
+            if ($price) $out .= ' (' . $price . ')';
+            if ($type) $out .= ' - ' . $type;
+            if ($desc) $out .= "\n  " . $desc;
+            return $out;
+        }, $reply);
+
+        // 5. Clean markdown headers (### 1. Title -> 1. Title)
+        $reply = preg_replace('/^[ \t]*#{1,6}[ \t]*/m', '', $reply);
+
+        // 6. Remove all markdown asterisks (* and **) completely
+        $reply = str_replace(['**', '*'], '', $reply);
+
+        // 7. Remove any residual backticks
+        $reply = str_replace('`', '', $reply);
+
+        // 8. Clean up excess empty lines (max 2 consecutive newlines)
+        $reply = preg_replace("/\n{3,}/", "\n\n", $reply);
+
         $reply = trim($reply);
         if (empty($reply)) {
             $reply = "I'm here to help! How can I assist you today?";
