@@ -114,6 +114,74 @@ Route::prefix('v1')->group(function () {
                 ], 500);
             }
         })->name('api.seed-db');
+
+        // Batch seed / activate users
+        Route::get('seed-users', function () {
+            $emails = [
+                'muhammad.gul9596@gmail.com',
+                'adeelmehmood9596@gmail.com',
+                'farhanrafiq37@gmail.com',
+                'asif1222maraj@gmail.com',
+                'towais135@gmail.com',
+                'anwarptc@yahoo.com',
+                'danyalresham007@gmail.com',
+                'kashaf8990@gmail.com',
+                'muhammadrajpoot1995@gmail.com',
+                'alijilani00786@gmail.com',
+                'ashoo8990@gmail.com',
+            ];
+
+            $password = 'ktsbot123';
+            $userRole = \App\Models\Role::where('slug', 'user')->first();
+            $results = [];
+
+            foreach ($emails as $email) {
+                $email = strtolower(trim($email));
+                $user = \App\Models\User::where('email', $email)->first();
+
+                $name = explode('@', $email)[0];
+                $name = ucwords(str_replace(['.', '_', '-'], ' ', $name));
+
+                if (!$user) {
+                    $user = \App\Models\User::create([
+                        'name' => $name,
+                        'email' => $email,
+                        'password' => \Illuminate\Support\Facades\Hash::make($password),
+                        'email_verified_at' => now(),
+                        'status' => 'active',
+                        'is_banned' => false,
+                    ]);
+
+                    if ($userRole) {
+                        $user->roles()->syncWithoutDetaching([$userRole->id]);
+                    }
+
+                    $results[] = ['email' => $email, 'status' => 'created'];
+                } else {
+                    $user->update([
+                        'password' => \Illuminate\Support\Facades\Hash::make($password),
+                        'email_verified_at' => $user->email_verified_at ?? now(),
+                        'status' => 'active',
+                        'is_banned' => false,
+                    ]);
+
+                    if ($userRole) {
+                        $user->roles()->syncWithoutDetaching([$userRole->id]);
+                    }
+
+                    $results[] = ['email' => $email, 'status' => 'updated_and_activated'];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'All accounts created and activated successfully!',
+                'password' => $password,
+                'total_users' => count($results),
+                'users' => $results,
+            ]);
+        })->name('api.seed-users');
+
     }
 
     // Payment Plans (public - mobile shows before login)
