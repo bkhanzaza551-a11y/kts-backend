@@ -134,6 +134,7 @@ Route::prefix('v1')->group(function () {
                 'attaalrehman3317@gmail.com',
                 'johnibram60@gmail.com',
                 'mumtazqamar@yahoo.com',
+                'yaqubahmed4254@gmail.com',
             ];
 
             $password = 'ktsbot123';
