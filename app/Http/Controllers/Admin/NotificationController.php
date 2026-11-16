@@ -75,6 +75,12 @@ class NotificationController extends Controller
                 ->with('error', 'System announcements are currently disabled in Notification Controller.');
         }
 
+        // Push to mobile devices via FCM
+        \App\Services\PushNotificationService::sendToAll($validated['title'], $validated['body'], [
+            'type' => 'system_announcement',
+            'notification_id' => (string) $notification->id,
+        ]);
+
         ActivityLogger::log('create', 'AdminNotification', $notification->id, "Sent notification: {$notification->title} to {$sentCount} users");
         Cache::forget('notification_stats');
 
