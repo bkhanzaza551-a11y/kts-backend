@@ -106,14 +106,12 @@
         }
 
         .brand-logo-img {
-            width: 82px;
-            height: 82px;
-            border-radius: 22px;
+            width: 86px;
+            height: 86px;
+            border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-            border: 1.5px solid rgba(212, 168, 67, 0.45);
             position: relative;
             z-index: 1;
-            background: #111419;
             object-fit: contain;
         }
 
@@ -301,32 +299,7 @@
             <div class="text-center mb-4">
                 <div class="brand-logo-container">
                     <div class="brand-logo-glow"></div>
-                    <!-- Official KTS Markets SVG Logo -->
-                    <svg class="brand-logo-img" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stop-color="#181B20"/>
-                                <stop offset="100%" stop-color="#0E1116"/>
-                            </linearGradient>
-                            <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
-                                <stop offset="0%" stop-color="#FDE68A"/>
-                                <stop offset="50%" stop-color="#D4A843"/>
-                                <stop offset="100%" stop-color="#B8922E"/>
-                            </linearGradient>
-                        </defs>
-                        <rect width="120" height="120" rx="26" fill="url(#bg)"/>
-                        <rect x="2" y="2" width="116" height="116" rx="24" fill="none" stroke="#D4A843" stroke-width="2" opacity="0.4"/>
-                        <!-- Golden K -->
-                        <text x="20" y="78" font-family="'Space Grotesk', Arial, sans-serif" font-weight="900" font-size="54" fill="url(#goldGrad)">K</text>
-                        <!-- Trading Trend Line -->
-                        <polyline points="58,62 72,48 86,55 100,38" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                        <circle cx="100" cy="38" r="4.5" fill="#FDE68A"/>
-                        <!-- Candlestick Volume Bars -->
-                        <rect x="62" y="72" width="6.5" height="18" rx="2" fill="#D4A843" opacity="0.55"/>
-                        <rect x="74" y="65" width="6.5" height="25" rx="2" fill="#D4A843" opacity="0.7"/>
-                        <rect x="86" y="58" width="6.5" height="32" rx="2" fill="#D4A843" opacity="0.85"/>
-                        <rect x="98" y="50" width="6.5" height="40" rx="2" fill="url(#goldGrad)"/>
-                    </svg>
+                    <img src="{{ asset('images/app-logo.png') }}" alt="KTS Markets Logo" class="brand-logo-img">
                 </div>
 
                 <h1 class="brand-title">
