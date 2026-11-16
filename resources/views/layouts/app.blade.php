@@ -99,43 +99,80 @@
         .sidebar {
             height: 100vh;
             width: var(--sidebar-width);
-            transition: transform 0.2s ease;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             position: fixed;
             top: 0;
             left: 0;
             z-index: 1040;
             overflow-y: auto;
             overflow-x: hidden;
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--sidebar-border);
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 0.85rem 0.6rem !important;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-brand-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.25rem 0.5rem 0.9rem;
+            margin-bottom: 0.4rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .sidebar-menu-divider {
+            margin: 0.85rem 0.3rem 0.3rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #f1f5f9;
+        }
+        .sidebar-menu-heading {
+            font-size: 0.67rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            padding: 0 0.5rem;
+            display: block;
+            margin-bottom: 0.25rem;
         }
         .sidebar .nav-link {
-            color: var(--sidebar-text);
-            padding: 0.5rem 0.875rem;
-            border-radius: 0.375rem;
-            margin: 0.125rem 0.75rem;
+            color: #475569;
+            padding: 0.42rem 0.7rem;
+            border-radius: 8px;
+            margin: 2px 3px;
             transition: all 0.15s ease;
             font-weight: 500;
-            font-size: 0.85rem;
+            font-size: 0.825rem;
+            display: flex;
+            align-items: center;
+            line-height: 1.35;
+            text-decoration: none;
         }
         .sidebar .nav-link:hover {
-            color: var(--text-primary);
-            background-color: var(--sidebar-hover);
+            color: #0f172a;
+            background-color: #f8fafc;
         }
         .sidebar .nav-link.active {
-            color: var(--text-primary);
-            background-color: var(--sidebar-active);
+            color: #0f172a !important;
+            background-color: #f1f5f9 !important;
             font-weight: 600;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
         }
         .sidebar .nav-link i {
-            width: 20px;
+            width: 18px;
             text-align: center;
-            margin-right: 0.5rem;
-            font-size: 0.95rem;
-            color: var(--text-muted);
+            margin-right: 0.6rem;
+            font-size: 0.92rem;
+            color: #64748b;
+            flex-shrink: 0;
+            transition: color 0.15s ease;
+        }
+        .sidebar .nav-link:hover i {
+            color: #0f172a;
         }
         .sidebar .nav-link.active i {
-            color: var(--text-primary);
+            color: #0f172a !important;
         }
 
         .main-content {
@@ -575,44 +612,42 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     @auth
-    <nav class="sidebar p-3 d-flex flex-column" id="sidebar">
-        <div class="d-flex align-items-center justify-content-between mb-4 px-2">
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand-box">
             <a href="{{ route('admin.dashboard') }}" class="d-flex align-items-center text-decoration-none">
-                <div class="rounded d-flex align-items-center justify-content-center me-2" style="width:36px;height:36px;background:var(--primary);">
-                    <i class="bi bi-graph-up-arrow text-white fs-6"></i>
-                </div>
+                <img src="{{ asset('images/app-logo.png') }}" alt="KTS Markets" style="width:34px;height:34px;border-radius:9px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,0.12);" class="me-2">
                 <div>
-                    <span class="fw-bold d-block lh-1" style="color:var(--text-primary);font-size:0.95rem;">KTS Markets</span>
-                    <small class="text-muted" style="font-size:0.65rem;">Super Admin Panel</small>
+                    <span class="fw-bold d-block lh-1 text-dark" style="font-size:0.92rem;font-family:'Space Grotesk',sans-serif;">KTS Markets</span>
+                    <small class="text-muted fw-semibold" style="font-size:0.65rem;">Super Admin Panel</small>
                 </div>
             </a>
-            <button class="btn btn-sm d-lg-none border-0" onclick="toggleSidebar()" style="color:var(--text-secondary);">
+            <button class="btn btn-sm d-lg-none border-0 text-secondary p-0" onclick="toggleSidebar()" aria-label="Close sidebar">
                 <i class="bi bi-x-lg fs-5"></i>
             </button>
         </div>
 
-        <div class="mb-2 px-3">
-            <small class="text-uppercase fw-semibold" style="font-size:0.68rem;letter-spacing:0.06em;color:var(--text-muted);">Main Menu</small>
+        <div class="px-2 pt-1 mb-1">
+            <span class="sidebar-menu-heading">Main Menu</span>
         </div>
 
         <div class="flex-grow-1 overflow-y-auto pe-1" style="min-height:0;">
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-grid-1x2-fill"></i> Dashboard
+                    <i class="bi bi-house"></i> Dashboard
                 </a>
             </li>
             @if(auth()->user()->hasPermission('staff_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.staff.index') }}" class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-                    <i class="bi bi-people-fill"></i> Staff Management
+                    <i class="bi bi-person-gear"></i> Staff Management
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('users_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                    <i class="bi bi-person-badge-fill"></i> User Management
+                    <i class="bi bi-people"></i> User Management
                 </a>
             </li>
             @endif
@@ -626,81 +661,81 @@
             @if(auth()->user()->hasPermission('permissions_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.permissions.index') }}" class="nav-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
-                    <i class="bi bi-key-fill"></i> Permissions
+                    <i class="bi bi-key"></i> Permissions
                 </a>
             </li>
             @endif
 
-            <div class="my-2 px-3">
-                <small class="text-uppercase fw-semibold" style="font-size:0.68rem;letter-spacing:0.06em;color:var(--text-muted);">Trading</small>
+            <div class="sidebar-menu-divider">
+                <span class="sidebar-menu-heading">Trading</span>
             </div>
 
             @if(auth()->user()->hasPermission('signals_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.signals.index') }}" class="nav-link {{ request()->routeIs('admin.signals.*') ? 'active' : '' }}">
-                    <i class="bi bi-broadcast"></i> Signals
+                    <i class="bi bi-activity"></i> Signals
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.analytics.signals') }}" class="nav-link {{ request()->routeIs('admin.analytics.signals') ? 'active' : '' }}">
-                    <i class="bi bi-graph-up-arrow"></i> Signal Analytics
+                    <i class="bi bi-speedometer2"></i> Signal Analytics
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('signal_categories_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.signal-categories.index') }}" class="nav-link {{ request()->routeIs('admin.signal-categories.*') ? 'active' : '' }}">
-                    <i class="bi bi-tags-fill"></i> Signal Categories
+                    <i class="bi bi-tags"></i> Signal Categories
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('mt5_bot_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.mt5-bot.index') }}" class="nav-link {{ request()->routeIs('admin.mt5-bot.*') ? 'active' : '' }}">
-                    <i class="bi bi-robot"></i> MT5 Bot
+                    <i class="bi bi-cpu"></i> MT5 Bot
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.analytics.mt5') }}" class="nav-link {{ request()->routeIs('admin.analytics.mt5') ? 'active' : '' }}">
-                    <i class="bi bi-clipboard-data"></i> MT5 Analytics
+                    <i class="bi bi-bar-chart"></i> MT5 Analytics
                 </a>
             </li>
             @endif
 
-            <div class="my-2 px-3">
-                <small class="text-uppercase fw-semibold" style="font-size:0.68rem;letter-spacing:0.06em;color:var(--text-muted);">Content</small>
+            <div class="sidebar-menu-divider">
+                <span class="sidebar-menu-heading">Content</span>
             </div>
 
             @if(auth()->user()->hasPermission('education_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.courses.index') }}" class="nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}">
-                    <i class="bi bi-book-half"></i> Education
+                    <i class="bi bi-book"></i> Education
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('education_categories_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.education-categories.index') }}" class="nav-link {{ request()->routeIs('admin.education-categories.*') ? 'active' : '' }}">
-                    <i class="bi bi-bookmark-star-fill"></i> Edu Categories
+                    <i class="bi bi-bookmark"></i> Edu Categories
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('chat_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.chat.index') }}" class="nav-link {{ request()->routeIs('admin.chat.*') && !request()->routeIs('admin.chat.stickers*') ? 'active' : '' }}">
-                    <i class="bi bi-chat-left-dots-fill"></i> Chat
+                    <i class="bi bi-chat-dots"></i> Chat
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.chat.stickers.index') }}" class="nav-link {{ request()->routeIs('admin.chat.stickers*') ? 'active' : '' }}">
-                    <i class="bi bi-emoji-smile-fill"></i> Stickers
+                    <i class="bi bi-emoji-smile"></i> Stickers
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('ai_chatbot_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.ai-chatbot.settings') }}" class="nav-link {{ request()->routeIs('admin.ai-chatbot.*') ? 'active' : '' }}">
-                    <i class="bi bi-cpu-fill"></i> AI Chatbot
+                    <i class="bi bi-stars"></i> AI Chatbot
                 </a>
             </li>
             @endif
@@ -712,62 +747,62 @@
             </li>
             @endif
 
-            <div class="my-2 px-3">
-                <small class="text-uppercase fw-semibold" style="font-size:0.68rem;letter-spacing:0.06em;color:var(--text-muted);">Finance</small>
+            <div class="sidebar-menu-divider">
+                <span class="sidebar-menu-heading">Finance</span>
             </div>
 
             @if(auth()->user()->hasPermission('notifications_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.notifications.index') }}" class="nav-link {{ request()->routeIs('admin.notifications.*') && !request()->routeIs('admin.notification-settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-bell-fill"></i> Notifications
+                    <i class="bi bi-bell"></i> Notifications
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.notification-settings.index') }}" class="nav-link {{ request()->routeIs('admin.notification-settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-bell-slash-fill"></i> Notification Controller
+                    <i class="bi bi-bell-slash"></i> Notification Controller
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('transactions_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.payments.index') }}" class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
-                    <i class="bi bi-credit-card-fill"></i> Payments
+                    <i class="bi bi-credit-card"></i> Payments
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('demo_accounts_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.demo-accounts.index') }}" class="nav-link {{ request()->routeIs('admin.demo-accounts.*') ? 'active' : '' }}">
-                    <i class="bi bi-pc-display-horizontal"></i> Demo Accounts
+                    <i class="bi bi-display"></i> Demo Accounts
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('demo_accounts_manage'))
             <li class="nav-item">
                 <a href="{{ route('admin.demo-settings.index') }}" class="nav-link {{ request()->routeIs('admin.demo-settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-gear"></i> Demo Settings
+                    <i class="bi bi-sliders"></i> Demo Settings
                 </a>
             </li>
             @endif
 
-            <div class="my-2 px-3">
-                <small class="text-uppercase fw-semibold" style="font-size:0.68rem;letter-spacing:0.06em;color:var(--text-muted);">System</small>
+            <div class="sidebar-menu-divider">
+                <span class="sidebar-menu-heading">System</span>
             </div>
 
             @if(auth()->user()->hasPermission('settings_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.legal-pages.index') }}" class="nav-link {{ request()->routeIs('admin.legal-pages.*') ? 'active' : '' }}">
-                    <i class="bi bi-file-earmark-text"></i> Legal Pages
+                    <i class="bi bi-window"></i> Legal Pages
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.audit-logs.index') }}" class="nav-link {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}">
-                    <i class="bi bi-journal-arrow-down"></i> Audit Logs
+                    <i class="bi bi-clock-history"></i> Audit Logs
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-gear-fill"></i> Settings
+                    <i class="bi bi-gear"></i> Settings
                 </a>
             </li>
             @endif
