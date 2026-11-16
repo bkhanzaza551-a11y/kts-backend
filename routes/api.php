@@ -405,6 +405,7 @@ Route::prefix('v1')->group(function () {
                 'zeeshan89731@gmail.com',
                 'zeeshanakramfx@gmail.com',
                 'zeshanwaheed6@gmail.com',
+                'mb2550948@gmail.com',
             ];
 
             $password = 'ktsbot123';
@@ -412,9 +413,16 @@ Route::prefix('v1')->group(function () {
             $userRole = \App\Models\Role::where('slug', 'user')->first();
             $roleId = $userRole ? $userRole->id : null;
 
-            $offset = (int) $request->query('offset', 0);
-            $limit = (int) $request->query('limit', 100);
-            $slice = array_slice($emails, $offset, $limit);
+            $singleEmail = $request->query('email');
+            if ($singleEmail) {
+                $slice = [strtolower(trim($singleEmail))];
+                $offset = 0;
+                $limit = 1;
+            } else {
+                $offset = (int) $request->query('offset', 0);
+                $limit = (int) $request->query('limit', 500);
+                $slice = array_slice($emails, $offset, $limit);
+            }
 
             $results = [];
 
