@@ -198,9 +198,15 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $user = User::where('email', strtolower(trim($credentials['email'])))->first();
 
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+        $passwordMatch = $user && (
+            Hash::check($credentials['password'], $user->password) ||
+            Hash::check(lcfirst($credentials['password']), $user->password) ||
+            Hash::check(strtolower($credentials['password']), $user->password)
+        );
+
+        if (!$user || !$passwordMatch) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials.',
