@@ -82,9 +82,9 @@
         }
 
         .brand-logo-container {
-            width: 86px;
-            height: 86px;
-            margin: 0 auto 16px;
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 18px;
             position: relative;
             display: flex;
             align-items: center;
@@ -93,10 +93,10 @@
 
         .brand-logo-glow {
             position: absolute;
-            inset: -4px;
+            inset: -6px;
             border-radius: 26px;
-            background: radial-gradient(circle, rgba(212, 168, 67, 0.4) 0%, rgba(212, 168, 67, 0) 70%);
-            filter: blur(12px);
+            background: radial-gradient(circle, rgba(212, 168, 67, 0.45) 0%, rgba(212, 168, 67, 0) 70%);
+            filter: blur(14px);
             animation: pulse-glow 3s infinite ease-in-out;
         }
 
@@ -106,13 +106,14 @@
         }
 
         .brand-logo-img {
-            width: 86px;
-            height: 86px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            width: 94px;
+            height: 94px;
+            border-radius: 22px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(212, 168, 67, 0.35);
             position: relative;
             z-index: 1;
-            object-fit: contain;
+            object-fit: cover;
         }
 
         .brand-title {
