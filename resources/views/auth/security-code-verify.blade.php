@@ -1,57 +1,174 @@
-@extends('layouts.app')
-@section('title', 'Verify Security Code')
-@section('content')
-<div class="min-vh-100 d-flex align-items-center justify-content-center" style="margin-top:-60px;">
-    <div class="w-100" style="max-width: 420px;">
-        <div class="text-center mb-4">
-            <div class="rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:60px;height:60px;background:linear-gradient(135deg,#f59e0b,#f97316);">
-                <i class="bi bi-key text-white fs-2"></i>
-            </div>
-            <h4 class="fw-bold" style="color:#111827;">Security Code</h4>
-            <p class="text-secondary small mb-0">Enter your 8-character security code</p>
-        </div>
-        <div class="card" style="border-radius:1rem;border:none;box-shadow:0 10px 40px rgba(0,0,0,0.08);">
-            <div class="card-body p-4">
-                @if($showCode)
-                <div class="alert alert-success mb-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        <strong>Your Security Code (save this!):</strong>
-                    </div>
-                    <div class="bg-light rounded p-3 text-center">
-                        <code class="text-success fs-4 fw-bold" style="letter-spacing:4px;">{{ $showCode }}</code>
-                    </div>
-                    <small class="d-block mt-2 text-warning">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
-                        This code will only be shown once. Save it securely!
-                    </small>
-                </div>
-                @endif
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Security Code - KTS Markets</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/logo.svg') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold-primary: #D4A843;
+            --gold-light: #FDE68A;
+            --gold-dark: #B8922E;
+            --bg-dark: #07090D;
+            --card-dark: rgba(14, 18, 24, 0.92);
+            --border-dark: rgba(212, 168, 67, 0.2);
+        }
 
-                @if($errors->any())
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $errors->first() }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                @endif
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
 
-                <form method="POST" action="{{ route('admin.security-code.verify.post') }}">
-                    @csrf
-                    <div class="mb-4">
-                        <label class="form-label fw-medium">Security Code</label>
-                        <input type="text" name="security_code" value="{{ old('security_code', $showCode ?? '') }}" class="form-control form-control-lg text-center fw-bold" maxlength="8" pattern="[A-Za-z0-9]{8}" autocomplete="off" autofocus required placeholder="XXXXXXXX" style="letter-spacing:4px;font-size:24px;text-transform:uppercase;">
-                    </div>
-                    <button type="submit" class="btn btn-warning w-100 py-2 fw-semibold text-dark">
-                        <i class="bi bi-shield-check me-1"></i>Complete Login
-                    </button>
-                </form>
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(212, 168, 67, 0.16) 0%, rgba(7, 9, 13, 0) 65%),
+                linear-gradient(180deg, #090C11 0%, #06070A 100%);
+            min-height: 100vh;
+            color: #E2E8F0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: 440px;
+            padding: 24px;
+        }
+
+        .auth-card {
+            background: var(--card-dark);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-dark);
+            border-radius: 24px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 40px rgba(212, 168, 67, 0.08);
+            padding: 38px 32px;
+        }
+
+        .icon-badge-glow {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 16px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, rgba(212, 168, 67, 0.2), rgba(212, 168, 67, 0.05));
+            border: 1.5px solid rgba(212, 168, 67, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(212, 168, 67, 0.2);
+        }
+
+        .brand-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: #FFFFFF;
+        }
+
+        .code-input {
+            background: #0B0E13 !important;
+            border: 1.5px solid #262D38 !important;
+            color: #FDE68A !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            letter-spacing: 6px;
+            font-size: 26px !important;
+            text-align: center;
+            border-radius: 14px !important;
+            padding: 14px !important;
+            text-transform: uppercase;
+            transition: all 0.25s ease;
+        }
+
+        .code-input:focus {
+            border-color: var(--gold-primary) !important;
+            box-shadow: 0 0 0 4px rgba(212, 168, 67, 0.2) !important;
+            background: #0E1218 !important;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #D4A843 0%, #F59E0B 50%, #B8922E 100%);
+            color: #07090C;
+            border: none;
+            border-radius: 12px;
+            padding: 13px 20px;
+            font-size: 15px;
+            font-weight: 700;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(212, 168, 67, 0.28);
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-1.5px);
+            box-shadow: 0 12px 30px rgba(212, 168, 67, 0.42);
+            color: #000;
+        }
+
+        .code-display-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="text-center mb-4">
+                <div class="icon-badge-glow">
+                    <i class="bi bi-key-fill fs-1" style="color: var(--gold-primary);"></i>
+                </div>
+                <h2 class="brand-title">Security Key Authorization</h2>
+                <p class="text-secondary small mb-0">Enter your 8-character security key</p>
             </div>
+
+            @if($showCode)
+            <div class="code-display-box text-center">
+                <div style="color: #34D399; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                    <i class="bi bi-check-circle-fill me-1"></i>Active Admin Security Key
+                </div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 26px; font-weight: 800; color: #FFFFFF; letter-spacing: 5px; margin-top: 4px;">{{ $showCode }}</div>
+                <div style="color: #FBBF24; font-size: 11px; margin-top: 4px;">
+                    <i class="bi bi-shield-check me-1"></i>Pre-filled for authorized session access
+                </div>
+            </div>
+            @endif
+
+            @if($errors->any())
+            <div class="alert alert-danger border-0 py-2 small mb-3" style="background: rgba(239, 68, 68, 0.15); color: #FCA5A5;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $errors->first() }}
+            </div>
+            @endif
+
+            <form method="POST" action="{{ route('admin.security-code.verify.post') }}">
+                @csrf
+                <div class="mb-4">
+                    <input type="text" name="security_code" value="{{ old('security_code', $showCode ?? '') }}" class="form-control code-input" maxlength="8" pattern="[A-Za-z0-9]{8}" autocomplete="off" autofocus required placeholder="XXXXXXXX">
+                </div>
+                <button type="submit" class="btn-gold">
+                    <i class="bi bi-shield-lock-fill"></i> Complete Authorization & Enter
+                </button>
+            </form>
         </div>
+
         <div class="text-center mt-3">
-            <a href="{{ route('admin.login') }}" class="text-secondary text-decoration-none small">
-                <i class="bi bi-arrow-left me-1"></i>Back to Login
+            <a href="{{ route('admin.login') }}" class="text-decoration-none small" style="color: #64748B;">
+                <i class="bi bi-arrow-left me-1"></i>Back to Sign In
             </a>
         </div>
     </div>
-</div>
-@endsection
+</body>
+</html>
