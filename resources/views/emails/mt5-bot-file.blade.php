@@ -118,21 +118,15 @@
                             </tr>
                           </table>
 
-                          <!-- PROMINENT DOWNLOAD BUTTON IN MIDDLE SECTION -->
-                          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                          <!-- ATTACHMENT NOTICE (NO EXTERNAL LINKS - 100% SECURE) -->
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fef3c7; border: 1px dashed #f59e0b; border-radius: 10px;">
                             <tr>
-                              <td align="center">
-                                @if(!empty($downloadUrl))
-                                <a href="{{ $downloadUrl }}" target="_blank" style="display: block; width: 100%; max-width: 460px; box-sizing: border-box; background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: #ffffff; text-decoration: none; text-align: center; font-weight: 800; font-size: 15px; padding: 14px 20px; border-radius: 10px; box-shadow: 0 4px 14px rgba(180, 83, 9, 0.35); letter-spacing: 0.3px;">
-                                  📥 &nbsp;DOWNLOAD BOT FILE (.{{ strtoupper($bot->bot_file_type ?? 'EX5') }})
-                                </a>
-                                @endif
-                              </td>
-                            </tr>
-                            <tr>
-                              <td align="center" style="padding-top: 10px;">
-                                <div style="font-size: 11.5px; color: #854d0e; font-weight: 600;">
-                                  📎 <em>Note: The file is also attached at the bottom of this email.</em>
+                              <td align="center" style="padding: 14px 16px;">
+                                <div style="font-size: 14px; font-weight: 800; color: #92400e; margin-bottom: 4px;">
+                                  📎 File Is Email Ke Saath Attached Hai
+                                </div>
+                                <div style="font-size: 12px; color: #78350f; line-height: 1.5;">
+                                  Email ke aakhir mein mojood <strong>{{ $bot->bot_file_name ?? 'KTS10PipsBot_v2.ex5' }}</strong> attachment box par click karke direct save karein.
                                 </div>
                               </td>
                             </tr>

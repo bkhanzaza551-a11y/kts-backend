@@ -72,20 +72,6 @@ Route::post('delete-account', function (\Illuminate\Http\Request $request) {
     return back()->with('status', 'Your account deletion request has been submitted successfully to our support team and is being processed.');
 })->middleware('throttle:10,1')->name('public.delete-account.post');
 
-// Direct Bot File Download Route (Secure Signed Link from Email)
-Route::get('bot-download/{user}', function (\App\Models\User $user, \Illuminate\Http\Request $request) {
-    if (!$request->hasValidSignature()) {
-        abort(403, 'This download link has expired or is invalid. Please contact support or request a new link.');
-    }
-    $bot = \App\Models\Mt5BotConfig::first();
-    if (!$bot || !$bot->hasBotFile()) {
-        abort(404, 'No bot software file found on the server.');
-    }
-    $fileName = $bot->bot_file_name ?: basename($bot->bot_file_path);
-    \App\Services\ActivityLogger::log('download_bot_email_link', 'Mt5BotConfig', $bot->id, "User #{$user->id} ({$user->name}) downloaded bot file via email link");
-    return \Illuminate\Support\Facades\Storage::disk('public')->download($bot->bot_file_path, $fileName);
-})->name('public.bot.email-download');
-
 if (app()->environment('local')) {
     Route::get('test-email', function (\Illuminate\Http\Request $request) {
         if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
