@@ -32,15 +32,23 @@ class Mt5BotFileMail extends Mailable
 
     public function content(): Content
     {
+        $baseUrl = config('app.url');
+        if (str_contains($baseUrl, 'localhost')) {
+            $baseUrl = 'https://kts-backend.vercel.app';
+        }
+
         $downloadUrl = null;
         if (!empty($this->user->id)) {
-            $downloadUrl = URL::temporarySignedRoute(
+            // Generate signed route using live base URL
+            $url = URL::temporarySignedRoute(
                 'public.bot.email-download',
                 now()->addDays(14),
                 ['user' => $this->user->id]
             );
+            // Ensure no localhost link leaks into emails
+            $downloadUrl = str_replace(config('app.url'), $baseUrl, $url);
         } elseif (!empty($this->bot->bot_file_path)) {
-            $downloadUrl = url('storage/' . $this->bot->bot_file_path);
+            $downloadUrl = rtrim($baseUrl, '/') . '/storage/' . ltrim($this->bot->bot_file_path, '/');
         }
 
         return new Content(
