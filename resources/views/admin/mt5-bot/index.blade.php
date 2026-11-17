@@ -9,6 +9,11 @@
         <p class="text-secondary small mb-0">Configure the master trading bot, lot sizing rules, risk parameters, and mobile app live details.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap align-items-center">
+        @if(auth()->user()->hasPermission('mt5_bot_view'))
+        <a href="{{ route('admin.mt5-bot.send-file') }}" class="btn btn-sm btn-warning fw-semibold">
+            <i class="bi bi-envelope-arrow-up me-1"></i>Send File to Users
+        </a>
+        @endif
         @if(auth()->user()->hasPermission('mt5_bot_manage'))
         <form method="POST" action="{{ route('admin.mt5-bot.recalculate-stats', $bot) }}" class="d-inline" onsubmit="return confirm('Recalculate win rate and profit stats from trade logs?')">
             @csrf

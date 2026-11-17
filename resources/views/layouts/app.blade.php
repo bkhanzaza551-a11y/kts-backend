@@ -107,7 +107,7 @@
             overflow-y: auto;
             overflow-x: hidden;
             background: #ffffff;
-            border-right: 1px solid #e2e8f0;
+            border-right: 1px solid #eef2f6;
             padding: 0.85rem 0.6rem !important;
             display: flex;
             flex-direction: column;
@@ -116,29 +116,38 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0.25rem 0.5rem 0.9rem;
+            padding: 0.35rem 0.55rem 0.95rem;
             margin-bottom: 0.4rem;
             border-bottom: 1px solid #f1f5f9;
         }
+        .sidebar-brand-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            object-fit: cover;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            flex-shrink: 0;
+        }
         .sidebar-menu-divider {
-            margin: 0.85rem 0.3rem 0.3rem;
-            padding-top: 0.75rem;
+            margin: 0.75rem 0.25rem 0.25rem;
+            padding-top: 0.65rem;
             border-top: 1px solid #f1f5f9;
         }
         .sidebar-menu-heading {
-            font-size: 0.67rem;
+            font-size: 0.65rem;
             font-weight: 700;
-            letter-spacing: 0.07em;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
             color: #94a3b8;
-            padding: 0 0.5rem;
+            padding: 0 0.55rem;
             display: block;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
         }
         .sidebar .nav-link {
             color: #475569;
-            padding: 0.42rem 0.7rem;
-            border-radius: 8px;
+            padding: 0.44rem 0.72rem;
+            border-radius: 9px;
             margin: 2px 3px;
             transition: all 0.15s ease;
             font-weight: 500;
@@ -147,32 +156,48 @@
             align-items: center;
             line-height: 1.35;
             text-decoration: none;
+            border: 1px solid transparent;
         }
         .sidebar .nav-link:hover {
             color: #0f172a;
             background-color: #f8fafc;
+            border-color: #f1f5f9;
         }
         .sidebar .nav-link.active {
             color: #0f172a !important;
             background-color: #f1f5f9 !important;
             font-weight: 600;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+            border-color: #e2e8f0;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
         }
+        .sidebar .nav-link .sidebar-icon,
+        .sidebar .nav-link svg.lucide,
         .sidebar .nav-link i {
-            width: 18px;
+            width: 17px;
+            height: 17px;
+            font-size: 0.95rem;
             text-align: center;
-            margin-right: 0.6rem;
-            font-size: 0.92rem;
+            margin-right: 0.68rem;
             color: #64748b;
+            stroke: #64748b;
+            stroke-width: 1.85px;
             flex-shrink: 0;
-            transition: color 0.15s ease;
+            transition: color 0.15s ease, stroke 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
+        .sidebar .nav-link:hover .sidebar-icon,
+        .sidebar .nav-link:hover svg.lucide,
         .sidebar .nav-link:hover i {
             color: #0f172a;
+            stroke: #0f172a;
         }
+        .sidebar .nav-link.active .sidebar-icon,
+        .sidebar .nav-link.active svg.lucide,
         .sidebar .nav-link.active i {
             color: #0f172a !important;
+            stroke: #0f172a !important;
         }
 
         .main-content {
@@ -615,9 +640,9 @@
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-brand-box">
             <a href="{{ route('admin.dashboard') }}" class="d-flex align-items-center text-decoration-none">
-                <img src="{{ asset('images/app-logo.png') }}" alt="KTS Markets" style="width:34px;height:34px;border-radius:9px;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,0.12);" class="me-2">
+                <img src="{{ asset('images/app-logo.png') }}" alt="KTS Markets" class="sidebar-brand-logo me-2">
                 <div>
-                    <span class="fw-bold d-block lh-1 text-dark" style="font-size:0.92rem;font-family:'Space Grotesk',sans-serif;">KTS Markets</span>
+                    <span class="fw-bold d-block lh-1 text-dark" style="font-size:0.92rem;font-family:'Space Grotesk',sans-serif;letter-spacing:-0.2px;">KTS Markets</span>
                     <small class="text-muted fw-semibold" style="font-size:0.65rem;">Super Admin Panel</small>
                 </div>
             </a>
@@ -634,34 +659,34 @@
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-house"></i> Dashboard
+                    <i data-lucide="home" class="bi bi-house sidebar-icon"></i> <span>Dashboard</span>
                 </a>
             </li>
             @if(auth()->user()->hasPermission('staff_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.staff.index') }}" class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-                    <i class="bi bi-person-gear"></i> Staff Management
+                    <i data-lucide="users" class="bi bi-person-gear sidebar-icon"></i> <span>Staff Management</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('users_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                    <i class="bi bi-people"></i> User Management
+                    <i data-lucide="user-check" class="bi bi-people sidebar-icon"></i> <span>User Management</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('roles_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                    <i class="bi bi-shield-check"></i> Roles & Permissions
+                    <i data-lucide="shield-check" class="bi bi-shield-check sidebar-icon"></i> <span>Roles & Permissions</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('permissions_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.permissions.index') }}" class="nav-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
-                    <i class="bi bi-key"></i> Permissions
+                    <i data-lucide="key-round" class="bi bi-key sidebar-icon"></i> <span>Permissions</span>
                 </a>
             </li>
             @endif
@@ -673,31 +698,31 @@
             @if(auth()->user()->hasPermission('signals_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.signals.index') }}" class="nav-link {{ request()->routeIs('admin.signals.*') ? 'active' : '' }}">
-                    <i class="bi bi-activity"></i> Signals
+                    <i data-lucide="activity" class="bi bi-activity sidebar-icon"></i> <span>Signals</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.analytics.signals') }}" class="nav-link {{ request()->routeIs('admin.analytics.signals') ? 'active' : '' }}">
-                    <i class="bi bi-speedometer2"></i> Signal Analytics
+                    <i data-lucide="trending-up" class="bi bi-speedometer2 sidebar-icon"></i> <span>Signal Analytics</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('signal_categories_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.signal-categories.index') }}" class="nav-link {{ request()->routeIs('admin.signal-categories.*') ? 'active' : '' }}">
-                    <i class="bi bi-tags"></i> Signal Categories
+                    <i data-lucide="tags" class="bi bi-tags sidebar-icon"></i> <span>Signal Categories</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('mt5_bot_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.mt5-bot.index') }}" class="nav-link {{ request()->routeIs('admin.mt5-bot.*') ? 'active' : '' }}">
-                    <i class="bi bi-cpu"></i> MT5 Bot
+                    <i data-lucide="cpu" class="bi bi-cpu sidebar-icon"></i> <span>MT5 Bot</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.analytics.mt5') }}" class="nav-link {{ request()->routeIs('admin.analytics.mt5') ? 'active' : '' }}">
-                    <i class="bi bi-bar-chart"></i> MT5 Analytics
+                    <i data-lucide="gauge" class="bi bi-bar-chart sidebar-icon"></i> <span>MT5 Analytics</span>
                 </a>
             </li>
             @endif
@@ -709,40 +734,40 @@
             @if(auth()->user()->hasPermission('education_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.courses.index') }}" class="nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}">
-                    <i class="bi bi-book"></i> Education
+                    <i data-lucide="book-open" class="bi bi-book sidebar-icon"></i> <span>Education</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('education_categories_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.education-categories.index') }}" class="nav-link {{ request()->routeIs('admin.education-categories.*') ? 'active' : '' }}">
-                    <i class="bi bi-bookmark"></i> Edu Categories
+                    <i data-lucide="bookmark" class="bi bi-bookmark sidebar-icon"></i> <span>Edu Categories</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('chat_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.chat.index') }}" class="nav-link {{ request()->routeIs('admin.chat.*') && !request()->routeIs('admin.chat.stickers*') ? 'active' : '' }}">
-                    <i class="bi bi-chat-dots"></i> Chat
+                    <i data-lucide="message-square" class="bi bi-chat-dots sidebar-icon"></i> <span>Chat</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.chat.stickers.index') }}" class="nav-link {{ request()->routeIs('admin.chat.stickers*') ? 'active' : '' }}">
-                    <i class="bi bi-emoji-smile"></i> Stickers
+                    <i data-lucide="smile" class="bi bi-emoji-smile sidebar-icon"></i> <span>Stickers</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('ai_chatbot_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.ai-chatbot.settings') }}" class="nav-link {{ request()->routeIs('admin.ai-chatbot.*') ? 'active' : '' }}">
-                    <i class="bi bi-stars"></i> AI Chatbot
+                    <i data-lucide="sparkles" class="bi bi-stars sidebar-icon"></i> <span>AI Chatbot</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('chat_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.support-chat.index') }}" class="nav-link {{ request()->routeIs('admin.support-chat*') ? 'active' : '' }}">
-                    <i class="bi bi-headset"></i> Support Chats
+                    <i data-lucide="headphones" class="bi bi-headset sidebar-icon"></i> <span>Support Chats</span>
                 </a>
             </li>
             @endif
@@ -754,33 +779,33 @@
             @if(auth()->user()->hasPermission('notifications_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.notifications.index') }}" class="nav-link {{ request()->routeIs('admin.notifications.*') && !request()->routeIs('admin.notification-settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-bell"></i> Notifications
+                    <i data-lucide="bell" class="bi bi-bell sidebar-icon"></i> <span>Notifications</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.notification-settings.index') }}" class="nav-link {{ request()->routeIs('admin.notification-settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-bell-slash"></i> Notification Controller
+                    <i data-lucide="bell-ring" class="bi bi-bell-slash sidebar-icon"></i> <span>Notification Controller</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('transactions_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.payments.index') }}" class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
-                    <i class="bi bi-credit-card"></i> Payments
+                    <i data-lucide="credit-card" class="bi bi-credit-card sidebar-icon"></i> <span>Payments</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('demo_accounts_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.demo-accounts.index') }}" class="nav-link {{ request()->routeIs('admin.demo-accounts.*') ? 'active' : '' }}">
-                    <i class="bi bi-display"></i> Demo Accounts
+                    <i data-lucide="monitor" class="bi bi-display sidebar-icon"></i> <span>Demo Accounts</span>
                 </a>
             </li>
             @endif
             @if(auth()->user()->hasPermission('demo_accounts_manage'))
             <li class="nav-item">
                 <a href="{{ route('admin.demo-settings.index') }}" class="nav-link {{ request()->routeIs('admin.demo-settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-sliders"></i> Demo Settings
+                    <i data-lucide="sliders-horizontal" class="bi bi-sliders sidebar-icon"></i> <span>Demo Settings</span>
                 </a>
             </li>
             @endif
@@ -792,17 +817,17 @@
             @if(auth()->user()->hasPermission('settings_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.legal-pages.index') }}" class="nav-link {{ request()->routeIs('admin.legal-pages.*') ? 'active' : '' }}">
-                    <i class="bi bi-window"></i> Legal Pages
+                    <i data-lucide="layout-template" class="bi bi-window sidebar-icon"></i> <span>Legal Pages</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.audit-logs.index') }}" class="nav-link {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}">
-                    <i class="bi bi-clock-history"></i> Audit Logs
+                    <i data-lucide="clock" class="bi bi-clock-history sidebar-icon"></i> <span>Audit Logs</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-gear"></i> Settings
+                    <i data-lucide="settings" class="bi bi-gear sidebar-icon"></i> <span>Settings</span>
                 </a>
             </li>
             @endif
@@ -977,7 +1002,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
     <script>
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');

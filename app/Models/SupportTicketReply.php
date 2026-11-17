@@ -14,6 +14,10 @@ class SupportTicketReply extends Model
         'support_ticket_id', 'user_id', 'message', 'attachment', 'is_system'
     ];
 
+    protected $casts = [
+        'is_system' => 'boolean',
+    ];
+
     public function ticket()
     {
         return $this->belongsTo(SupportTicket::class, 'support_ticket_id');

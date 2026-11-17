@@ -8,7 +8,7 @@
         <p class="text-secondary small mb-0">Manage customer support inquiries, AI chatbot escalations, and live user tickets.</p>
     </div>
     @if(auth()->user()->hasPermission('ai_chat_manage'))
-    <a href="{{ route('admin.ai-chatbot.index') }}" class="btn btn-sm btn-outline-primary fw-semibold">
+    <a href="{{ route('admin.ai-chatbot.settings') }}" class="btn btn-sm btn-outline-primary fw-semibold">
         <i class="bi bi-robot me-1"></i>AI Chatbot Settings
     </a>
     @endif

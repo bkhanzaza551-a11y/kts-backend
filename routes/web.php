@@ -481,6 +481,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('permission:mt5_bot_view')->group(function () {
             Route::get('mt5-bot', [Mt5BotController::class, 'index'])->name('mt5-bot.index');
             Route::get('mt5-bot/create', [Mt5BotController::class, 'create'])->name('mt5-bot.create');
+            // Send File route MUST be before {bot} wildcard
+            Route::get('mt5-bot/send-file', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'index'])->name('mt5-bot.send-file');
             Route::get('mt5-bot/{bot}', [Mt5BotController::class, 'show'])->name('mt5-bot.show');
             Route::get('mt5-bot/{bot}/edit', [Mt5BotController::class, 'edit'])->name('mt5-bot.edit');
             Route::get('mt5-bot/{bot}/logs', [Mt5BotController::class, 'logs'])->name('mt5-bot.logs');
@@ -490,6 +492,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::middleware('permission:mt5_bot_manage')->group(function () {
             Route::post('mt5-bot', [Mt5BotController::class, 'store'])->name('mt5-bot.store');
+            // Send File POST also before wildcards
+            Route::post('mt5-bot/send-file', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'send'])
+                ->middleware('throttle:5,1')
+                ->name('mt5-bot.send-file.post');
             Route::put('mt5-bot/{bot}', [Mt5BotController::class, 'update'])->name('mt5-bot.update');
             Route::delete('mt5-bot/{bot}/delete-file', [Mt5BotController::class, 'deleteFile'])->name('mt5-bot.delete-file');
             Route::delete('mt5-bot/{bot}', [Mt5BotController::class, 'destroy'])->name('mt5-bot.destroy');
