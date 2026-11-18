@@ -43,8 +43,8 @@
     @csrf
 
     <div class="row g-4">
-        {{-- LEFT MAIN COLUMN: Form Sections --}}
-        <div class="col-lg-8">
+        {{-- Main Form Container --}}
+        <div class="col-12">
 
             {{-- 1. BASIC USER INFORMATION --}}
             <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
@@ -431,61 +431,6 @@
             </div>
 
         </div>
-
-        {{-- RIGHT SIDEBAR: Live User Preview & Quick Info --}}
-        <div class="col-lg-4">
-            <div class="sticky-top" style="top:20px; z-index:10;">
-
-                {{-- Live Profile Card Preview --}}
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:16px; overflow:hidden;">
-                    <div class="card-header py-3 bg-white border-bottom fw-bold text-dark">
-                        <i class="bi bi-eye-fill me-2 text-primary"></i>Live User Card Preview
-                    </div>
-                    <div class="card-body p-4 text-center">
-                        {{-- Circular Avatar --}}
-                        <div class="mx-auto mb-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
-                             id="previewAvatar"
-                             style="width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg, #0d6efd, #0b5ed7); font-size:26px;">
-                            U
-                        </div>
-                        <h5 class="fw-bold text-dark mb-1" id="previewName">New User</h5>
-                        <p class="text-secondary small mb-3 text-break" id="previewEmail">user@example.com</p>
-
-                        {{-- Badges Strip --}}
-                        <div class="d-flex flex-wrap gap-2 justify-content-center mb-3">
-                            <span class="badge bg-success" id="previewStatusBadge">Active</span>
-                            <span class="badge bg-secondary" id="previewPremiumBadge" style="display:none;">👑 Premium</span>
-                            <span class="badge bg-warning text-dark" id="previewVerifiedBadge" style="display:none;">✅ Verified</span>
-                        </div>
-
-                        <div class="p-3 bg-light rounded-3 text-start small border">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-secondary">Broker:</span>
-                                <strong id="previewBroker">Exness</strong>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-secondary">Password:</span>
-                                <span class="text-muted" id="previewPasswordStatus">Pending</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Quick Guide & Tips --}}
-                <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
-                    <div class="card-body p-4">
-                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle-fill text-info me-2"></i>Quick Tips</h6>
-                        <ul class="text-secondary small ps-3 mb-0" style="line-height:1.7;">
-                            <li>Email must be unique across the platform.</li>
-                            <li>Password must meet all 4 strength criteria.</li>
-                            <li>Users created here are immediately verified and active.</li>
-                            <li>Premium users automatically unlock real-time trade signals.</li>
-                        </ul>
-                    </div>
-                </div>
-
-            </div>
-        </div>
     </div>
 </form>
 
@@ -496,7 +441,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const generateBtn = document.getElementById('generatePasswordBtn');
     const pwdInput = document.getElementById('passwordInput');
     const confirmInput = document.getElementById('confirmPasswordInput');
-    const pwdStatus = document.getElementById('previewPasswordStatus');
     const matchStatus = document.getElementById('passwordMatchStatus');
 
     function generateRandomPassword() {
@@ -521,16 +465,17 @@ document.addEventListener('DOMContentLoaded', function () {
         return pwd;
     }
 
-    generateBtn.addEventListener('click', function () {
-        const newPwd = generateRandomPassword();
-        pwdInput.type = 'text';
-        confirmInput.type = 'text';
-        pwdInput.value = newPwd;
-        confirmInput.value = newPwd;
-        validatePassword();
-        checkMatch();
-        pwdStatus.innerHTML = `<span class="badge bg-success">Generated & Strong</span>`;
-    });
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function () {
+            const newPwd = generateRandomPassword();
+            pwdInput.type = 'text';
+            confirmInput.type = 'text';
+            pwdInput.value = newPwd;
+            confirmInput.value = newPwd;
+            validatePassword();
+            checkMatch();
+        });
+    }
 
     // 2. Toggle Password Visibility
     document.querySelectorAll('.toggle-pwd').forEach(btn => {
@@ -560,18 +505,11 @@ document.addEventListener('DOMContentLoaded', function () {
         updateRule('rule-upper', hasUpper);
         updateRule('rule-lower', hasLower);
         updateRule('rule-number', hasNumber);
-
-        if (hasLength && hasUpper && hasLower && hasNumber) {
-            pwdStatus.innerHTML = `<span class="badge bg-success">Strong</span>`;
-        } else if (val.length > 0) {
-            pwdStatus.innerHTML = `<span class="badge bg-warning text-dark">Incomplete</span>`;
-        } else {
-            pwdStatus.textContent = 'Pending';
-        }
     }
 
     function updateRule(elementId, isValid) {
         const el = document.getElementById(elementId);
+        if (!el) return;
         if (isValid) {
             el.className = 'text-success fw-bold';
             el.querySelector('i').className = 'bi bi-check-circle-fill me-1';
@@ -599,49 +537,15 @@ document.addEventListener('DOMContentLoaded', function () {
     pwdInput.addEventListener('input', () => { validatePassword(); checkMatch(); });
     confirmInput.addEventListener('input', checkMatch);
 
-    // 4. Live Profile Card Previews
-    const nameInput = document.getElementById('userNameInput');
-    const emailInput = document.getElementById('userEmailInput');
-    const statusSelect = document.getElementById('userStatusSelect');
-    const previewName = document.getElementById('previewName');
-    const previewEmail = document.getElementById('previewEmail');
-    const previewAvatar = document.getElementById('previewAvatar');
-    const previewStatus = document.getElementById('previewStatusBadge');
-
-    nameInput.addEventListener('input', function () {
-        const val = this.value.trim() || 'New User';
-        previewName.textContent = val;
-        const initials = val.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase() || 'U';
-        previewAvatar.textContent = initials;
-    });
-
-    emailInput.addEventListener('input', function () {
-        previewEmail.textContent = this.value.trim() || 'user@example.com';
-    });
-
-    statusSelect.addEventListener('change', function () {
-        const val = this.value;
-        if (val === 'active') {
-            previewStatus.className = 'badge bg-success';
-            previewStatus.textContent = 'Active';
-        } else if (val === 'inactive') {
-            previewStatus.className = 'badge bg-secondary';
-            previewStatus.textContent = 'Inactive';
-        } else {
-            previewStatus.className = 'badge bg-danger';
-            previewStatus.textContent = 'Suspended';
-        }
-    });
-
-    // 5. Premium Subscription Controls & Expiry
+    // 4. Premium Subscription Controls & Expiry
     const premiumCheck = document.getElementById('isPremium');
     const premiumDays = document.getElementById('premiumDays');
     const premiumExpiryText = document.getElementById('premiumExpiryText');
     const premiumStatusBadge = document.getElementById('premiumStatusBadge');
-    const previewPremiumBadge = document.getElementById('previewPremiumBadge');
     const premiumCardBody = document.getElementById('premiumCardBody');
 
     function updatePremiumUI() {
+        if (!premiumCheck || !premiumDays) return;
         if (premiumCheck.checked) {
             const days = parseInt(premiumDays.value) || 0;
             const targetDate = new Date();
@@ -653,41 +557,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 year: 'numeric'
             });
 
-            premiumExpiryText.textContent = `${formattedDate} (${days} days remaining)`;
-            premiumStatusBadge.className = 'badge bg-warning text-dark px-3 py-2 fw-bold';
-            premiumStatusBadge.innerHTML = '<i class="bi bi-star-fill me-1"></i>VIP Premium Active';
-            previewPremiumBadge.style.display = 'inline-block';
-            premiumCardBody.style.opacity = '1';
+            if (premiumExpiryText) premiumExpiryText.textContent = `${formattedDate} (${days} days remaining)`;
+            if (premiumStatusBadge) {
+                premiumStatusBadge.className = 'badge bg-warning text-dark px-3 py-2 fw-bold';
+                premiumStatusBadge.innerHTML = '<i class="bi bi-star-fill me-1"></i>VIP Premium Active';
+            }
+            if (premiumCardBody) premiumCardBody.style.opacity = '1';
         } else {
-            premiumExpiryText.textContent = 'Not active (Standard client)';
-            premiumStatusBadge.className = 'badge bg-secondary px-3 py-2';
-            premiumStatusBadge.textContent = 'Standard Account';
-            previewPremiumBadge.style.display = 'none';
+            if (premiumExpiryText) premiumExpiryText.textContent = 'Not active (Standard client)';
+            if (premiumStatusBadge) {
+                premiumStatusBadge.className = 'badge bg-secondary px-3 py-2';
+                premiumStatusBadge.textContent = 'Standard Account';
+            }
         }
     }
 
-    premiumCheck.addEventListener('change', updatePremiumUI);
-    premiumDays.addEventListener('input', updatePremiumUI);
+    if (premiumCheck) premiumCheck.addEventListener('change', updatePremiumUI);
+    if (premiumDays) premiumDays.addEventListener('input', updatePremiumUI);
 
     document.querySelectorAll('.preset-btn').forEach(btn => {
         btn.addEventListener('click', function () {
-            premiumDays.value = this.dataset.days;
-            if (!premiumCheck.checked) {
+            if (premiumDays) premiumDays.value = this.dataset.days;
+            if (premiumCheck && !premiumCheck.checked) {
                 premiumCheck.checked = true;
             }
             updatePremiumUI();
         });
     });
 
-    // 6. Verified Badge & Chat Role Live Preview
+    // 5. Verified Badge & Chat Role Live Preview
     const isVerifiedCheck = document.getElementById('isVerified');
     const chatBadgeInput = document.getElementById('chatBadgeInput');
     const badgeColorSelect = document.getElementById('badgeColorSelect');
     const badgeLivePreview = document.getElementById('badgeLivePreview');
     const badgeTextPreview = document.getElementById('badgeTextPreview');
-    const previewVerifiedBadge = document.getElementById('previewVerifiedBadge');
 
     function updateBadgePreview() {
+        if (!chatBadgeInput || !badgeTextPreview || !badgeColorSelect || !badgeLivePreview) return;
         const text = chatBadgeInput.value.trim() || 'VERIFIED PRO';
         badgeTextPreview.textContent = text;
 
@@ -702,19 +608,11 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         badgeLivePreview.className = colorClasses[color] || colorClasses['warning'];
-
-        if (isVerifiedCheck.checked) {
-            previewVerifiedBadge.style.display = 'inline-block';
-            previewVerifiedBadge.className = colorClasses[color] || 'badge bg-warning text-dark';
-            previewVerifiedBadge.innerHTML = `<i class="bi bi-patch-check-fill me-1"></i>${text}`;
-        } else {
-            previewVerifiedBadge.style.display = 'none';
-        }
     }
 
-    isVerifiedCheck.addEventListener('change', updateBadgePreview);
-    chatBadgeInput.addEventListener('input', updateBadgePreview);
-    badgeColorSelect.addEventListener('change', updateBadgePreview);
+    if (isVerifiedCheck) isVerifiedCheck.addEventListener('change', updateBadgePreview);
+    if (chatBadgeInput) chatBadgeInput.addEventListener('input', updateBadgePreview);
+    if (badgeColorSelect) badgeColorSelect.addEventListener('change', updateBadgePreview);
 
     // Initial triggers
     updatePremiumUI();
