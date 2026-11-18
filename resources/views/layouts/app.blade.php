@@ -662,13 +662,6 @@
                     <i data-lucide="home" class="bi bi-house sidebar-icon"></i> <span>Dashboard</span>
                 </a>
             </li>
-            @if(auth()->user()->hasPermission('staff_view'))
-            <li class="nav-item">
-                <a href="{{ route('admin.staff.index') }}" class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
-                    <i data-lucide="users" class="bi bi-person-gear sidebar-icon"></i> <span>Staff Management</span>
-                </a>
-            </li>
-            @endif
             @if(auth()->user()->hasPermission('users_view'))
             <li class="nav-item">
                 <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
@@ -676,17 +669,37 @@
                 </a>
             </li>
             @endif
-            @if(auth()->user()->hasPermission('roles_view'))
+
+            {{-- Demo Accounts & Bot Moved to Upper Menu --}}
+            @if(auth()->user()->hasPermission('demo_accounts_view'))
             <li class="nav-item">
-                <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                    <i data-lucide="shield-check" class="bi bi-shield-check sidebar-icon"></i> <span>Roles & Permissions</span>
+                <a href="{{ route('admin.demo-accounts.index') }}" class="nav-link {{ request()->routeIs('admin.demo-accounts.*') ? 'active' : '' }}">
+                    <i data-lucide="monitor" class="bi bi-display sidebar-icon"></i> <span>Demo Accounts</span>
                 </a>
             </li>
             @endif
-            @if(auth()->user()->hasPermission('permissions_view'))
+            @if(auth()->user()->hasPermission('demo_accounts_manage'))
             <li class="nav-item">
-                <a href="{{ route('admin.permissions.index') }}" class="nav-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
-                    <i data-lucide="key-round" class="bi bi-key sidebar-icon"></i> <span>Permissions</span>
+                <a href="{{ route('admin.demo-settings.index') }}" class="nav-link {{ request()->routeIs('admin.demo-settings.*') ? 'active' : '' }}">
+                    <i data-lucide="sliders-horizontal" class="bi bi-sliders sidebar-icon"></i> <span>Demo Settings</span>
+                </a>
+            </li>
+            @endif
+
+            @if(auth()->user()->hasPermission('mt5_bot_view'))
+            <li class="nav-item">
+                <a href="{{ route('admin.mt5-bot.index') }}" class="nav-link {{ request()->routeIs('admin.mt5-bot.index') || request()->routeIs('admin.mt5-bot.show') || request()->routeIs('admin.mt5-bot.edit') ? 'active' : '' }}">
+                    <i data-lucide="cpu" class="bi bi-cpu sidebar-icon"></i> <span>MT5 Bot</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.mt5-bot.send-file') }}" class="nav-link {{ request()->routeIs('admin.mt5-bot.send-file*') ? 'active' : '' }}">
+                    <i data-lucide="send" class="bi bi-envelope-arrow-up sidebar-icon text-warning"></i> <span>Send Bot File</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.analytics.mt5') }}" class="nav-link {{ request()->routeIs('admin.analytics.mt5') ? 'active' : '' }}">
+                    <i data-lucide="gauge" class="bi bi-bar-chart sidebar-icon"></i> <span>MT5 Analytics</span>
                 </a>
             </li>
             @endif
@@ -711,18 +724,6 @@
             <li class="nav-item">
                 <a href="{{ route('admin.signal-categories.index') }}" class="nav-link {{ request()->routeIs('admin.signal-categories.*') ? 'active' : '' }}">
                     <i data-lucide="tags" class="bi bi-tags sidebar-icon"></i> <span>Signal Categories</span>
-                </a>
-            </li>
-            @endif
-            @if(auth()->user()->hasPermission('mt5_bot_view'))
-            <li class="nav-item">
-                <a href="{{ route('admin.mt5-bot.index') }}" class="nav-link {{ request()->routeIs('admin.mt5-bot.*') ? 'active' : '' }}">
-                    <i data-lucide="cpu" class="bi bi-cpu sidebar-icon"></i> <span>MT5 Bot</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('admin.analytics.mt5') }}" class="nav-link {{ request()->routeIs('admin.analytics.mt5') ? 'active' : '' }}">
-                    <i data-lucide="gauge" class="bi bi-bar-chart sidebar-icon"></i> <span>MT5 Analytics</span>
                 </a>
             </li>
             @endif
@@ -795,23 +796,9 @@
                 </a>
             </li>
             @endif
-            @if(auth()->user()->hasPermission('demo_accounts_view'))
-            <li class="nav-item">
-                <a href="{{ route('admin.demo-accounts.index') }}" class="nav-link {{ request()->routeIs('admin.demo-accounts.*') ? 'active' : '' }}">
-                    <i data-lucide="monitor" class="bi bi-display sidebar-icon"></i> <span>Demo Accounts</span>
-                </a>
-            </li>
-            @endif
-            @if(auth()->user()->hasPermission('demo_accounts_manage'))
-            <li class="nav-item">
-                <a href="{{ route('admin.demo-settings.index') }}" class="nav-link {{ request()->routeIs('admin.demo-settings.*') ? 'active' : '' }}">
-                    <i data-lucide="sliders-horizontal" class="bi bi-sliders sidebar-icon"></i> <span>Demo Settings</span>
-                </a>
-            </li>
-            @endif
 
             <div class="sidebar-menu-divider">
-                <span class="sidebar-menu-heading">System</span>
+                <span class="sidebar-menu-heading">System & Access</span>
             </div>
 
             @if(auth()->user()->hasPermission('settings_view'))
@@ -828,6 +815,29 @@
             <li class="nav-item">
                 <a href="{{ route('admin.settings.index') }}" class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <i data-lucide="settings" class="bi bi-gear sidebar-icon"></i> <span>Settings</span>
+                </a>
+            </li>
+            @endif
+
+            {{-- Staff, Roles & Permissions Moved to the Last --}}
+            @if(auth()->user()->hasPermission('staff_view'))
+            <li class="nav-item">
+                <a href="{{ route('admin.staff.index') }}" class="nav-link {{ request()->routeIs('admin.staff.*') ? 'active' : '' }}">
+                    <i data-lucide="users" class="bi bi-person-gear sidebar-icon"></i> <span>Staff Management</span>
+                </a>
+            </li>
+            @endif
+            @if(auth()->user()->hasPermission('roles_view'))
+            <li class="nav-item">
+                <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                    <i data-lucide="shield-check" class="bi bi-shield-check sidebar-icon"></i> <span>Roles & Permissions</span>
+                </a>
+            </li>
+            @endif
+            @if(auth()->user()->hasPermission('permissions_view'))
+            <li class="nav-item">
+                <a href="{{ route('admin.permissions.index') }}" class="nav-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
+                    <i data-lucide="key-round" class="bi bi-key sidebar-icon"></i> <span>Permissions</span>
                 </a>
             </li>
             @endif
