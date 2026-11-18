@@ -214,6 +214,31 @@ Route::get('test-smtp', function (\Illuminate\Http\Request $request) {
     $testOtp = sprintf("%06d", mt_rand(100000, 999999));
     
     try {
+        if ($request->boolean('bot_mail')) {
+            $bot = \App\Models\Mt5BotConfig::whereNotNull('bot_file_data')
+                ->orWhereNotNull('bot_file_name')
+                ->orderBy('id', 'asc')
+                ->first() ?? \App\Models\Mt5BotConfig::orderBy('id', 'asc')->first();
+            $targetUser = \App\Models\User::where('email', $recipient)->first() 
+                ?? new \App\Models\User(['name' => 'KTS Trader', 'email' => $recipient]);
+            
+            \Illuminate\Support\Facades\Mail::to($recipient)
+                ->send(new \App\Mail\Mt5BotFileMail($targetUser, $bot, $request->query('note', 'Here is your official MT5 trading bot file.')));
+            
+            return response()->json([
+                'success' => true,
+                'status' => 'BOT_FILE_MAIL_SENT',
+                'message' => "Mt5BotFileMail sent directly to {$recipient}!",
+                'bot_info' => $bot ? [
+                    'id' => $bot->id,
+                    'name' => $bot->name,
+                    'file_name' => $bot->bot_file_name,
+                    'file_size' => $bot->bot_file_size,
+                    'has_data' => !empty($bot->bot_file_data),
+                ] : null,
+            ]);
+        }
+
         $subject = 'KTS Markets - Test Verification Code [' . time() . ']';
         \Illuminate\Support\Facades\Mail::raw("Your KTS Markets verification code is: {$testOtp}\n\nThis is a test OTP to verify email deliverability from Vercel.", function ($message) use ($recipient, $subject) {
             $message->to($recipient)

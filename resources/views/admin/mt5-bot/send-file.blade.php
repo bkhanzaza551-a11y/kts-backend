@@ -334,16 +334,104 @@
                     </div>
                     <small class="text-muted" id="selectedEmailsPreview" style="max-width:450px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></small>
                 </div>
-                <button type="submit"
+                <button type="button"
                     id="sendBtn"
                     class="btn btn-warning fw-bold px-4 py-2 fs-6 shadow-sm"
                     {{ ($bot && $bot->hasBotFile()) ? '' : 'disabled' }}
-                    onclick="return confirmSend(event)">
+                    onclick="openConfirmModal()">
                     <i class="bi bi-send-fill me-2"></i>Send Bot File Email
                 </button>
             </div>
 
         </form>
+    </div>
+
+    {{-- CONFIRMATION MODAL --}}
+    <div class="modal fade" id="sendConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                <div class="modal-body p-4 text-center">
+                    {{-- Decorative Icon Badge --}}
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                         style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%); border: 3px solid #FFD700; box-shadow: 0 8px 24px rgba(255, 193, 7, 0.35);">
+                        <i class="bi bi-send-check-fill text-warning fs-1"></i>
+                    </div>
+
+                    <h4 class="fw-bold text-dark mb-1" id="modalTitle">Confirm Email Dispatch</h4>
+                    <p class="text-secondary small mb-3" id="modalSubtitle">
+                        Please review your dispatch details before sending.
+                    </p>
+
+                    {{-- Detail Card --}}
+                    <div class="p-3 bg-light rounded-3 text-start mb-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted small fw-semibold">Target Mode:</span>
+                            <span class="badge bg-primary px-2 py-1" id="modalTargetBadge">Selected Users</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted small fw-semibold">Recipients:</span>
+                            <span class="fw-bold text-dark" id="modalRecipientsCount">0 users</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted small fw-semibold">Attached File:</span>
+                            <span class="fw-bold text-success" id="modalFileName">
+                                <i class="bi bi-paperclip me-1"></i>{{ $bot->bot_file_name ?? 'MT5 Bot File' }}
+                            </span>
+                        </div>
+                        <div id="modalNotePreviewRow" style="display: none;">
+                            <span class="text-muted small fw-semibold d-block mb-1">Admin Note:</span>
+                            <div class="small text-secondary bg-white p-2 rounded border fst-italic" id="modalNoteText"></div>
+                        </div>
+                    </div>
+
+                    {{-- Warning Alert for ALL users broadcast --}}
+                    <div id="modalAllWarning" class="alert alert-warning text-start small mb-3 border-0 py-2 px-3" style="display: none; border-radius: 12px; background: #FFFBEB; border: 1px solid #FCD34D !important;">
+                        <div class="d-flex gap-2">
+                            <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0"></i>
+                            <div>
+                                <strong class="text-dark">Broadcast to ALL Registered Users:</strong>
+                                <div class="text-secondary">Every single active user ({{ $allUsers->count() }} users) will receive this MT5 bot email.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Recipients Badges Preview (for selected mode) --}}
+                    <div id="modalRecipientsWrapper" class="text-start mb-3" style="display: none;">
+                        <span class="text-muted small fw-semibold d-block mb-1">Selected Recipients Preview:</span>
+                        <div id="modalRecipientsList" class="d-flex flex-wrap gap-1 p-2 bg-white rounded border" style="max-height: 100px; overflow-y: auto;"></div>
+                    </div>
+
+                    {{-- Action Buttons --}}
+                    <div class="d-flex gap-2 justify-content-center mt-4">
+                        <button type="button" class="btn btn-light px-4 py-2 fw-semibold text-secondary" data-bs-dismiss="modal" style="border-radius: 12px; border: 1px solid #E5E7EB;">
+                            Cancel
+                        </button>
+                        <button type="button" id="confirmSendSubmitBtn" class="btn btn-warning px-4 py-2 fw-bold text-dark shadow-sm" style="border-radius: 12px; background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%); border: none;">
+                            <i class="bi bi-send-fill me-1"></i>Yes, Send Bot File
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- VALIDATION ALERT MODAL (0 users selected) --}}
+    <div class="modal fade" id="noSelectionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg text-center p-3" style="border-radius: 20px;">
+                <div class="modal-body">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center"
+                         style="width: 60px; height: 60px; border-radius: 50%; background: #FEE2E2; color: #DC2626; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.2);">
+                        <i class="bi bi-exclamation-circle-fill fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">No Users Selected</h5>
+                    <p class="text-secondary small mb-3">Please select at least one user from the list below before sending.</p>
+                    <button type="button" class="btn btn-dark w-100 fw-bold py-2" data-bs-dismiss="modal" style="border-radius: 12px;">
+                        Understood
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- RIGHT COLUMN: Info & Upload --}}
@@ -519,20 +607,61 @@
         updateCount();
     });
 
-    // Confirmation
-    window.confirmSend = function (e) {
+    // Modern Modal Confirmation
+    window.openConfirmModal = function () {
         const isAll = document.getElementById('targetAll').checked;
+        const note = document.querySelector('textarea[name="admin_note"]')?.value.trim() || '';
+
+        // Note preview
+        const noteRow = document.getElementById('modalNotePreviewRow');
+        const noteText = document.getElementById('modalNoteText');
+        if (note) {
+            noteRow.style.display = 'block';
+            noteText.textContent = note;
+        } else {
+            noteRow.style.display = 'none';
+        }
+
         if (isAll) {
-            return confirm(`⚠️ Are you sure you want to broadcast the MT5 Bot file to ALL ${totalUsersCount} registered users?`);
+            document.getElementById('modalTargetBadge').className = 'badge bg-success px-2 py-1';
+            document.getElementById('modalTargetBadge').textContent = '🚀 Broadcast to ALL';
+            document.getElementById('modalRecipientsCount').textContent = `${totalUsersCount} registered users`;
+            document.getElementById('modalAllWarning').style.display = 'block';
+            document.getElementById('modalRecipientsWrapper').style.display = 'none';
+        } else {
+            const count = selected.size;
+            if (count === 0) {
+                const noSelectModal = new bootstrap.Modal(document.getElementById('noSelectionModal'));
+                noSelectModal.show();
+                return;
+            }
+
+            document.getElementById('modalTargetBadge').className = 'badge bg-primary px-2 py-1';
+            document.getElementById('modalTargetBadge').textContent = 'Selected Users';
+            document.getElementById('modalRecipientsCount').textContent = `${count} user(s)`;
+            document.getElementById('modalAllWarning').style.display = 'none';
+
+            // Populate preview badges
+            const listEl = document.getElementById('modalRecipientsList');
+            listEl.innerHTML = '';
+            selected.forEach(u => {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-light text-dark border px-2 py-1';
+                badge.innerHTML = `<i class="bi bi-person me-1 text-secondary"></i>${u.name || u.email}`;
+                listEl.appendChild(badge);
+            });
+            document.getElementById('modalRecipientsWrapper').style.display = 'block';
         }
-        const count = selected.size;
-        if (count === 0) {
-            e.preventDefault();
-            alert('Please select at least one user from the list below.');
-            return false;
-        }
-        return confirm(`Send the MT5 bot file to ${count} user(s)?`);
+
+        const confirmModal = new bootstrap.Modal(document.getElementById('sendConfirmModal'));
+        confirmModal.show();
     };
+
+    document.getElementById('confirmSendSubmitBtn').addEventListener('click', function () {
+        this.disabled = true;
+        this.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span>Dispatching Emails...`;
+        document.getElementById('sendForm').submit();
+    });
 
     handleTargetChange();
 })();
