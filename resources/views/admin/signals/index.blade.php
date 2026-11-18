@@ -6,6 +6,9 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <h4 class="mb-0 fw-bold"><i class="bi bi-broadcast me-2 text-primary"></i>Signal Management</h4>
     <div class="d-flex gap-2">
+        <a href="{{ route('admin.signals.index', ['sync' => 1]) }}" class="btn btn-outline-success" title="Track active signals against live market prices now">
+            <i class="bi bi-arrow-repeat me-1"></i>Sync Live Market
+        </a>
         <a href="{{ route('admin.signal-categories.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-tags me-1"></i>Categories
         </a>

@@ -32,6 +32,24 @@ Route::get('/', function () {
     return redirect()->route('admin.login');
 });
 
+// Automated Cron Route to track signals against live market prices
+Route::get('cron/track-signals', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('signals:track');
+        \Illuminate\Support\Facades\Cache::forget('signal_stats');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Signals tracking executed successfully.',
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+})->name('cron.signals.track');
+
 // Public Legal & Data Safety Routes (Required for Google Play Store Listing)
 Route::get('privacy-policy', function () {
     $page = \App\Models\LegalPage::active()->where('slug', 'privacy-policy')->first();

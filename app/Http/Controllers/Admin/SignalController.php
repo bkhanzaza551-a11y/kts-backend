@@ -10,13 +10,41 @@ use App\Services\NotificationService;
 use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SignalController extends Controller
 {
     public function index(Request $request)
     {
+        // 1. Manual Force Sync trigger
+        if ($request->has('sync')) {
+            try {
+                Artisan::call('signals:track');
+                Cache::forget('signal_stats');
+                return redirect()->route('admin.signals.index')->with('success', 'Live market prices synced successfully! Signals checked against real-time quotes.');
+            } catch (\Throwable $e) {
+                return redirect()->route('admin.signals.index')->with('error', 'Sync failed: ' . $e->getMessage());
+            }
+        }
+
+        // 2. Automatic Auto-Tracking (runs if active signals exist and not checked in last 30s)
+        try {
+            $hasActive = Signal::where('status', 'active')->where('result', 'pending')->exists();
+            if ($hasActive) {
+                $lastTracked = Cache::get('signals_last_auto_tracked');
+                if (!$lastTracked || now()->diffInSeconds($lastTracked) >= 30) {
+                    Cache::put('signals_last_auto_tracked', now(), 30);
+                    Artisan::call('signals:track');
+                    Cache::forget('signal_stats');
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Signals auto-track failed: ' . $e->getMessage());
+        }
+
         $query = Signal::with(['creator', 'categories']);
 
         if ($search = trim($request->input('search', ''))) {

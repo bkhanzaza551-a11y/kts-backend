@@ -248,7 +248,7 @@ class TrackActiveSignals extends Command
         $tdSymbol = $this->formatForTwelveData($symbolUpper);
 
         try {
-            $response = Http::timeout(8)->get("https://api.twelvedata.com/price", [
+            $response = Http::withoutVerifying()->timeout(8)->get("https://api.twelvedata.com/price", [
                 'symbol' => $tdSymbol,
                 'apikey' => $apiKey,
             ]);
@@ -277,7 +277,7 @@ class TrackActiveSignals extends Command
 
         foreach ($urls as $url) {
             try {
-                $response = Http::timeout(5)->get($url);
+                $response = Http::withoutVerifying()->timeout(5)->get($url);
                 if ($response->successful()) {
                     $data = $response->json();
                     if (isset($data['price']) && is_numeric($data['price'])) {
@@ -315,7 +315,7 @@ class TrackActiveSignals extends Command
         }
 
         try {
-            $response = Http::timeout(8)->get(
+            $response = Http::withoutVerifying()->timeout(8)->get(
                 "https://api.coingecko.com/api/v3/simple/price",
                 ['ids' => $coinMap[$symbolUpper], 'vs_currencies' => 'usd']
             );
@@ -339,8 +339,9 @@ class TrackActiveSignals extends Command
         $yahooSymbol = $this->formatForYahoo($symbolUpper, $isCrypto);
 
         try {
-            $response = Http::timeout(8)->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            $response = Http::withoutVerifying()->timeout(8)->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept' => '*/*',
             ])->get("https://query1.finance.yahoo.com/v8/finance/chart/{$yahooSymbol}", [
                 'interval' => '1m',
                 'range' => '1d',
