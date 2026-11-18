@@ -432,6 +432,16 @@
             .sidebar-overlay.show { display: block; }
         }
 
+        /* Desktop Collapsible Sidebar */
+        @media (min-width: 992px) {
+            body.sidebar-collapsed .sidebar {
+                transform: translateX(-100%) !important;
+            }
+            body.sidebar-collapsed .main-content {
+                margin-left: 0 !important;
+            }
+        }
+
         .form-control, .form-select {
             border-radius: 0.375rem;
             padding: 0.45rem 0.75rem;
@@ -634,6 +644,15 @@
     @stack('styles')
 </head>
 <body>
+    <script>
+        (function() {
+            try {
+                if (window.innerWidth >= 992 && localStorage.getItem('sidebar_collapsed') === 'true') {
+                    document.body.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+        })();
+    </script>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     @auth
@@ -646,8 +665,9 @@
                     <small class="text-muted fw-semibold" style="font-size:0.65rem;">Super Admin Panel</small>
                 </div>
             </a>
-            <button class="btn btn-sm d-lg-none border-0 text-secondary p-0" onclick="toggleSidebar()" aria-label="Close sidebar">
-                <i class="bi bi-x-lg fs-5"></i>
+            <button class="btn btn-sm border-0 text-secondary p-1 rounded-circle d-flex align-items-center justify-content-center" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle Sidebar" style="width: 28px; height: 28px; background: rgba(0,0,0,0.04);">
+                <i class="bi bi-chevron-left fs-6 d-none d-lg-inline"></i>
+                <i class="bi bi-x-lg fs-6 d-lg-none"></i>
             </button>
         </div>
 
@@ -849,10 +869,10 @@
     <div class="main-content" id="mainContent">
         @auth
         <header class="admin-topbar">
-            {{-- Left: Mobile Sidebar Toggle + Global Search Bar --}}
+            {{-- Left: Sidebar Toggle (Desktop & Mobile) + Global Search Bar --}}
             <div class="d-flex align-items-center gap-2 gap-md-3 flex-grow-1" style="max-width: 580px;">
-                <button class="btn btn-sm btn-light border d-lg-none py-1 px-2" onclick="toggleSidebar()" type="button" aria-label="Toggle sidebar">
-                    <i class="bi bi-list fs-5"></i>
+                <button id="sidebarToggleBtn" class="btn btn-sm btn-light border py-1 px-2 d-flex align-items-center justify-content-center" onclick="toggleSidebar()" type="button" aria-label="Toggle sidebar" title="Toggle Sidebar (Open/Close)" style="border-radius: 8px; width: 36px; height: 36px; flex-shrink: 0;">
+                    <i class="bi bi-list fs-5 text-dark"></i>
                 </button>
 
                 {{-- Global Search Bar with Live Suggestions --}}
@@ -1019,10 +1039,18 @@
         }
 
         function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('show');
-            overlay.classList.toggle('show');
+            const isDesktop = window.innerWidth >= 992;
+            if (isDesktop) {
+                const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+                try {
+                    localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false');
+                } catch(e) {}
+            } else {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sidebar) sidebar.classList.toggle('show');
+                if (overlay) overlay.classList.toggle('show');
+            }
         }
 
         // Global Beautiful SweetAlert2 Confirm Handler
