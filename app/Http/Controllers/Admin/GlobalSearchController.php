@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-use App\Models\Payment;
+use App\Models\DemoAccountRequest;
 use App\Models\Signal;
 use App\Models\SupportTicket;
+use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GlobalSearchController extends Controller
 {
@@ -32,172 +34,248 @@ class GlobalSearchController extends Controller
         $results = [];
 
         // 1. Navigation / Menu items match
-        $navMatches = $this->getNavigationItems($q);
-        if (!empty($navMatches)) {
-            $results[] = [
-                'category' => 'Navigation & Modules',
-                'icon' => 'bi-compass',
-                'items' => array_slice($navMatches, 0, 5),
-            ];
+        try {
+            $navMatches = $this->getNavigationItems($q);
+            if (!empty($navMatches)) {
+                $results[] = [
+                    'category' => 'Navigation & Modules',
+                    'icon' => 'bi-compass',
+                    'items' => array_slice($navMatches, 0, 5),
+                ];
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Global search nav error: ' . $e->getMessage());
         }
 
         // 2. Users & Traders (Clients & Accounts)
-        if ($request->user()->hasPermission('users_view')) {
-            $users = User::with('roles')
-                ->where(function($query) use ($likePattern) {
-                    $query->whereRaw('LOWER(name) LIKE ?', [$likePattern])
-                          ->orWhereRaw('LOWER(email) LIKE ?', [$likePattern])
-                          ->orWhereRaw('LOWER(COALESCE(phone, \'\')) LIKE ?', [$likePattern])
-                          ->orWhereRaw('LOWER(COALESCE(real_account_id, \'\')) LIKE ?', [$likePattern])
-                          ->orWhereRaw('LOWER(COALESCE(demo_account_id, \'\')) LIKE ?', [$likePattern])
-                          ->orWhereRaw('LOWER(COALESCE(broker_name, \'\')) LIKE ?', [$likePattern]);
-                })
-                ->limit(6)
-                ->get();
+        try {
+            if ($request->user() && $request->user()->hasPermission('users_view')) {
+                $users = User::with('roles')
+                    ->where(function($query) use ($likePattern) {
+                        $query->whereRaw('LOWER(name) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(email) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(phone, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(real_account_id, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(demo_account_id, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(broker_name, \'\')) LIKE ?', [$likePattern]);
+                    })
+                    ->limit(6)
+                    ->get();
 
-            if ($users->isNotEmpty()) {
-                $userItems = [];
-                foreach ($users as $u) {
-                    $roleName = $u->roles->pluck('name')->first() ?? ($u->isSuperAdmin() ? 'Super Admin' : 'Trader');
-                    $subtitle = $u->email . ($u->real_account_id ? " • Real: {$u->real_account_id}" : ($u->demo_account_id ? " • Demo: {$u->demo_account_id}" : " • {$roleName}"));
-                    
-                    $badge = $u->is_banned ? 'Banned' : ($u->is_premium ? 'VIP' : ($u->isSuperAdmin() ? 'Admin' : 'User'));
-                    $badgeClass = $u->is_banned ? 'bg-danger text-white' : ($u->is_premium ? 'bg-warning text-dark' : ($u->isSuperAdmin() ? 'bg-dark text-white' : 'bg-primary text-white'));
-                    
-                    $userItems[] = [
-                        'title' => $u->name,
-                        'subtitle' => $subtitle,
-                        'badge' => $badge,
-                        'badge_class' => $badgeClass,
-                        'url' => route('admin.users.show', $u->id),
-                        'icon' => 'bi-person-circle',
+                if ($users->isNotEmpty()) {
+                    $userItems = [];
+                    foreach ($users as $u) {
+                        $roleName = $u->roles->pluck('name')->first() ?? ($u->isSuperAdmin() ? 'Super Admin' : 'Trader');
+                        $subtitle = $u->email . ($u->real_account_id ? " • Real: {$u->real_account_id}" : ($u->demo_account_id ? " • Demo: {$u->demo_account_id}" : " • {$roleName}"));
+                        
+                        $badge = $u->is_banned ? 'Banned' : ($u->is_premium ? 'VIP' : ($u->isSuperAdmin() ? 'Admin' : 'User'));
+                        $badgeClass = $u->is_banned ? 'bg-danger text-white' : ($u->is_premium ? 'bg-warning text-dark' : ($u->isSuperAdmin() ? 'bg-dark text-white' : 'bg-primary text-white'));
+                        
+                        $userItems[] = [
+                            'title' => $u->name,
+                            'subtitle' => $subtitle,
+                            'badge' => $badge,
+                            'badge_class' => $badgeClass,
+                            'url' => route('admin.users.show', $u->id),
+                            'icon' => 'bi-person-circle',
+                        ];
+                    }
+                    $results[] = [
+                        'category' => 'Users & Accounts',
+                        'icon' => 'bi-people',
+                        'items' => $userItems,
                     ];
                 }
-                $results[] = [
-                    'category' => 'Users & Accounts',
-                    'icon' => 'bi-people',
-                    'items' => $userItems,
-                ];
             }
+        } catch (\Throwable $e) {
+            Log::warning('Global search users error: ' . $e->getMessage());
         }
 
-        // 3. Trading Signals
-        if ($request->user()->hasPermission('signals_view')) {
-            $signals = Signal::where(function($query) use ($likePattern) {
-                    $query->whereRaw('LOWER(symbol) LIKE ?', [$likePattern])
-                          ->orWhereRaw('LOWER(type) LIKE ?', [$likePattern]);
-                })
-                ->limit(4)
-                ->latest()
-                ->get();
+        // 3. Demo Account Requests
+        try {
+            if ($request->user() && $request->user()->hasPermission('demo_accounts_view')) {
+                $demoRequests = DemoAccountRequest::with('user')
+                    ->where(function($query) use ($likePattern) {
+                        $query->whereRaw('LOWER(COALESCE(exness_account_number, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(demo_email, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(demo_phone, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(account_type, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereHas('user', function($uq) use ($likePattern) {
+                                  $uq->whereRaw('LOWER(name) LIKE ?', [$likePattern])
+                                     ->orWhereRaw('LOWER(email) LIKE ?', [$likePattern]);
+                              });
+                    })
+                    ->limit(4)
+                    ->latest()
+                    ->get();
 
-            if ($signals->isNotEmpty()) {
-                $signalItems = [];
-                foreach ($signals as $s) {
-                    $signalItems[] = [
-                        'title' => "{$s->symbol} (" . strtoupper($s->type) . ")",
-                        'subtitle' => "Status: {$s->status} • TP1: {$s->tp1} • SL: {$s->sl}",
-                        'badge' => strtoupper($s->type),
-                        'badge_class' => strtoupper($s->type) === 'BUY' ? 'bg-success text-white' : 'bg-danger text-white',
-                        'url' => route('admin.signals.index', ['search' => $s->symbol]),
+                if ($demoRequests->isNotEmpty()) {
+                    $demoItems = [];
+                    foreach ($demoRequests as $dr) {
+                        $userName = $dr->user ? $dr->user->name : ($dr->demo_email ?? 'Trader');
+                        $accNum = $dr->exness_account_number ?: 'Pending';
+                        $demoItems[] = [
+                            'title' => "Exness #{$accNum} — {$userName}",
+                            'subtitle' => "Type: " . ucfirst($dr->account_type) . " • Balance: \${$dr->deposit_amount} • Status: " . ucfirst($dr->status),
+                            'badge' => ucfirst($dr->status),
+                            'badge_class' => $dr->status === 'approved' ? 'bg-success text-white' : ($dr->status === 'pending' ? 'bg-warning text-dark' : 'bg-danger text-white'),
+                            'url' => route('admin.demo-accounts.show', $dr->id),
+                            'icon' => 'bi-display',
+                        ];
+                    }
+                    $results[] = [
+                        'category' => 'Demo Account Requests',
+                        'icon' => 'bi-display',
+                        'items' => $demoItems,
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Global search demo accounts error: ' . $e->getMessage());
+        }
+
+        // 4. Trading Signals
+        try {
+            if ($request->user() && $request->user()->hasPermission('signals_view')) {
+                $signals = Signal::where(function($query) use ($likePattern) {
+                        $query->whereRaw('LOWER(symbol) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(direction) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(title, \'\')) LIKE ?', [$likePattern]);
+                    })
+                    ->limit(4)
+                    ->latest()
+                    ->get();
+
+                if ($signals->isNotEmpty()) {
+                    $signalItems = [];
+                    foreach ($signals as $s) {
+                        $dir = strtoupper($s->direction ?? 'BUY');
+                        $signalItems[] = [
+                            'title' => "{$s->symbol} ({$dir})" . ($s->title ? " • {$s->title}" : ""),
+                            'subtitle' => "Status: " . ucfirst($s->status) . " • Entry: {$s->entry_price} • TP: {$s->take_profit} • SL: {$s->stop_loss}",
+                            'badge' => $dir,
+                            'badge_class' => $dir === 'BUY' ? 'bg-success text-white' : 'bg-danger text-white',
+                            'url' => route('admin.signals.index', ['search' => $s->symbol]),
+                            'icon' => 'bi-broadcast',
+                        ];
+                    }
+                    $results[] = [
+                        'category' => 'Trading Signals',
                         'icon' => 'bi-broadcast',
+                        'items' => $signalItems,
                     ];
                 }
-                $results[] = [
-                    'category' => 'Trading Signals',
-                    'icon' => 'bi-broadcast',
-                    'items' => $signalItems,
-                ];
             }
+        } catch (\Throwable $e) {
+            Log::warning('Global search signals error: ' . $e->getMessage());
         }
 
-        // 4. Support Tickets
-        if ($request->user()->hasPermission('chat_view')) {
-            $tickets = SupportTicket::where(function($query) use ($likePattern) {
-                    $query->whereRaw('LOWER(ticket_number) LIKE ?', [$likePattern])
-                          ->orWhereRaw('LOWER(subject) LIKE ?', [$likePattern]);
-                })
-                ->limit(4)
-                ->latest()
-                ->get();
+        // 5. Support Tickets
+        try {
+            if ($request->user() && $request->user()->hasPermission('chat_view')) {
+                $tickets = SupportTicket::where(function($query) use ($likePattern) {
+                        $query->whereRaw('LOWER(ticket_number) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(subject) LIKE ?', [$likePattern]);
+                    })
+                    ->limit(4)
+                    ->latest()
+                    ->get();
 
-            if ($tickets->isNotEmpty()) {
-                $ticketItems = [];
-                foreach ($tickets as $t) {
-                    $ticketItems[] = [
-                        'title' => "{$t->ticket_number}: {$t->subject}",
-                        'subtitle' => "Status: " . ucfirst($t->status) . " • Priority: " . ucfirst($t->priority ?? 'medium'),
-                        'badge' => ucfirst($t->status),
-                        'badge_class' => $t->status === 'open' ? 'bg-success text-white' : 'bg-secondary text-white',
-                        'url' => route('admin.support-chat.show', $t->id),
+                if ($tickets->isNotEmpty()) {
+                    $ticketItems = [];
+                    foreach ($tickets as $t) {
+                        $ticketItems[] = [
+                            'title' => "{$t->ticket_number}: {$t->subject}",
+                            'subtitle' => "Status: " . ucfirst($t->status) . " • Priority: " . ucfirst($t->priority ?? 'medium'),
+                            'badge' => ucfirst($t->status),
+                            'badge_class' => $t->status === 'open' ? 'bg-success text-white' : 'bg-secondary text-white',
+                            'url' => route('admin.support-chat.show', $t->id),
+                            'icon' => 'bi-headset',
+                        ];
+                    }
+                    $results[] = [
+                        'category' => 'Support Tickets',
                         'icon' => 'bi-headset',
+                        'items' => $ticketItems,
                     ];
                 }
-                $results[] = [
-                    'category' => 'Support Tickets',
-                    'icon' => 'bi-headset',
-                    'items' => $ticketItems,
-                ];
             }
+        } catch (\Throwable $e) {
+            Log::warning('Global search tickets error: ' . $e->getMessage());
         }
 
-        // 5. Education Courses & Academy
-        if ($request->user()->hasPermission('education_view')) {
-            $courses = Course::where(function($query) use ($likePattern) {
-                    $query->whereRaw('LOWER(title) LIKE ?', [$likePattern])
-                          ->orWhereRaw('LOWER(COALESCE(description, \'\')) LIKE ?', [$likePattern]);
-                })
-                ->limit(4)
-                ->get();
+        // 6. Education Courses & Academy
+        try {
+            if ($request->user() && $request->user()->hasPermission('education_view')) {
+                $courses = Course::where(function($query) use ($likePattern) {
+                        $query->whereRaw('LOWER(title) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(description, \'\')) LIKE ?', [$likePattern]);
+                    })
+                    ->limit(4)
+                    ->get();
 
-            if ($courses->isNotEmpty()) {
-                $courseItems = [];
-                foreach ($courses as $c) {
-                    $courseItems[] = [
-                        'title' => $c->title,
-                        'subtitle' => "Difficulty: " . ucfirst($c->difficulty ?? 'All'),
-                        'badge' => 'Course',
-                        'badge_class' => 'bg-info text-dark',
-                        'url' => route('admin.courses.show', $c->id),
-                        'icon' => 'bi-book-half',
+                if ($courses->isNotEmpty()) {
+                    $courseItems = [];
+                    foreach ($courses as $c) {
+                        $courseItems[] = [
+                            'title' => $c->title,
+                            'subtitle' => "Difficulty: " . ucfirst($c->difficulty ?? 'All'),
+                            'badge' => 'Course',
+                            'badge_class' => 'bg-info text-dark',
+                            'url' => route('admin.courses.show', $c->id),
+                            'icon' => 'bi-book-half',
+                        ];
+                    }
+                    $results[] = [
+                        'category' => 'Education & Courses',
+                        'icon' => 'bi-mortarboard',
+                        'items' => $courseItems,
                     ];
                 }
-                $results[] = [
-                    'category' => 'Education & Courses',
-                    'icon' => 'bi-mortarboard',
-                    'items' => $courseItems,
-                ];
             }
+        } catch (\Throwable $e) {
+            Log::warning('Global search courses error: ' . $e->getMessage());
         }
 
-        // 6. Payments & Invoices
-        if ($request->user()->hasPermission('transactions_view')) {
-            $payments = Payment::where(function($query) use ($likePattern) {
-                    $query->whereRaw('LOWER(COALESCE(transaction_id, \'\')) LIKE ?', [$likePattern])
-                          ->orWhereRaw('LOWER(COALESCE(tx_hash, \'\')) LIKE ?', [$likePattern]);
-                })
-                ->limit(4)
-                ->latest()
-                ->get();
+        // 7. Payments & Invoices (Transactions)
+        try {
+            if ($request->user() && $request->user()->hasPermission('transactions_view')) {
+                $transactions = Transaction::with('user')
+                    ->where(function($query) use ($likePattern) {
+                        $query->whereRaw('LOWER(COALESCE(transaction_id, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(gateway, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereRaw('LOWER(COALESCE(plan_type, \'\')) LIKE ?', [$likePattern])
+                              ->orWhereHas('user', function($uq) use ($likePattern) {
+                                  $uq->whereRaw('LOWER(name) LIKE ?', [$likePattern])
+                                     ->orWhereRaw('LOWER(email) LIKE ?', [$likePattern]);
+                              });
+                    })
+                    ->limit(4)
+                    ->latest()
+                    ->get();
 
-            if ($payments->isNotEmpty()) {
-                $paymentItems = [];
-                foreach ($payments as $p) {
-                    $paymentItems[] = [
-                        'title' => "Tx: " . ($p->transaction_id ?: substr($p->tx_hash, 0, 16)),
-                        'subtitle' => "Amount: \${$p->amount} • Status: " . ucfirst($p->status),
-                        'badge' => ucfirst($p->status),
-                        'badge_class' => $p->status === 'approved' ? 'bg-success text-white' : ($p->status === 'pending' ? 'bg-warning text-dark' : 'bg-danger text-white'),
-                        'url' => route('admin.payments.index', ['search' => $p->transaction_id ?: $p->tx_hash]),
-                        'icon' => 'bi-credit-card-2-front',
+                if ($transactions->isNotEmpty()) {
+                    $txItems = [];
+                    foreach ($transactions as $t) {
+                        $uName = $t->user ? $t->user->name : 'Client';
+                        $txItems[] = [
+                            'title' => "Tx: {$t->transaction_id} ({$uName})",
+                            'subtitle' => "Amount: \${$t->amount} • Plan: " . ucfirst($t->plan_type ?? 'N/A') . " • Gateway: " . strtoupper($t->gateway ?? 'N/A'),
+                            'badge' => ucfirst($t->status),
+                            'badge_class' => $t->status === 'approved' ? 'bg-success text-white' : ($t->status === 'pending' ? 'bg-warning text-dark' : 'bg-danger text-white'),
+                            'url' => route('admin.payments.show', $t->id),
+                            'icon' => 'bi-credit-card-2-front',
+                        ];
+                    }
+                    $results[] = [
+                        'category' => 'Payments & Transactions',
+                        'icon' => 'bi-credit-card',
+                        'items' => $txItems,
                     ];
                 }
-                $results[] = [
-                    'category' => 'Payments & Transactions',
-                    'icon' => 'bi-credit-card',
-                    'items' => $paymentItems,
-                ];
             }
+        } catch (\Throwable $e) {
+            Log::warning('Global search transactions error: ' . $e->getMessage());
         }
 
         return response()->json(['results' => $results]);
@@ -210,9 +288,10 @@ class GlobalSearchController extends Controller
             ['title' => 'User Management', 'subtitle' => 'Manage registered mobile app clients and traders', 'url' => route('admin.users.index'), 'icon' => 'bi-person-badge-fill', 'badge' => 'Users', 'keywords' => ['users', 'clients', 'traders', 'accounts', 'banned', 'vip', 'premium']],
             ['title' => 'Staff Management', 'subtitle' => 'Manage admin team and staff credentials', 'url' => route('admin.staff.index'), 'icon' => 'bi-people-fill', 'badge' => 'Staff', 'keywords' => ['staff', 'admins', 'team', 'moderators']],
             ['title' => 'Roles & Permissions', 'subtitle' => 'Configure security roles and capabilities', 'url' => route('admin.roles.index'), 'icon' => 'bi-shield-check', 'badge' => 'Security', 'keywords' => ['roles', 'permissions', 'access', 'security', 'guard']],
-            ['title' => 'Signals Management', 'subtitle' => 'Create and publish live trading signals', 'url' => route('admin.signals.index'), 'icon' => 'bi-broadcast', 'badge' => 'Trading', 'keywords' => ['signals', 'forex', 'crypto', 'buy', 'sell', 'trades']],
+            ['title' => 'Signals Management', 'subtitle' => 'Create and publish live trading signals', 'url' => route('admin.signals.index'), 'icon' => 'bi-broadcast', 'badge' => 'Trading', 'keywords' => ['signals', 'forex', 'crypto', 'buy', 'sell', 'trades', 'gold', 'eurusd', 'xauusd', 'btcusd']],
             ['title' => 'Signal Analytics', 'subtitle' => 'Win rate and trade performance stats', 'url' => route('admin.analytics.signals'), 'icon' => 'bi-graph-up-arrow', 'badge' => 'Analytics', 'keywords' => ['signals analytics', 'win rate', 'pnl', 'performance']],
             ['title' => 'MT5 Bot Management', 'subtitle' => 'Automated trading bot settings and status', 'url' => route('admin.mt5-bot.index'), 'icon' => 'bi-robot', 'badge' => 'Bot', 'keywords' => ['mt5 bot', 'automated trading', 'bot', 'expert advisor', 'ea', 'terminal']],
+            ['title' => 'Send MT5 Bot File', 'subtitle' => 'Distribute .ex5/.ex4 trading bot files via email to users', 'url' => route('admin.mt5-bot.send-file'), 'icon' => 'bi-envelope-arrow-up', 'badge' => 'Bot File', 'keywords' => ['send bot file', 'email bot', 'ex5', 'ex4', 'distribute bot']],
             ['title' => 'MT5 Bot Analytics', 'subtitle' => 'Equity curve, monthly P&L, bot performance', 'url' => route('admin.analytics.mt5'), 'icon' => 'bi-clipboard-data', 'badge' => 'Analytics', 'keywords' => ['mt5 analytics', 'equity curve', 'profit', 'bot stats']],
             ['title' => 'Education Courses', 'subtitle' => 'Trading academy, video courses and lessons', 'url' => route('admin.courses.index'), 'icon' => 'bi-book-half', 'badge' => 'Academy', 'keywords' => ['education', 'courses', 'lessons', 'videos', 'academy', 'learn']],
             ['title' => 'Chat Rooms & Moderation', 'subtitle' => 'Live community chat rooms and banned words', 'url' => route('admin.chat.index'), 'icon' => 'bi-chat-left-dots-fill', 'badge' => 'Community', 'keywords' => ['chat', 'community', 'messages', 'moderation', 'stickers', 'rooms']],
@@ -221,8 +300,8 @@ class GlobalSearchController extends Controller
             ['title' => 'Push Notifications', 'subtitle' => 'Broadcast push alerts and trading tips', 'url' => route('admin.notifications.index'), 'icon' => 'bi-bell-fill', 'badge' => 'Alerts', 'keywords' => ['notifications', 'push', 'broadcast', 'fcm', 'messages']],
             ['title' => 'Notification Controller', 'subtitle' => 'Toggle specific notification channels on/off', 'url' => route('admin.notification-settings.index'), 'icon' => 'bi-bell-slash-fill', 'badge' => 'Settings', 'keywords' => ['notification controller', 'notification settings', 'toggle alerts']],
             ['title' => 'Payments & Invoices', 'subtitle' => 'Approve deposits, crypto payments and subscriptions', 'url' => route('admin.payments.index'), 'icon' => 'bi-credit-card-fill', 'badge' => 'Finance', 'keywords' => ['payments', 'transactions', 'crypto', 'usdt', 'deposits', 'billing']],
-            ['title' => 'Demo Account Requests', 'subtitle' => 'Review and approve MT5 demo accounts', 'url' => route('admin.demo-accounts.index'), 'icon' => 'bi-pc-display-horizontal', 'badge' => 'Demo', 'keywords' => ['demo accounts', 'demo requests', 'practice account', 'broker link']],
-            ['title' => 'Demo Settings & Instructions', 'subtitle' => 'Configure instructions, brokers and servers', 'url' => route('admin.demo-settings.index'), 'icon' => 'bi-gear', 'badge' => 'Settings', 'keywords' => ['demo settings', 'broker setup', 'video tutorial', 'demo instructions']],
+            ['title' => 'Demo Account Requests', 'subtitle' => 'Review and approve MT5 demo accounts', 'url' => route('admin.demo-accounts.index'), 'icon' => 'bi-pc-display-horizontal', 'badge' => 'Demo', 'keywords' => ['demo accounts', 'demo requests', 'practice account', 'broker link', 'exness']],
+            ['title' => 'Demo Settings & Instructions', 'subtitle' => 'Configure instructions, brokers and servers', 'url' => route('admin.demo-settings.index'), 'icon' => 'bi-gear', 'badge' => 'Settings', 'keywords' => ['demo settings', 'broker setup', 'video tutorial', 'demo instructions', 'exness link', 'referral']],
             ['title' => 'Legal Pages', 'subtitle' => 'Manage Privacy Policy and Terms of Service', 'url' => route('admin.legal-pages.index'), 'icon' => 'bi-file-earmark-text', 'badge' => 'Legal', 'keywords' => ['privacy policy', 'terms and conditions', 'legal pages', 'compliance']],
             ['title' => 'Audit Logs', 'subtitle' => 'Track all superadmin and staff activities', 'url' => route('admin.audit-logs.index'), 'icon' => 'bi-journal-arrow-down', 'badge' => 'Logs', 'keywords' => ['audit logs', 'activity log', 'history', 'security logs', 'actions']],
             ['title' => 'System Settings', 'subtitle' => 'Maintenance mode, database backups, brand config', 'url' => route('admin.settings.index'), 'icon' => 'bi-gear-fill', 'badge' => 'System', 'keywords' => ['system settings', 'backups', 'maintenance', 'logo', 'security code']],
