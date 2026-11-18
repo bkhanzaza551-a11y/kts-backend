@@ -172,8 +172,9 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
     } catch (\Throwable $t) {}
 
     // Clean schema reset to eliminate aborted locks/partial tables
+    // DEFAULT IS SAFE (reset=0) — must explicitly pass ?reset=1 to wipe DB
     $resetDone = false;
-    if ($request->query('reset', '1') !== '0') {
+    if ($request->query('reset', '0') === '1') {
         try {
             \Illuminate\Support\Facades\DB::statement('DROP SCHEMA IF EXISTS public CASCADE');
             \Illuminate\Support\Facades\DB::statement('CREATE SCHEMA public');
