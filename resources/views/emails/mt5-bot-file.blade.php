@@ -21,13 +21,7 @@
               <table cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center">
-                    @if(file_exists(public_path('images/kts-logo.jpg')))
-                      <img src="{{ $message->embed(public_path('images/kts-logo.jpg')) }}" width="88" height="88" alt="KTS Markets" style="display: block; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); margin: 0 auto; border: 0;" />
-                    @else
-                      <div style="background: linear-gradient(135deg, #d97706, #f59e0b); border-radius: 20px; padding: 18px 26px; color: #ffffff; font-weight: 900; font-size: 22px; box-shadow: 0 8px 20px rgba(217, 119, 6, 0.3);">
-                        KTS MARKETS
-                      </div>
-                    @endif
+                      <img src="https://raw.githubusercontent.com/bkhanzaza551-a11y/kts-backend/main/public/images/kts-logo.jpg" width="88" height="88" alt="KTS Markets" style="display: block; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); margin: 0 auto; border: 0;" />
                   </td>
                 </tr>
                 <tr>
