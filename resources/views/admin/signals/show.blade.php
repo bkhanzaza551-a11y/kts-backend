@@ -76,6 +76,51 @@
             </div>
         </div>
 
+        <!-- Live Real-Time Candlestick Chart -->
+        <div class="card mb-4 border-0 shadow-sm" style="overflow: hidden; border-radius: 12px;">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 fs-6 d-inline-flex align-items-center fw-semibold">
+                        <span class="spinner-grow spinner-grow-sm me-1 text-success" role="status" style="width: 8px; height: 8px;"></span> Live Market
+                    </span>
+                    <h6 class="mb-0 fw-bold text-dark d-flex align-items-center">
+                        <i class="bi bi-graph-up-arrow text-primary me-2"></i>Real-Time Candlestick Chart
+                        <span class="text-secondary fw-normal ms-2 small">({{ $signal->symbol }})</span>
+                    </h6>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="btn-group btn-group-sm" role="group" id="tvTimeframeGroup">
+                        <button type="button" class="btn btn-outline-secondary btn-tf" data-interval="1">1m</button>
+                        <button type="button" class="btn btn-outline-secondary btn-tf" data-interval="5">5m</button>
+                        <button type="button" class="btn btn-primary btn-tf active" data-interval="15">15m</button>
+                        <button type="button" class="btn btn-outline-secondary btn-tf" data-interval="60">1H</button>
+                        <button type="button" class="btn btn-outline-secondary btn-tf" data-interval="240">4H</button>
+                        <button type="button" class="btn btn-outline-secondary btn-tf" data-interval="D">1D</button>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnToggleFullscreen" title="Full Screen View">
+                        <i class="bi bi-arrows-fullscreen"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0 position-relative" id="chartCardContainer" style="background: #ffffff; min-height: 520px;">
+                <div id="tradingview_chart_wrapper" style="width: 100%; height: 520px;">
+                    <!-- TradingView Widget Injected via JavaScript -->
+                </div>
+            </div>
+            <div class="card-footer bg-light py-2 px-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2 text-muted small">
+                <div>
+                    <i class="bi bi-broadcast text-danger me-1"></i> Live ticking candlestick feed via TradingView.
+                </div>
+                <div>
+                    <span>Entry: <strong class="text-dark">{{ $signal->entry_price ?? '-' }}</strong></span>
+                    <span class="mx-2 text-secondary">•</span>
+                    <span>TP: <strong class="text-success">{{ $signal->take_profit ?? '-' }}</strong></span>
+                    <span class="mx-2 text-secondary">•</span>
+                    <span>SL: <strong class="text-danger">{{ $signal->stop_loss ?? '-' }}</strong></span>
+                </div>
+            </div>
+        </div>
+
         @if($signal->categories->count())
         <div class="card mb-4">
             <div class="card-body">
@@ -205,3 +250,139 @@
 </div>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const rawSymbol = @json($signal->symbol ?? 'EURUSD');
+    let currentInterval = '15';
+
+    function resolveTradingViewSymbol(symbol) {
+        if (!symbol) return 'FX:EURUSD';
+        const clean = symbol.toString().trim().toUpperCase().replace(/[\/\s\-_]/g, '');
+
+        // Standard Forex pairs
+        const forexPairs = [
+            'EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'USDCAD', 'AUDUSD', 'NZDUSD',
+            'EURGBP', 'EURJPY', 'EURCHF', 'EURAUD', 'EURNZD', 'EURCAD',
+            'GBPJPY', 'GBPCHF', 'GBPAUD', 'GBPNZD', 'GBPCAD',
+            'AUDJPY', 'AUDNZD', 'AUDCAD', 'AUDCHF',
+            'NZDJPY', 'NZDCAD', 'NZDCHF',
+            'CADJPY', 'CADCHF', 'CHFJPY', 'USDZAR', 'USDTRY', 'USDMXN'
+        ];
+        if (forexPairs.includes(clean)) {
+            return 'FX:' + clean;
+        }
+
+        // Gold & Commodities
+        if (clean === 'XAUUSD' || clean === 'GOLD') return 'OANDA:XAUUSD';
+        if (clean === 'XAGUSD' || clean === 'SILVER') return 'OANDA:XAGUSD';
+        if (clean === 'OIL' || clean === 'USOIL' || clean === 'WTI') return 'TVC:USOIL';
+        if (clean === 'UKOIL' || clean === 'BRENT') return 'TVC:UKOIL';
+
+        // Indices
+        if (clean === 'US30' || clean === 'DJ30' || clean === 'DOW') return 'BLACKBULL:US30';
+        if (clean === 'NAS100' || clean === 'USTEC' || clean === 'NDX') return 'BLACKBULL:NAS100';
+        if (clean === 'SPX500' || clean === 'US500' || clean === 'SP500') return 'BLACKBULL:US500';
+        if (clean === 'GER40' || clean === 'DAX' || clean === 'DAX40') return 'BLACKBULL:GER40';
+
+        // Crypto
+        if (clean.endsWith('USDT')) return 'BINANCE:' + clean;
+        const cryptoCoins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE', 'ADA', 'AVAX', 'LINK', 'DOT', 'NEAR', 'MATIC', 'PEPE', 'SUI'];
+        if (cryptoCoins.includes(clean)) {
+            return 'BINANCE:' + clean + 'USDT';
+        }
+
+        // 6-letter currency heuristic
+        if (/^[A-Z]{6}$/.test(clean)) {
+            return 'FX:' + clean;
+        }
+
+        return clean;
+    }
+
+    const tvSymbol = resolveTradingViewSymbol(rawSymbol);
+
+    function renderTradingViewChart(interval) {
+        const wrapper = document.getElementById('tradingview_chart_wrapper');
+        if (!wrapper) return;
+
+        wrapper.innerHTML = `
+            <div class="tradingview-widget-container" style="height:100%;width:100%">
+                <div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>
+            </div>
+        `;
+
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+        script.async = true;
+        script.innerHTML = JSON.stringify({
+            "autosize": true,
+            "symbol": tvSymbol,
+            "interval": interval,
+            "timezone": "Etc/UTC",
+            "theme": "light",
+            "style": "1", // 1 = Realtime Candlesticks
+            "locale": "en",
+            "enable_publishing": false,
+            "allow_symbol_change": true,
+            "hide_top_toolbar": false,
+            "hide_legend": false,
+            "save_image": false,
+            "hide_volume": false,
+            "withdateranges": true,
+            "details": true,
+            "calendar": false,
+            "support_host": "https://www.tradingview.com"
+        });
+
+        wrapper.querySelector('.tradingview-widget-container').appendChild(script);
+    }
+
+    // Initial render
+    renderTradingViewChart(currentInterval);
+
+    // Timeframe switcher buttons
+    const tfButtons = document.querySelectorAll('.btn-tf');
+    tfButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            tfButtons.forEach(b => {
+                b.classList.remove('btn-primary', 'active');
+                b.classList.add('btn-outline-secondary');
+            });
+            this.classList.remove('btn-outline-secondary');
+            this.classList.add('btn-primary', 'active');
+
+            currentInterval = this.getAttribute('data-interval') || '15';
+            renderTradingViewChart(currentInterval);
+        });
+    });
+
+    // Fullscreen toggle
+    const fullscreenBtn = document.getElementById('btnToggleFullscreen');
+    const chartContainer = document.getElementById('chartCardContainer');
+    const chartWrapper = document.getElementById('tradingview_chart_wrapper');
+
+    if (fullscreenBtn && chartContainer) {
+        fullscreenBtn.addEventListener('click', function () {
+            if (!document.fullscreenElement) {
+                chartContainer.requestFullscreen().catch(err => {
+                    console.warn('Fullscreen error:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        document.addEventListener('fullscreenchange', function () {
+            if (document.fullscreenElement) {
+                chartWrapper.style.height = '100vh';
+            } else {
+                chartWrapper.style.height = '520px';
+            }
+        });
+    }
+});
+</script>
+@endpush
