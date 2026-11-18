@@ -15,6 +15,24 @@ use App\Http\Controllers\Api\SupportTicketApiController;
 use App\Http\Controllers\Api\MarketDataApiController;
 use Illuminate\Support\Facades\Route;
 
+// Cron Route for Signals Auto-Tracking
+Route::get('cron/track-signals', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('signals:track');
+        \Illuminate\Support\Facades\Cache::forget('signal_stats');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Signals tracking executed successfully.',
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
+
 Route::prefix('v1')->group(function () {
     Route::post('register', [AuthController::class, 'register'])->middleware('throttle:3,1')->name('api.register');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('api.login');

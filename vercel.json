@@ -19,7 +19,7 @@
   "outputDirectory": "public",
   "crons": [
     {
-      "path": "/cron/track-signals",
+      "path": "/api/cron/track-signals",
       "schedule": "*/5 * * * *"
     }
   ]
