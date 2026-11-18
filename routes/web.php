@@ -189,7 +189,7 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
             'previous_error' => $prev ? $prev->getMessage() : null,
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'schema_reset' => $resetDone,
+            'schema_reset' => false,
             'artisan_output' => \Illuminate\Support\Facades\Artisan::output(),
         ], 500);
     }

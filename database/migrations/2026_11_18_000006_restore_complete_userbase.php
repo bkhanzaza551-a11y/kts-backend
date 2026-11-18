@@ -308,26 +308,39 @@ return new class extends Migration
         $adminUser = User::where('email', 'admin@ktsmarkets.com')->first();
         $reviewerId = $adminUser ? $adminUser->id : 1;
 
+        $existingEmails = User::whereIn('email', array_keys($users))->pluck('email')->map(fn($e) => strtolower($e))->toArray();
+
+        $toInsert = [];
         foreach ($users as $email => $name) {
-            $user = User::where('email', $email)->first();
-            if (!$user) {
-                $user = User::create([
+            $eLower = strtolower($email);
+            if (!in_array($eLower, $existingEmails)) {
+                $toInsert[] = [
                     'name'              => $name,
                     'email'             => $email,
                     'password'          => $hashedPassword,
                     'email_verified_at' => $now,
                     'status'            => 'active',
                     'is_banned'         => false,
-                ]);
-            } else {
-                $user->update([
-                    'status'    => 'active',
-                    'is_banned' => false,
-                ]);
+                    'created_at'        => $now,
+                    'updated_at'        => $now,
+                ];
             }
+        }
 
-            if ($userRole && !$user->roles()->where('slug', 'user')->exists()) {
-                $user->roles()->attach($userRole->id);
+        if (!empty($toInsert)) {
+            foreach (array_chunk($toInsert, 50) as $chunk) {
+                User::insert($chunk);
+            }
+        }
+
+        // Attach default role in bulk
+        if ($userRole) {
+            $unassignedIds = User::whereDoesntHave('roles')->pluck('id')->toArray();
+            if (!empty($unassignedIds)) {
+                $roleRows = array_map(fn($id) => ['user_id' => $id, 'role_id' => $userRole->id], $unassignedIds);
+                foreach (array_chunk($roleRows, 100) as $chunk) {
+                    \Illuminate\Support\Facades\DB::table('user_role')->insertOrIgnore($chunk);
+                }
             }
         }
 
