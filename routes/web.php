@@ -223,6 +223,36 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
     }
 })->name('public.artisan-migrate');
 
+// Secure endpoint to track active signals against live market prices
+Route::get('artisan-track-signals', function (\Illuminate\Http\Request $request) {
+    if ($request->query('secret') !== 'ktsmarkets123') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized. Please provide valid ?secret=ktsmarkets123'
+        ], 403);
+    }
+
+    try {
+        \Illuminate\Support\Facades\Artisan::call('signals:track');
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        \Illuminate\Support\Facades\Cache::forget('signal_stats');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Signals tracking executed successfully.',
+            'output' => $output,
+            'active_signals' => \App\Models\Signal::where('status', 'active')->count(),
+            'closed_signals' => \App\Models\Signal::where('status', 'closed')->count(),
+            'signals' => \App\Models\Signal::latest('id')->limit(5)->get(['id', 'symbol', 'direction', 'status', 'result', 'pips_result', 'close_price']),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+})->name('public.artisan-track-signals');
+
 Route::get('test-smtp', function (\Illuminate\Http\Request $request) {
     if ($request->query('secret') !== 'ktsmarkets123') {
         return response()->json(['error' => 'Unauthorized'], 403);
