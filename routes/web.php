@@ -191,7 +191,7 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
 
     // Strictly safe migration execution — NO reset or drop schema ever allowed
     try {
-        if ($request->boolean('track_signals')) {
+        if ($request->filled('track_signals') || $request->query('action') === 'track') {
             \Illuminate\Support\Facades\Artisan::call('signals:track');
             $trackOutput = \Illuminate\Support\Facades\Artisan::output();
             \Illuminate\Support\Facades\Cache::forget('signal_stats');
