@@ -35,7 +35,14 @@ class DashboardController extends Controller
 
     public function stats()
     {
-        return response()->json($this->getStats());
+        if (request()->has('fresh')) {
+            Cache::forget('dashboard_stats');
+        }
+        $stats = $this->getStats();
+        $stats['formatted_total_revenue'] = \App\Services\CurrencyService::formatAmount($stats['total_revenue']);
+        $stats['formatted_this_month_revenue'] = \App\Services\CurrencyService::formatAmount($stats['this_month_revenue']);
+        $stats['formatted_pending_amount'] = \App\Services\CurrencyService::formatAmount($stats['pending_amount']);
+        return response()->json($stats);
     }
 
     public function userGrowth()

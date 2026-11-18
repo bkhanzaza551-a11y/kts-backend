@@ -5,9 +5,9 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">Total Users</p>
-                        <h4 class="text-dark mb-1 fw-bold">{{ number_format($stats['total_users']) }}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-total-users">{{ number_format($stats['total_users']) }}</h4>
                         <div class="d-flex align-items-center mt-1">
-                            <span class="badge bg-secondary me-2">
+                            <span class="badge bg-secondary me-2" id="stat-new-today">
                                 <i class="bi bi-arrow-up"></i> {{ $stats['new_today'] }}
                             </span>
                             <small class="text-secondary" style="font-size:0.75rem;">today</small>
@@ -27,9 +27,9 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">Active Users</p>
-                        <h4 class="text-dark mb-1 fw-bold">{{ number_format($stats['active_users']) }}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-active-users">{{ number_format($stats['active_users']) }}</h4>
                         <div class="d-flex align-items-center mt-1">
-                            <small class="text-secondary" style="font-size:0.75rem;">
+                            <small class="text-secondary" style="font-size:0.75rem;" id="stat-active-pct">
                                 {{ $stats['total_users'] > 0 ? round(($stats['active_users'] / $stats['total_users']) * 100, 1) : 0 }}% of total
                             </small>
                         </div>
@@ -48,9 +48,9 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">Premium Users</p>
-                        <h4 class="text-dark mb-1 fw-bold">{{ number_format($stats['premium_users']) }}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-premium-users">{{ number_format($stats['premium_users']) }}</h4>
                         <div class="d-flex align-items-center mt-1">
-                            <small class="text-secondary" style="font-size:0.75rem;">
+                            <small class="text-secondary" style="font-size:0.75rem;" id="stat-premium-pct">
                                 {{ $stats['total_users'] > 0 ? round(($stats['premium_users'] / $stats['total_users']) * 100, 1) : 0 }}% conversion
                             </small>
                         </div>
@@ -69,7 +69,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">MT5 Bot Users</p>
-                        <h4 class="text-dark mb-1 fw-bold">{{ number_format($stats['mt5_bot_users']) }}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-mt5-users">{{ number_format($stats['mt5_bot_users']) }}</h4>
                         <div class="d-flex align-items-center mt-1">
                             <small class="text-secondary" style="font-size:0.75rem;">Active connections</small>
                         </div>
@@ -90,7 +90,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">New This Week</p>
-                        <h4 class="text-dark mb-1 fw-bold">{{ number_format($stats['new_this_week']) }}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-new-week">{{ number_format($stats['new_this_week']) }}</h4>
                         <div class="mt-1">
                             <small class="text-secondary" style="font-size:0.75rem;">Last 7 days</small>
                         </div>
@@ -109,7 +109,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">New This Month</p>
-                        <h4 class="text-dark mb-1 fw-bold">{{ number_format($stats['new_this_month']) }}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-new-month">{{ number_format($stats['new_this_month']) }}</h4>
                         <div class="mt-1">
                             <small class="text-secondary" style="font-size:0.75rem;">{{ now()->format('F Y') }}</small>
                         </div>
@@ -128,7 +128,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">Total Staff</p>
-                        <h4 class="text-dark mb-1 fw-bold">{{ number_format($stats['total_staff']) }}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-total-staff">{{ number_format($stats['total_staff']) }}</h4>
                         <div class="mt-1">
                             <small class="text-secondary" style="font-size:0.75rem;">Team members</small>
                         </div>
@@ -147,7 +147,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">Banned Users</p>
-                        <h4 class="text-dark mb-1 fw-bold">{{ number_format($stats['banned_users']) }}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-banned-users">{{ number_format($stats['banned_users']) }}</h4>
                         <div class="mt-1">
                             <small class="text-secondary" style="font-size:0.75rem;">Blocked accounts</small>
                         </div>
@@ -168,18 +168,18 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">Total Revenue</p>
-                        <h4 class="text-dark mb-1 fw-bold">{!! \App\Services\CurrencyService::formatAmount($stats['total_revenue']) !!}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-total-revenue">{!! \App\Services\CurrencyService::formatAmount($stats['total_revenue']) !!}</h4>
                         <div class="d-flex align-items-center mt-1">
                             @if($stats['revenue_change'] > 0)
-                            <span class="badge bg-success me-2">
+                            <span class="badge bg-success me-2" id="stat-rev-change">
                                 <i class="bi bi-arrow-up"></i> {{ $stats['revenue_change'] }}%
                             </span>
                             @elseif($stats['revenue_change'] < 0)
-                            <span class="badge bg-danger me-2">
+                            <span class="badge bg-danger me-2" id="stat-rev-change">
                                 <i class="bi bi-arrow-down"></i> {{ abs($stats['revenue_change']) }}%
                             </span>
                             @else
-                            <span class="badge bg-secondary me-2">0%</span>
+                            <span class="badge bg-secondary me-2" id="stat-rev-change">0%</span>
                             @endif
                             <small class="text-secondary" style="font-size:0.75rem;">vs last month</small>
                         </div>
@@ -198,7 +198,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">This Month Revenue</p>
-                        <h4 class="text-dark mb-1 fw-bold">{!! \App\Services\CurrencyService::formatAmount($stats['this_month_revenue']) !!}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-month-revenue">{!! \App\Services\CurrencyService::formatAmount($stats['this_month_revenue']) !!}</h4>
                         <div class="mt-1">
                             <small class="text-secondary" style="font-size:0.75rem;">{{ now()->format('F Y') }}</small>
                         </div>
@@ -217,9 +217,9 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-secondary mb-1 small fw-medium">Pending Payments</p>
-                        <h4 class="text-dark mb-1 fw-bold">{{ $stats['pending_transactions'] }}</h4>
+                        <h4 class="text-dark mb-1 fw-bold" id="stat-pending-tx">{{ $stats['pending_transactions'] }}</h4>
                         <div class="d-flex align-items-center mt-1">
-                            <span class="badge bg-warning text-dark me-2">
+                            <span class="badge bg-warning text-dark me-2" id="stat-pending-amount">
                                 {!! \App\Services\CurrencyService::formatAmount($stats['pending_amount']) !!}
                             </span>
                         </div>
