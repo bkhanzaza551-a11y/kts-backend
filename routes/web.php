@@ -171,38 +171,15 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
         }
     } catch (\Throwable $t) {}
 
-    // Clean schema reset to eliminate aborted locks/partial tables
-    // DEFAULT IS SAFE (reset=0) — must explicitly pass ?reset=1 to wipe DB
-    $resetDone = false;
-    if ($request->query('reset', '0') === '1') {
-        try {
-            \Illuminate\Support\Facades\DB::statement('DROP SCHEMA IF EXISTS public CASCADE');
-            \Illuminate\Support\Facades\DB::statement('CREATE SCHEMA public');
-            \Illuminate\Support\Facades\DB::statement('GRANT ALL ON SCHEMA public TO public');
-            $resetDone = true;
-        } catch (\Throwable $t) {
-            $resetDone = false;
-        }
-    }
-
+    // Strictly safe migration execution — NO reset or drop schema ever allowed
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
 
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-        $seedOutput = \Illuminate\Support\Facades\Artisan::output();
-
         return response()->json([
             'success' => true,
-            'message' => 'PostgreSQL Database migrated & seeded successfully on Vercel!',
-            'schema_reset' => $resetDone,
+            'message' => 'Pending migrations executed successfully without touching existing data.',
             'migration_output' => $migrateOutput,
-            'seed_output' => $seedOutput,
-            'login_accounts' => [
-                'admin' => ['email' => 'admin@ktsmarkets.com', 'password' => 'Password123!'],
-                'reviewer_test' => ['email' => 'test@ktsmarkets.com', 'password' => 'Password123!'],
-                'user' => ['email' => 'user@ktsmarkets.com', 'password' => 'Password123!'],
-            ]
         ], 200);
     } catch (\Throwable $e) {
         $prev = $e->getPrevious();
