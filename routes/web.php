@@ -173,6 +173,13 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
 
     // Strictly safe migration execution — NO reset or drop schema ever allowed
     try {
+        if ($request->boolean('restore_users')) {
+            $migInstance = require database_path('migrations/2026_11_18_000006_restore_complete_userbase.php');
+            if (is_object($migInstance)) {
+                $migInstance->up();
+            }
+        }
+
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
         $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
 
@@ -180,6 +187,9 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
             'success' => true,
             'message' => 'Pending migrations executed successfully without touching existing data.',
             'migration_output' => $migrateOutput,
+            'total_users' => \App\Models\User::count(),
+            'demo_requests' => \App\Models\DemoAccountRequest::count(),
+            'latest_migrations' => \Illuminate\Support\Facades\DB::table('migrations')->latest('id')->limit(5)->pluck('migration'),
         ], 200);
     } catch (\Throwable $e) {
         $prev = $e->getPrevious();
