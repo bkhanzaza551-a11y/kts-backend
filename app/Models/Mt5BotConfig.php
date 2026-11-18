@@ -90,7 +90,9 @@ class Mt5BotConfig extends Model
 
     public function hasBotFile(): bool
     {
-        return !empty($this->bot_file_data) || (!empty($this->bot_file_path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->bot_file_path));
+        return !empty($this->bot_file_data) 
+            || !empty($this->bot_file_name)
+            || (!empty($this->bot_file_path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->bot_file_path));
     }
 
     public function getBotFileInfo(): ?array

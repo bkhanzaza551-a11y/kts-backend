@@ -20,7 +20,10 @@ class Mt5BotFileDispatchController extends Controller
      */
     public function index(Request $request)
     {
-        $bot = Mt5BotConfig::first();
+        $bot = Mt5BotConfig::whereNotNull('bot_file_data')
+            ->orWhereNotNull('bot_file_name')
+            ->orderBy('id', 'asc')
+            ->first() ?? Mt5BotConfig::orderBy('id', 'asc')->first();
 
         // Approved & linked demo account requests (with user info)
         $demoRequests = DemoAccountRequest::with('user')
@@ -65,7 +68,7 @@ class Mt5BotFileDispatchController extends Controller
             'bot_file' => 'required|file|max:102400',
         ]);
 
-        $bot = Mt5BotConfig::first();
+        $bot = Mt5BotConfig::orderBy('id', 'asc')->first();
         if (!$bot) {
             $bot = Mt5BotConfig::create([
                 'name' => 'KTS10 Pips Bot',
@@ -96,7 +99,8 @@ class Mt5BotFileDispatchController extends Controller
             $filePath = 'mt5-bots/' . $originalName;
         }
 
-        $bot->update([
+        // Update ALL bot configs so regardless of which row is retrieved, file is immediately recognized
+        Mt5BotConfig::query()->update([
             'bot_file_path' => $filePath,
             'bot_file_name' => $originalName,
             'bot_file_size' => $formattedSize,
@@ -124,7 +128,10 @@ class Mt5BotFileDispatchController extends Controller
             'admin_note'  => 'nullable|string|max:500',
         ]);
 
-        $bot = Mt5BotConfig::first();
+        $bot = Mt5BotConfig::whereNotNull('bot_file_data')
+            ->orWhereNotNull('bot_file_name')
+            ->orderBy('id', 'asc')
+            ->first() ?? Mt5BotConfig::orderBy('id', 'asc')->first();
 
         if (!$bot || !$bot->hasBotFile()) {
             return back()->with('error', 'No bot file has been uploaded yet. Please upload a bot file below first.');
