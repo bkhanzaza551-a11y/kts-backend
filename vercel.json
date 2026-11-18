@@ -16,11 +16,5 @@
       "dest": "/api/index.php"
     }
   ],
-  "outputDirectory": "public",
-  "crons": [
-    {
-      "path": "/api/cron/track-signals",
-      "schedule": "*/5 * * * *"
-    }
-  ]
+  "outputDirectory": "public"
 }
