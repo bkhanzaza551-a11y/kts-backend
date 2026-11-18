@@ -20,6 +20,7 @@ class Mt5BotConfig extends Model
         'bot_file_name',
         'bot_file_size',
         'bot_file_type',
+        'bot_file_data',
         'bot_file_uploaded_at',
         'api_key',
         'api_secret',
@@ -57,6 +58,7 @@ class Mt5BotConfig extends Model
         'mt5_account_number',
         'mt5_server',
         'bot_file_path',
+        'bot_file_data',
     ];
 
     protected $appends = [
@@ -88,7 +90,7 @@ class Mt5BotConfig extends Model
 
     public function hasBotFile(): bool
     {
-        return !empty($this->bot_file_path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->bot_file_path);
+        return !empty($this->bot_file_data) || (!empty($this->bot_file_path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->bot_file_path));
     }
 
     public function getBotFileInfo(): ?array
@@ -111,6 +113,16 @@ class Mt5BotConfig extends Model
 
     protected function calculateFileSize(): string
     {
+        if (!empty($this->bot_file_data)) {
+            $bytes = strlen(base64_decode($this->bot_file_data));
+            if ($bytes >= 1048576) {
+                return round($bytes / 1048576, 2) . ' MB';
+            } elseif ($bytes >= 1024) {
+                return round($bytes / 1024, 2) . ' KB';
+            }
+            return $bytes . ' B';
+        }
+
         try {
             $bytes = \Illuminate\Support\Facades\Storage::disk('public')->size($this->bot_file_path);
             if ($bytes >= 1048576) {

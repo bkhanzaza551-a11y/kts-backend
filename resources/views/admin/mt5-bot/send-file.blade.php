@@ -7,14 +7,14 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h4 class="mb-1 fw-bold text-dark"><i class="bi bi-envelope-arrow-up me-2 text-warning"></i>Send MT5 Bot File</h4>
-        <p class="text-secondary small mb-0">Select users from approved demo requests or any registered user, then send the bot file via email.</p>
+        <p class="text-secondary small mb-0">Upload your MT5 bot file, select recipients (or all registered users), and send via email.</p>
     </div>
     <a href="{{ route('admin.mt5-bot.index') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>Back to Bot
+        <i class="bi bi-arrow-left me-1"></i>Back to MT5 Bot
     </a>
 </div>
 
-{{-- Alerts --}}
+{{-- Session Alerts --}}
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle me-2"></i>{!! session('success') !!}
@@ -34,66 +34,143 @@
     </div>
 @endif
 
+{{-- DIRECT FILE UPLOAD / STATUS CARD --}}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        @if($bot && $bot->hasBotFile())
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:52px;height:52px;background:#198754;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;flex-shrink:0;">
+                        <i class="bi bi-file-earmark-binary"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="mb-0 fw-bold text-dark">{{ $bot->bot_file_name ?? 'KTS10PipsBot_v2.ex5' }}</h5>
+                            <span class="badge bg-success">Ready to Send</span>
+                            <span class="badge bg-warning text-dark">{{ strtoupper($bot->bot_file_type ?? 'EX5') }}</span>
+                        </div>
+                        <small class="text-secondary">
+                            Size: <strong>{{ $bot->bot_file_size ?? 'Ready' }}</strong> &nbsp;•&nbsp; 
+                            Uploaded: {{ $bot->bot_file_uploaded_at?->diffForHumans() ?? 'Recently' }} &nbsp;•&nbsp;
+                            <span class="text-success"><i class="bi bi-shield-check me-1"></i>Saved in Database (Permanent)</span>
+                        </small>
+                    </div>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleUploadBox()">
+                        <i class="bi bi-cloud-arrow-up me-1"></i>Upload New / Replace File
+                    </button>
+                </div>
+            </div>
+        @else
+            <div class="alert alert-danger d-flex align-items-center gap-3 mb-3 border-0">
+                <i class="bi bi-exclamation-triangle-fill fs-3 text-danger"></i>
+                <div>
+                    <div class="fw-bold">No Bot File Ready on Server!</div>
+                    <small>Please select and upload your <code>.ex5</code> or <code>.ex4</code> trading bot file below before sending emails.</small>
+                </div>
+            </div>
+        @endif
+
+        {{-- Upload Form Box (Visible if no file, or toggled) --}}
+        <div id="uploadBox" class="{{ ($bot && $bot->hasBotFile()) ? 'd-none' : '' }} mt-3 pt-3 border-top">
+            <form method="POST" action="{{ route('admin.mt5-bot.send-file.upload') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold small text-secondary">Select MT5 Bot Software File (.ex5, .ex4, .zip):</label>
+                        <input type="file" name="bot_file" class="form-control" accept=".ex5,.ex4,.zip,.mq5,.mq4" required>
+                    </div>
+                    <div class="col-md-4 pt-md-4">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">
+                            <i class="bi bi-upload me-1"></i>Upload Bot File Now
+                        </button>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    <i class="bi bi-info-circle me-1"></i>File is stored securely in the database so it will <strong>never disappear</strong> even on serverless deployments (Vercel).
+                </small>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4">
 
-    {{-- LEFT: User Selection --}}
+    {{-- LEFT: Send Options & User Selection --}}
     <div class="col-lg-8">
         <form method="POST" action="{{ route('admin.mt5-bot.send-file.post') }}" id="sendForm">
             @csrf
 
-            {{-- File Status Banner --}}
-            @if($bot && $bot->hasBotFile())
-                <div class="alert alert-success border-0 d-flex align-items-center gap-3 mb-4" style="background:rgba(25,135,84,0.1);border-left:4px solid #198754 !important;border-radius:10px;">
-                    <div style="width:42px;height:42px;background:#198754;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="bi bi-file-earmark-binary text-white fs-5"></i>
-                    </div>
-                    <div>
-                        <div class="fw-bold text-dark">{{ $bot->bot_file_name }}</div>
-                        <small class="text-secondary">{{ $bot->bot_file_size }} &nbsp;•&nbsp; {{ strtoupper($bot->bot_file_type) }} file &nbsp;•&nbsp; Uploaded {{ $bot->bot_file_uploaded_at?->diffForHumans() }}</small>
-                    </div>
-                    <div class="ms-auto">
-                        <span class="badge bg-success px-3 py-2">Ready to Send</span>
-                    </div>
+            {{-- TARGET RECIPIENTS SELECTOR (ALL USERS VS SELECTED) --}}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-send-check me-2 text-primary"></i>1. Select Recipient Mode</h6>
                 </div>
-            @else
-                <div class="alert alert-danger border-0 d-flex align-items-center gap-3 mb-4" style="border-left:4px solid #dc3545 !important;border-radius:10px;">
-                    <i class="bi bi-exclamation-octagon-fill text-danger fs-3"></i>
-                    <div>
-                        <div class="fw-bold">No Bot File Uploaded!</div>
-                        <small>Please <a href="{{ route('admin.mt5-bot.index') }}">upload a bot file</a> first before sending emails.</small>
-                    </div>
-                </div>
-            @endif
+                <div class="card-body">
+                    <div class="row g-3">
+                        {{-- Option 1: Selected Users --}}
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 h-100 target-option cursor-pointer" id="optionSelectedBox" onclick="setTargetMode('selected')">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="send_target" id="targetSelected" value="selected" checked onchange="handleTargetChange()">
+                                    <label class="form-check-label fw-bold text-dark cursor-pointer" for="targetSelected">
+                                        🔘 Specific Selected Users
+                                    </label>
+                                </div>
+                                <p class="text-secondary small mb-0 mt-2 ps-4">
+                                    Choose specific users from the Approved Demo Requests or All Users list below.
+                                </p>
+                            </div>
+                        </div>
 
-            {{-- Tabs --}}
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom">
-                    <ul class="nav nav-tabs card-header-tabs" id="userTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active fw-semibold" id="demo-tab" data-bs-toggle="tab" data-bs-target="#demoPanel" type="button" role="tab">
-                                <i class="bi bi-pc-display-horizontal me-1"></i>
-                                Approved Demo Requests
-                                <span class="badge bg-warning text-dark ms-1">{{ $demoRequests->count() }}</span>
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link fw-semibold" id="all-tab" data-bs-toggle="tab" data-bs-target="#allUsersPanel" type="button" role="tab">
-                                <i class="bi bi-people me-1"></i>
-                                All Registered Users
-                                <span class="badge bg-primary ms-1">{{ $allUsers->count() }}</span>
-                            </button>
-                        </li>
-                    </ul>
+                        {{-- Option 2: ALL REGISTERED USERS --}}
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 h-100 target-option cursor-pointer" id="optionAllBox" onclick="setTargetMode('all')">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="send_target" id="targetAll" value="all" onchange="handleTargetChange()">
+                                    <label class="form-check-label fw-bold text-success cursor-pointer" for="targetAll">
+                                        🚀 Send to ALL Registered Users
+                                    </label>
+                                </div>
+                                <p class="text-secondary small mb-0 mt-2 ps-4">
+                                    Dispatches the bot file email to <strong>all {{ $allUsers->count() }} active registered users</strong> in 1 click!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- USER SELECTION TABLES (Visible when "selected" mode is active) --}}
+            <div class="card border-0 shadow-sm mb-4" id="userSelectionCard">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-people me-2 text-primary"></i>2. Choose Users from Tabs</h6>
+                        {{-- Visual Tabs --}}
+                        <ul class="nav nav-pills" id="userTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-bold px-3 py-1 small" id="demo-tab" data-bs-toggle="pill" data-bs-target="#demoPanel" type="button" role="tab">
+                                    <i class="bi bi-pc-display-horizontal me-1"></i>Approved Demo Requests ({{ $demoRequests->count() }})
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold px-3 py-1 small" id="all-tab" data-bs-toggle="pill" data-bs-target="#allUsersPanel" type="button" role="tab">
+                                    <i class="bi bi-people me-1"></i>All Registered Users ({{ $allUsers->count() }})
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="tab-content" id="userTabsContent">
 
-                    {{-- TAB 1: Demo Requests --}}
+                    {{-- TAB 1: Approved Demo Requests --}}
                     <div class="tab-pane fade show active" id="demoPanel" role="tabpanel">
                         <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between flex-wrap gap-2">
                             <div class="d-flex align-items-center gap-2">
-                                <input type="checkbox" id="selectAllDemo" class="form-check-input" style="width:18px;height:18px;cursor:pointer;">
-                                <label for="selectAllDemo" class="mb-0 fw-semibold small text-secondary cursor-pointer">Select All Approved/Linked</label>
+                                <input type="checkbox" id="selectAllDemo" class="form-check-input" style="width:19px;height:19px;cursor:pointer;">
+                                <label for="selectAllDemo" class="mb-0 fw-bold small text-dark cursor-pointer">Select All Approved/Linked</label>
                             </div>
                             <small class="text-secondary">Showing requests with status: <span class="badge bg-success">approved</span> <span class="badge bg-info text-dark">linked</span></small>
                         </div>
@@ -105,17 +182,16 @@
                                 <div class="mt-2"><a href="{{ route('admin.demo-accounts.index') }}">View all demo requests →</a></div>
                             </div>
                         @else
-                            <div class="table-responsive">
+                            <div class="table-responsive" style="max-height:440px;overflow-y:auto;">
                                 <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light">
+                                    <thead class="table-light sticky-top">
                                         <tr>
                                             <th style="width:40px;"></th>
                                             <th>User</th>
-                                            <th>Demo Email</th>
                                             <th>Account #</th>
                                             <th>Type</th>
                                             <th>Status</th>
-                                            <th>Submitted</th>
+                                            <th>Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -132,11 +208,10 @@
                                                         data-name="{{ $req->user->name }}">
                                                 </td>
                                                 <td>
-                                                    <div class="fw-semibold">{{ $req->user->name }}</div>
+                                                    <div class="fw-bold text-dark">{{ $req->user->name }}</div>
                                                     <small class="text-muted">{{ $req->user->email }}</small>
                                                 </td>
-                                                <td><small class="text-muted">{{ $req->demo_email ?? '—' }}</small></td>
-                                                <td><code class="small">{{ $req->exness_account_number ?? '—' }}</code></td>
+                                                <td><code>{{ $req->exness_account_number ?? '—' }}</code></td>
                                                 <td><span class="badge bg-light text-dark border">{{ ucfirst($req->account_type ?? 'demo') }}</span></td>
                                                 <td>
                                                     @if($req->status === 'approved')
@@ -155,16 +230,16 @@
                         @endif
                     </div>
 
-                    {{-- TAB 2: All Users --}}
+                    {{-- TAB 2: All Registered Users --}}
                     <div class="tab-pane fade" id="allUsersPanel" role="tabpanel">
                         <div class="p-3 border-bottom bg-light d-flex align-items-center justify-content-between flex-wrap gap-2">
                             <div class="d-flex align-items-center gap-2">
-                                <input type="checkbox" id="selectAllUsers" class="form-check-input" style="width:18px;height:18px;cursor:pointer;">
-                                <label for="selectAllUsers" class="mb-0 fw-semibold small text-secondary cursor-pointer">Select All</label>
+                                <input type="checkbox" id="selectAllUsers" class="form-check-input" style="width:19px;height:19px;cursor:pointer;">
+                                <label for="selectAllUsers" class="mb-0 fw-bold small text-dark cursor-pointer">Select All Users In Table</label>
                             </div>
-                            {{-- Search --}}
+                            {{-- Search Filter --}}
                             <form method="GET" action="{{ route('admin.mt5-bot.send-file') }}#allUsersPanel" class="d-flex gap-2">
-                                <input type="text" name="search" value="{{ request('search') }}" class="form-control form-control-sm" placeholder="🔍 Search name or email..." style="width:240px;">
+                                <input type="text" name="search" value="{{ request('search') }}" class="form-control form-control-sm" placeholder="🔍 Search user name or email..." style="width:240px;">
                                 <button type="submit" class="btn btn-sm btn-outline-primary">Search</button>
                                 @if(request('search'))
                                     <a href="{{ route('admin.mt5-bot.send-file') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
@@ -178,7 +253,7 @@
                                 No users found matching your search.
                             </div>
                         @else
-                            <div class="table-responsive" style="max-height:420px;overflow-y:auto;">
+                            <div class="table-responsive" style="max-height:440px;overflow-y:auto;">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light sticky-top">
                                         <tr>
@@ -186,8 +261,8 @@
                                             <th>Name</th>
                                             <th>Email</th>
                                             <th>Status</th>
+                                            <th>Has Demo?</th>
                                             <th>Joined</th>
-                                            <th>Demo Req?</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -202,14 +277,13 @@
                                                     data-email="{{ $user->email }}"
                                                     data-name="{{ $user->name }}">
                                             </td>
-                                            <td class="fw-semibold">{{ $user->name }}</td>
+                                            <td class="fw-bold text-dark">{{ $user->name }}</td>
                                             <td><small class="text-muted">{{ $user->email }}</small></td>
                                             <td>
                                                 <span class="badge bg-{{ $user->status === 'active' ? 'success' : 'secondary' }}">
                                                     {{ ucfirst($user->status ?? 'active') }}
                                                 </span>
                                             </td>
-                                            <td><small class="text-muted">{{ $user->created_at->format('d M Y') }}</small></td>
                                             <td>
                                                 @if(in_array($user->id, $demoUserIds))
                                                     <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25"><i class="bi bi-check-circle me-1"></i>Yes</span>
@@ -217,6 +291,7 @@
                                                     <span class="badge bg-secondary bg-opacity-25 text-secondary border">No</span>
                                                 @endif
                                             </td>
+                                            <td><small class="text-muted">{{ $user->created_at->format('d M Y') }}</small></td>
                                         </tr>
                                         @endforeach
                                     </tbody>
@@ -225,94 +300,98 @@
                         @endif
                     </div>
 
-                </div>{{-- end tab-content --}}
-            </div>{{-- end card --}}
-
-            {{-- Admin Note --}}
-            <div class="card border-0 shadow-sm mt-4">
-                <div class="card-body">
-                    <label class="form-label fw-semibold"><i class="bi bi-chat-left-text me-1 text-warning"></i>Admin Note <span class="text-muted fw-normal">(optional — shown in email)</span></label>
-                    <textarea name="admin_note" class="form-control" rows="2" maxlength="500" placeholder="e.g. Please install and configure with your Exness account...">{{ old('admin_note') }}</textarea>
-                    <small class="text-muted">This note will appear in the email body for the user to read.</small>
                 </div>
             </div>
 
-            {{-- Send Button --}}
-            <div class="d-flex align-items-center justify-content-between mt-4 p-3 rounded-3 border" style="background:#fffbf0;">
-                <div>
-                    <div id="selectionCount" class="fw-bold text-dark">
-                        <i class="bi bi-person-check me-1 text-warning"></i>
-                        <span id="countNum">0</span> user(s) selected
+            {{-- ALL USERS BANNER (Shown when Mode 2 is selected) --}}
+            <div id="allUsersBanner" class="alert alert-info border-0 shadow-sm d-none mb-4 p-4" style="background:#e0f2fe;border-left:5px solid #0284c7 !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-broadcast fs-1 text-primary"></i>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">🚀 Sending to ALL {{ $allUsers->count() }} Registered Users!</h5>
+                        <p class="text-secondary mb-0 small">
+                            You have selected <strong>All Registered Users</strong> mode. Every active registered user in your database will receive the MT5 bot file attached to their email.
+                        </p>
                     </div>
-                    <small class="text-muted" id="selectionEmails" style="max-width:450px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></small>
+                </div>
+            </div>
+
+            {{-- Optional Admin Note --}}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <label class="form-label fw-bold text-dark"><i class="bi bi-chat-left-text me-1 text-warning"></i>3. Admin Note <span class="text-muted fw-normal">(Optional — shown in email)</span></label>
+                    <textarea name="admin_note" class="form-control" rows="2" maxlength="500" placeholder="e.g. Please install and configure the bot with your Exness MT5 account.">{{ old('admin_note') }}</textarea>
+                    <small class="text-muted">This note will appear prominently inside the email body for users.</small>
+                </div>
+            </div>
+
+            {{-- SEND BUTTON & SUMMARY BAR --}}
+            <div class="p-3 rounded-3 border d-flex align-items-center justify-content-between flex-wrap gap-3" style="background:#fffcf0;border-color:#fde047 !important;">
+                <div>
+                    <div id="selectionSummary" class="fw-bold text-dark fs-6">
+                        <i class="bi bi-person-check-fill me-1 text-warning"></i>
+                        <span id="summaryText">0 user(s) selected</span>
+                    </div>
+                    <small class="text-muted" id="selectedEmailsPreview" style="max-width:450px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></small>
                 </div>
                 <button type="submit"
                     id="sendBtn"
-                    class="btn btn-warning fw-bold px-4 py-2"
+                    class="btn btn-warning fw-bold px-4 py-2 fs-6 shadow-sm"
                     {{ ($bot && $bot->hasBotFile()) ? '' : 'disabled' }}
                     onclick="return confirmSend(event)">
-                    <i class="bi bi-send me-2"></i>Send Bot File Email
+                    <i class="bi bi-send-fill me-2"></i>Send Bot File Email
                 </button>
             </div>
 
         </form>
     </div>
 
-    {{-- RIGHT: Info Panel --}}
+    {{-- RIGHT COLUMN: Info & Upload --}}
     <div class="col-lg-4">
 
         {{-- Bot File Card --}}
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header fw-bold"><i class="bi bi-robot me-2 text-warning"></i>Bot File Info</div>
+            <div class="card-header bg-white py-3 fw-bold text-dark">
+                <i class="bi bi-robot me-2 text-warning"></i>Current Bot File Info
+            </div>
             <div class="card-body">
                 @if($bot && $bot->hasBotFile())
                     <dl class="mb-0">
                         <dt class="text-secondary small">File Name</dt>
-                        <dd class="fw-semibold text-break">{{ $bot->bot_file_name }}</dd>
+                        <dd class="fw-bold text-break text-dark">{{ $bot->bot_file_name }}</dd>
                         <dt class="text-secondary small">File Size</dt>
                         <dd>{{ $bot->bot_file_size }}</dd>
                         <dt class="text-secondary small">File Type</dt>
-                        <dd><span class="badge bg-warning text-dark">{{ strtoupper($bot->bot_file_type) }}</span></dd>
-                        <dt class="text-secondary small">Uploaded</dt>
-                        <dd class="mb-0">{{ $bot->bot_file_uploaded_at?->format('d M Y, h:i A') }}</dd>
+                        <dd><span class="badge bg-warning text-dark">{{ strtoupper($bot->bot_file_type ?? 'EX5') }}</span></dd>
+                        <dt class="text-secondary small">Storage Status</dt>
+                        <dd><span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Permanent DB Storage</span></dd>
+                        <dt class="text-secondary small">Uploaded At</dt>
+                        <dd class="mb-0">{{ $bot->bot_file_uploaded_at?->format('d M Y, h:i A') ?? 'Recently' }}</dd>
                     </dl>
                 @else
-                    <p class="text-danger mb-2"><i class="bi bi-exclamation-triangle me-1"></i>No file uploaded yet.</p>
-                    <a href="{{ route('admin.mt5-bot.index') }}" class="btn btn-sm btn-outline-warning">Upload Bot File →</a>
+                    <div class="text-danger mb-3">
+                        <i class="bi bi-exclamation-triangle me-1"></i>No file uploaded yet.
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary w-100 fw-bold" onclick="toggleUploadBox()">
+                        <i class="bi bi-upload me-1"></i>Upload Bot File (.ex5)
+                    </button>
                 @endif
             </div>
         </div>
 
-        {{-- How it works --}}
+        {{-- How It Works --}}
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header fw-bold"><i class="bi bi-info-circle me-2 text-info"></i>How This Works</div>
-            <div class="card-body">
-                <ol class="mb-0 ps-3" style="font-size:13px;line-height:1.9;">
-                    <li>Select users from <strong>Demo Requests</strong> or <strong>All Users</strong> tab</li>
-                    <li>Add an optional admin note</li>
-                    <li>Click <strong>Send Bot File Email</strong></li>
-                    <li>Each user gets a branded email with the <strong>.ex5/.ex4 file attached</strong></li>
-                    <li>Email includes MT5 installation instructions</li>
-                </ol>
+            <div class="card-header bg-white py-3 fw-bold text-dark">
+                <i class="bi bi-info-circle me-2 text-info"></i>How It Works
             </div>
-        </div>
-
-        {{-- Stats --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-header fw-bold"><i class="bi bi-bar-chart me-2 text-success"></i>Quick Stats</div>
             <div class="card-body">
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-secondary small">Approved Requests</span>
-                    <span class="fw-bold text-success">{{ $demoRequests->where('status', 'approved')->count() }}</span>
-                </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
-                    <span class="text-secondary small">Linked Requests</span>
-                    <span class="fw-bold text-info">{{ $demoRequests->where('status', 'linked')->count() }}</span>
-                </div>
-                <div class="d-flex justify-content-between py-2">
-                    <span class="text-secondary small">Total Users</span>
-                    <span class="fw-bold text-primary">{{ $allUsers->count() }}</span>
-                </div>
+                <ol class="mb-0 ps-3 text-secondary" style="font-size:13px;line-height:1.9;">
+                    <li>Upload your <strong>.ex5</strong> or <strong>.ex4</strong> bot file.</li>
+                    <li>Choose either <strong>Specific Selected Users</strong> or <strong>Send to ALL Registered Users</strong>.</li>
+                    <li>Add an optional admin note for instructions.</li>
+                    <li>Click <strong>Send Bot File Email</strong>.</li>
+                    <li>Each user receives a clean, branded email with the file attached!</li>
+                </ol>
             </div>
         </div>
 
@@ -324,19 +403,76 @@
 @push('scripts')
 <script>
 (function () {
-    // Track selected user IDs to prevent duplicates across tabs
-    const selected = new Map(); // id => {email, name}
+    const selected = new Map();
+    const totalUsersCount = {{ $allUsers->count() }};
+    const hasBot = {{ ($bot && $bot->hasBotFile()) ? 'true' : 'false' }};
+
+    window.toggleUploadBox = function () {
+        const box = document.getElementById('uploadBox');
+        if (box) {
+            box.classList.toggle('d-none');
+        }
+    };
+
+    window.setTargetMode = function (mode) {
+        if (mode === 'all') {
+            document.getElementById('targetAll').checked = true;
+        } else {
+            document.getElementById('targetSelected').checked = true;
+        }
+        handleTargetChange();
+    };
+
+    window.handleTargetChange = function () {
+        const isAll = document.getElementById('targetAll').checked;
+        const userCard = document.getElementById('userSelectionCard');
+        const allBanner = document.getElementById('allUsersBanner');
+        const summaryText = document.getElementById('summaryText');
+        const sendBtn = document.getElementById('sendBtn');
+        const preview = document.getElementById('selectedEmailsPreview');
+
+        const optSelected = document.getElementById('optionSelectedBox');
+        const optAll = document.getElementById('optionAllBox');
+
+        if (isAll) {
+            userCard.classList.add('d-none');
+            allBanner.classList.remove('d-none');
+            summaryText.innerHTML = `<span class="text-success">🚀 ALL ${totalUsersCount} Registered Users Selected!</span>`;
+            preview.textContent = 'Email will be sent to all active users in database.';
+            sendBtn.innerHTML = `<i class="bi bi-send-fill me-2"></i>Send to ALL ${totalUsersCount} Users`;
+            sendBtn.disabled = !hasBot;
+
+            optAll.style.borderColor = '#0284c7';
+            optAll.style.background = '#f0f9ff';
+            optSelected.style.borderColor = '#dee2e6';
+            optSelected.style.background = '#ffffff';
+        } else {
+            userCard.classList.remove('d-none');
+            allBanner.classList.add('d-none');
+            sendBtn.innerHTML = `<i class="bi bi-send-fill me-2"></i>Send Bot File Email`;
+
+            optSelected.style.borderColor = '#f59e0b';
+            optSelected.style.background = '#fffbeb';
+            optAll.style.borderColor = '#dee2e6';
+            optAll.style.background = '#ffffff';
+
+            updateCount();
+        }
+    };
 
     function updateCount() {
+        const isAll = document.getElementById('targetAll').checked;
+        if (isAll) return;
+
         const count = selected.size;
-        document.getElementById('countNum').textContent = count;
-        document.getElementById('sendBtn').disabled = count === 0 {{ $bot && $bot->hasBotFile() ? '' : '|| true' }};
+        document.getElementById('summaryText').textContent = `${count} user(s) selected`;
+        document.getElementById('sendBtn').disabled = count === 0 || !hasBot;
 
         const emails = [...selected.values()].map(u => u.email).join(', ');
-        document.getElementById('selectionEmails').textContent = emails || '';
+        document.getElementById('selectedEmailsPreview').textContent = emails || '';
     }
 
-    // Handle individual checkboxes
+    // Checkbox Listeners
     document.querySelectorAll('.user-checkbox').forEach(cb => {
         cb.addEventListener('change', function () {
             const id = this.value;
@@ -345,7 +481,7 @@
             } else {
                 selected.delete(id);
             }
-            // Sync duplicate checkboxes (same user might appear in both tabs)
+            // Sync duplicates
             document.querySelectorAll(`.user-checkbox[value="${id}"]`).forEach(c => {
                 c.checked = this.checked;
             });
@@ -363,7 +499,6 @@
             } else {
                 selected.delete(id);
             }
-            // Sync all tabs
             document.querySelectorAll(`.user-checkbox[value="${id}"]`).forEach(c => c.checked = this.checked);
         });
         updateCount();
@@ -384,18 +519,22 @@
         updateCount();
     });
 
-    // Confirm before send
+    // Confirmation
     window.confirmSend = function (e) {
+        const isAll = document.getElementById('targetAll').checked;
+        if (isAll) {
+            return confirm(`⚠️ Are you sure you want to broadcast the MT5 Bot file to ALL ${totalUsersCount} registered users?`);
+        }
         const count = selected.size;
         if (count === 0) {
             e.preventDefault();
-            alert('Please select at least one user.');
+            alert('Please select at least one user from the list below.');
             return false;
         }
-        return confirm(`Send the MT5 bot file to ${count} user(s)? They will each receive an email with the file attached.`);
+        return confirm(`Send the MT5 bot file to ${count} user(s)?`);
     };
 
-    updateCount();
+    handleTargetChange();
 })();
 </script>
 @endpush

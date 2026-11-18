@@ -119,10 +119,20 @@ class Mt5BotController extends Controller
 
         if ($request->hasFile('bot_file')) {
             $uploadedFile = $request->file('bot_file');
-            if ($bot->bot_file_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($bot->bot_file_path)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($bot->bot_file_path);
+
+            // Store file data directly in DB for permanent persistence on serverless (Vercel)
+            $fileContent = file_get_contents($uploadedFile->getRealPath());
+            $validated['bot_file_data'] = base64_encode($fileContent);
+
+            try {
+                if ($bot->bot_file_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($bot->bot_file_path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($bot->bot_file_path);
+                }
+                $filePath = $uploadedFile->store('mt5-bots', 'public');
+            } catch (\Throwable $e) {
+                $filePath = 'mt5-bots/' . $uploadedFile->getClientOriginalName();
             }
-            $filePath = $uploadedFile->store('mt5-bots', 'public');
+
             $originalName = $uploadedFile->getClientOriginalName();
             $fileSize = $uploadedFile->getSize();
             $formattedSize = $fileSize >= 1048576 
@@ -168,7 +178,16 @@ class Mt5BotController extends Controller
             return back()->with('error', 'No bot software file has been uploaded yet.');
         }
 
-        $fileName = $bot->bot_file_name ?: basename($bot->bot_file_path);
+        $fileName = $bot->bot_file_name ?: basename($bot->bot_file_path ?: 'KTS_Bot.ex5');
+
+        if (!empty($bot->bot_file_data)) {
+            return response()->streamDownload(function () use ($bot) {
+                echo base64_decode($bot->bot_file_data);
+            }, $fileName, [
+                'Content-Type' => 'application/octet-stream',
+            ]);
+        }
+
         return \Illuminate\Support\Facades\Storage::disk('public')->download($bot->bot_file_path, $fileName);
     }
 
@@ -183,6 +202,7 @@ class Mt5BotController extends Controller
             'bot_file_name' => null,
             'bot_file_size' => null,
             'bot_file_type' => null,
+            'bot_file_data' => null,
             'bot_file_uploaded_at' => null,
         ]);
 

@@ -493,6 +493,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('permission:mt5_bot_manage')->group(function () {
             Route::post('mt5-bot', [Mt5BotController::class, 'store'])->name('mt5-bot.store');
             // Send File POST also before wildcards
+            Route::post('mt5-bot/send-file/upload', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'uploadFile'])
+                ->name('mt5-bot.send-file.upload');
             Route::post('mt5-bot/send-file', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'send'])
                 ->middleware('throttle:5,1')
                 ->name('mt5-bot.send-file.post');

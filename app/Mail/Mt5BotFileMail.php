@@ -44,10 +44,19 @@ class Mt5BotFileMail extends Mailable
 
     public function attachments(): array
     {
+        $fileName = $this->bot->bot_file_name ?: 'KTS_Bot.ex5';
+
+        if (!empty($this->bot->bot_file_data)) {
+            return [
+                Attachment::fromData(fn () => base64_decode($this->bot->bot_file_data), $fileName)
+                    ->withMime('application/octet-stream'),
+            ];
+        }
+
         if ($this->bot->bot_file_path && Storage::disk('public')->exists($this->bot->bot_file_path)) {
             return [
                 Attachment::fromStorageDisk('public', $this->bot->bot_file_path)
-                    ->as($this->bot->bot_file_name ?: basename($this->bot->bot_file_path))
+                    ->as($fileName)
                     ->withMime('application/octet-stream'),
             ];
         }
