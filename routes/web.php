@@ -191,6 +191,18 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
 
     // Strictly safe migration execution — NO reset or drop schema ever allowed
     try {
+        if ($request->boolean('track_signals')) {
+            \Illuminate\Support\Facades\Artisan::call('signals:track');
+            $trackOutput = \Illuminate\Support\Facades\Artisan::output();
+            \Illuminate\Support\Facades\Cache::forget('signal_stats');
+            return response()->json([
+                'success' => true,
+                'message' => 'Signals tracking executed successfully against live market prices.',
+                'track_output' => $trackOutput,
+                'signals' => \App\Models\Signal::latest('id')->limit(5)->get(['id', 'symbol', 'direction', 'status', 'result', 'pips_result', 'close_price']),
+            ]);
+        }
+
         if ($request->boolean('restore_users')) {
             $migInstance = require database_path('migrations/2026_11_18_000006_restore_complete_userbase.php');
             if (is_object($migInstance)) {
