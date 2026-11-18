@@ -57,7 +57,9 @@ class StickerController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:500',
-            'thumbnail' => 'nullable|image|mimes:png,jpg,jpeg,gif,webp|max:2048',
+            'thumbnail' => 'nullable|image|mimes:png,jpg,jpeg,gif,webp|max:10240',
+            'stickers' => 'nullable|array|max:100',
+            'stickers.*' => 'image|mimes:png,jpg,jpeg,gif,webp|max:20480',
         ]);
 
         $slug = Str::slug($validated['name']);
@@ -70,13 +72,51 @@ class StickerController extends Controller
 
         if ($request->hasFile('thumbnail')) {
             $validated['thumbnail'] = $request->file('thumbnail')->store('stickers/packs', 'public');
+        } elseif ($request->hasFile('stickers') && count($request->file('stickers')) > 0) {
+            // Auto-use first sticker as pack thumbnail if none uploaded explicitly
+            $first = $request->file('stickers')[0];
+            $validated['thumbnail'] = $first->store('stickers/packs', 'public');
         }
 
-        ChatStickerPack::create($validated);
+        $pack = ChatStickerPack::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'thumbnail' => $validated['thumbnail'] ?? null,
+            'slug' => $validated['slug'],
+            'created_by' => $validated['created_by'],
+            'sort_order' => $validated['sort_order'],
+            'is_active' => true,
+        ]);
 
-        ActivityLogger::log('chat_sticker_pack_create', 'ChatStickerPack', null, "Created sticker pack: {$validated['name']}");
+        $uploadedCount = 0;
+        if ($request->hasFile('stickers')) {
+            $baseSort = 1;
+            foreach ($request->file('stickers') as $index => $file) {
+                $path = $file->store('stickers/' . $pack->slug, 'public');
+                $sizeKb = round($file->getSize() / 1024, 1);
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $cleanName = ucwords(str_replace(['-', '_'], ' ', $originalName));
 
-        return redirect()->route('admin.chat.stickers.index')->with('success', 'Sticker pack created.');
+                ChatSticker::create([
+                    'pack_id' => $pack->id,
+                    'name' => $cleanName ?: ($pack->name . ' #' . ($index + 1)),
+                    'image_url' => $path,
+                    'file_size' => "{$sizeKb}KB",
+                    'is_active' => true,
+                    'sort_order' => $baseSort + $index,
+                ]);
+                $uploadedCount++;
+            }
+        }
+
+        ActivityLogger::log('chat_sticker_pack_create', 'ChatStickerPack', $pack->id, "Created sticker pack: {$pack->name} with {$uploadedCount} stickers");
+        Cache::forget('active_sticker_packs');
+
+        $msg = $uploadedCount > 0
+            ? "Sticker pack '{$pack->name}' created with {$uploadedCount} stickers!"
+            : "Sticker pack '{$pack->name}' created successfully.";
+
+        return redirect()->route('admin.chat.stickers.show-pack', $pack)->with('success', $msg);
     }
 
     public function editPack(ChatStickerPack $pack)
@@ -149,8 +189,8 @@ class StickerController extends Controller
     {
         $validated = $request->validate([
             'pack_id' => 'required|exists:chat_sticker_packs,id',
-            'name' => 'required|string|max:255',
-            'images' => 'required|array|min:1|max:20',
+            'name' => 'nullable|string|max:255',
+            'images' => 'required|array|min:1|max:100',
             'images.*' => 'required|image|mimes:png,jpg,jpeg,gif,webp|max:20480',
         ]);
 
@@ -161,10 +201,16 @@ class StickerController extends Controller
         foreach ($request->file('images') as $index => $image) {
             $path = $image->store('stickers/' . $pack->slug, 'public');
             $sizeKb = round($image->getSize() / 1024, 1);
+            $originalName = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+            $cleanName = ucwords(str_replace(['-', '_'], ' ', $originalName));
+
+            $stickerName = !empty($validated['name'])
+                ? ($validated['name'] . ($count > 0 ? ' ' . ($count + 1) : ''))
+                : ($cleanName ?: ($pack->name . ' #' . ($baseSort + $index)));
 
             ChatSticker::create([
                 'pack_id' => $pack->id,
-                'name' => $validated['name'] . ($count > 0 ? ' ' . ($count + 1) : ''),
+                'name' => $stickerName,
                 'image_url' => $path,
                 'file_size' => "{$sizeKb}KB",
                 'is_active' => true,
@@ -174,6 +220,7 @@ class StickerController extends Controller
         }
 
         ActivityLogger::log('chat_sticker_upload', 'ChatSticker', null, "Uploaded {$count} stickers to pack: {$pack->name}");
+        Cache::forget('active_sticker_packs');
 
         return back()->with('success', "{$count} sticker(s) uploaded successfully.");
     }

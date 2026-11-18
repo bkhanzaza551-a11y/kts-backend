@@ -23,19 +23,21 @@
             <input type="hidden" name="pack_id" value="{{ $pack->id }}">
             <div class="row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label text-secondary">Sticker Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" required maxlength="255" placeholder="e.g. Happy, Trading, Fire">
+                    <label class="form-label text-secondary small fw-semibold">Base Sticker Name <span class="text-muted fw-normal">(Optional)</span></label>
+                    <input type="text" name="name" class="form-control form-control-sm @error('name') is-invalid @enderror" maxlength="255" placeholder="Leave blank to use image file names">
                     @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-5">
-                    <label class="form-label text-secondary">Images <span class="text-danger">*</span></label>
-                    <input type="file" name="images[]" class="form-control @error('images') is-invalid @enderror" multiple accept="image/*" required id="imageInput">
-                    <small class="text-secondary">Select 1-20 images. PNG, JPG, GIF, WebP. Max 20MB each.</small>
+                    <label class="form-label text-secondary small fw-semibold">Sticker Images <span class="text-danger">*</span></label>
+                    <input type="file" name="images[]" class="form-control form-control-sm @error('images') is-invalid @enderror" multiple accept="image/png,image/webp,image/gif,image/jpeg" required id="imageInput">
+                    <small class="text-secondary" style="font-size:0.75rem;">Bulk select up to <strong>100 images</strong> (.png, .webp, .gif, .jpg). Max 20MB each.</small>
                     @error('images')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     @error('images.0')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-3 d-grid">
-                    <button type="submit" class="btn btn-primary" id="uploadBtn"><i class="bi bi-upload me-1"></i>Upload</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold py-1.5" id="uploadBtn">
+                        <i class="bi bi-cloud-arrow-up me-1"></i>Bulk Upload
+                    </button>
                 </div>
             </div>
             <div id="previewGrid" class="row g-2 mt-3" style="display:none;"></div>
