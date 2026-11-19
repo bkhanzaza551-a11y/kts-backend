@@ -14,6 +14,7 @@ return new class extends Migration
         $now = now();
 
         $users = [
+            'aiglobalguide@gmail.com' => 'AI Global Guide',
             '14in105@gmail.com' => 'In',
             '27jerichoagoto@gmail.com' => 'Jerichoagoto',
             '92mushtaq.ahmad@gmail.com' => 'Mushtaq Ahmad',

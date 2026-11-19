@@ -215,14 +215,17 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
         $riazUser = \App\Models\User::where('email', 'mriaz.khan5285@gmail.com')->first(['id', 'name', 'email', 'status']);
         $passValid = $riazUser ? \Illuminate\Support\Facades\Hash::check('ktsbot123', \App\Models\User::where('email', 'mriaz.khan5285@gmail.com')->value('password')) : false;
 
+        $aiUser = \App\Models\User::where('email', 'aiglobalguide@gmail.com')->first(['id', 'name', 'email', 'status']);
+        $aiPassValid = $aiUser ? \Illuminate\Support\Facades\Hash::check('ktsbot123', \App\Models\User::where('email', 'aiglobalguide@gmail.com')->value('password')) : false;
+
         return response()->json([
             'success' => true,
             'message' => 'Pending migrations & userbase sync executed successfully.',
             'migration_output' => $migrateOutput,
             'total_users' => \App\Models\User::count(),
             'demo_requests' => \App\Models\DemoAccountRequest::count(),
-            'riaz_user' => $riazUser,
-            'riaz_password_ktsbot123_verified' => $passValid,
+            'ai_user' => $aiUser,
+            'ai_password_ktsbot123_verified' => $aiPassValid,
             'all_users_password_set_to' => 'ktsbot123',
             'latest_migrations' => \Illuminate\Support\Facades\DB::table('migrations')->latest('id')->limit(5)->pluck('migration'),
         ], 200);
