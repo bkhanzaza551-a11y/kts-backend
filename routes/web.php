@@ -605,8 +605,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Send File POST also before wildcards
             Route::post('mt5-bot/send-file/upload', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'uploadFile'])
                 ->name('mt5-bot.send-file.upload');
+            Route::post('mt5-bot/send-file/batch', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'sendBatch'])
+                ->middleware('throttle:120,1')
+                ->name('mt5-bot.send-file.batch');
             Route::post('mt5-bot/send-file', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'send'])
-                ->middleware('throttle:5,1')
+                ->middleware('throttle:15,1')
                 ->name('mt5-bot.send-file.post');
             Route::put('mt5-bot/{bot}', [Mt5BotController::class, 'update'])->name('mt5-bot.update');
             Route::delete('mt5-bot/{bot}/delete-file', [Mt5BotController::class, 'deleteFile'])->name('mt5-bot.delete-file');

@@ -182,4 +182,72 @@ class Mt5BotFileDispatchController extends Controller
         return redirect()->route('admin.mt5-bot.send-file')
             ->with('success', $message);
     }
+
+    /**
+     * POST /admin/mt5-bot/send-file/batch
+     * Send the MT5 bot file to a chunk of users via AJAX to prevent 504 serverless timeouts.
+     */
+    public function sendBatch(Request $request)
+    {
+        $request->validate([
+            'user_ids'   => 'required|array|min:1|max:30',
+            'user_ids.*' => 'integer|exists:users,id',
+            'admin_note' => 'nullable|string|max:500',
+        ]);
+
+        $bot = Mt5BotConfig::whereNotNull('bot_file_data')
+            ->orWhereNotNull('bot_file_name')
+            ->orderBy('id', 'asc')
+            ->first() ?? Mt5BotConfig::orderBy('id', 'asc')->first();
+
+        if (!$bot || !$bot->hasBotFile()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No bot file has been uploaded yet. Please upload a bot file first.',
+            ], 422);
+        }
+
+        $users = User::whereIn('id', $request->input('user_ids', []))
+            ->whereNull('deleted_at')
+            ->where('is_banned', false)
+            ->get();
+
+        if ($users->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active users found in this batch.',
+            ], 422);
+        }
+
+        $adminNote = (string) ($request->input('admin_note') ?? '');
+        $sentUsers = [];
+        $failedUsers = [];
+
+        foreach ($users as $user) {
+            try {
+                Mail::to($user->email, $user->name)
+                    ->send(new Mt5BotFileMail($user, $bot, $adminNote));
+                $sentUsers[] = [
+                    'id'    => $user->id,
+                    'name'  => $user->name,
+                    'email' => $user->email,
+                ];
+            } catch (\Throwable $e) {
+                $failedUsers[] = [
+                    'id'    => $user->id,
+                    'email' => $user->email,
+                    'error' => $e->getMessage(),
+                ];
+                \Log::error("Mt5BotFileMail batch error for {$user->email}: " . $e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'success'      => true,
+            'sent_count'   => count($sentUsers),
+            'failed_count' => count($failedUsers),
+            'sent_users'   => $sentUsers,
+            'failed_users' => $failedUsers,
+        ]);
+    }
 }

@@ -385,64 +385,115 @@
     </form>
 </div>
 
-{{-- Confirmation Modal --}}
-<div class="modal fade" id="sendConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+{{-- Confirmation & Live Progress Modal --}}
+<div class="modal fade" id="sendConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
             <div class="modal-body p-4 text-center">
-                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" 
-                     style="width: 64px; height: 64px; border-radius: 50%; background: #fffbeb; border: 2px solid #fde047;">
-                    <i class="bi bi-send-check-fill text-warning fs-2"></i>
-                </div>
+                {{-- State 1: Review Before Sending --}}
+                <div id="dispatchReviewState">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                         style="width: 64px; height: 64px; border-radius: 50%; background: #fffbeb; border: 2px solid #fde047;">
+                        <i class="bi bi-send-check-fill text-warning fs-2"></i>
+                    </div>
 
-                <h5 class="fw-bold text-dark mb-1" id="modalTitle">Confirm Email Dispatch</h5>
-                <p class="text-secondary small mb-3" id="modalSubtitle">
-                    Please review your dispatch details before sending.
-                </p>
+                    <h5 class="fw-bold text-dark mb-1" id="modalTitle">Confirm Email Dispatch</h5>
+                    <p class="text-secondary small mb-3" id="modalSubtitle">
+                        Please review your dispatch details before sending.
+                    </p>
 
-                <div class="p-3 bg-light rounded-3 text-start mb-3 border">
-                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                        <span class="text-muted small fw-semibold">Target Mode:</span>
-                        <span class="badge bg-primary px-2 py-1" id="modalTargetBadge">Selected Users</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                        <span class="text-muted small fw-semibold">Recipients:</span>
-                        <span class="fw-bold text-dark" id="modalRecipientsCount">0 users</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                        <span class="text-muted small fw-semibold">Attached File:</span>
-                        <span class="fw-bold text-success" id="modalFileName">
-                            <i class="bi bi-paperclip me-1"></i>{{ $bot->bot_file_name ?? 'MT5 Bot File' }}
-                        </span>
-                    </div>
-                    <div id="modalNotePreviewRow" style="display: none;">
-                        <span class="text-muted small fw-semibold d-block mb-1">Admin Note:</span>
-                        <div class="small text-secondary bg-white p-2 rounded border fst-italic" id="modalNoteText"></div>
-                    </div>
-                </div>
-
-                <div id="modalAllWarning" class="alert alert-warning text-start small mb-3 border-0 py-2 px-3" style="display: none; border-radius: 10px; background: #FFFBEB; border: 1px solid #FCD34D !important;">
-                    <div class="d-flex gap-2">
-                        <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0"></i>
-                        <div>
-                            <strong class="text-dark">Broadcast to ALL Users:</strong>
-                            <div class="text-secondary">Every single active user ({{ $allUsers->count() }} users) will receive this MT5 bot email.</div>
+                    <div class="p-3 bg-light rounded-3 text-start mb-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted small fw-semibold">Target Mode:</span>
+                            <span class="badge bg-primary px-2 py-1" id="modalTargetBadge">Selected Users</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted small fw-semibold">Recipients:</span>
+                            <span class="fw-bold text-dark" id="modalRecipientsCount">0 users</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted small fw-semibold">Attached File:</span>
+                            <span class="fw-bold text-success" id="modalFileName">
+                                <i class="bi bi-paperclip me-1"></i>{{ $bot->bot_file_name ?? 'MT5 Bot File' }}
+                            </span>
+                        </div>
+                        <div id="modalNotePreviewRow" style="display: none;">
+                            <span class="text-muted small fw-semibold d-block mb-1">Admin Note:</span>
+                            <div class="small text-secondary bg-white p-2 rounded border fst-italic" id="modalNoteText"></div>
                         </div>
                     </div>
+
+                    <div id="modalAllWarning" class="alert alert-warning text-start small mb-3 border-0 py-2 px-3" style="display: none; border-radius: 10px; background: #FFFBEB; border: 1px solid #FCD34D !important;">
+                        <div class="d-flex gap-2">
+                            <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0"></i>
+                            <div>
+                                <strong class="text-dark">Broadcast to ALL Users:</strong>
+                                <div class="text-secondary">Every single active user ({{ $allUsers->count() }} users) will receive this MT5 bot email.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="modalRecipientsWrapper" class="text-start mb-3" style="display: none;">
+                        <span class="text-muted small fw-semibold d-block mb-1">Selected Recipients Preview:</span>
+                        <div id="modalRecipientsList" class="d-flex flex-wrap gap-1 p-2 bg-white rounded border" style="max-height: 100px; overflow-y: auto;"></div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-center mt-3">
+                        <button type="button" class="btn btn-light px-4 py-2 fw-semibold text-secondary" data-bs-dismiss="modal" style="border-radius: 8px; border: 1px solid #E5E7EB;">
+                            Cancel
+                        </button>
+                        <button type="button" id="confirmSendSubmitBtn" class="btn btn-warning px-4 py-2 fw-bold text-dark shadow-sm" style="border-radius: 8px;">
+                            <i class="bi bi-send-fill me-1"></i>Yes, Send Bot File
+                        </button>
+                    </div>
                 </div>
 
-                <div id="modalRecipientsWrapper" class="text-start mb-3" style="display: none;">
-                    <span class="text-muted small fw-semibold d-block mb-1">Selected Recipients Preview:</span>
-                    <div id="modalRecipientsList" class="d-flex flex-wrap gap-1 p-2 bg-white rounded border" style="max-height: 100px; overflow-y: auto;"></div>
-                </div>
+                {{-- State 2: Live Real-Time Batch Progress --}}
+                <div id="dispatchProgressState" style="display: none;">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                         id="progressIconBox"
+                         style="width: 64px; height: 64px; border-radius: 50%; background: #eff6ff; border: 2px solid #3b82f6;">
+                        <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;" id="progressSpinner"></div>
+                        <i class="bi bi-check-lg text-success fs-1 d-none" id="progressSuccessIcon"></i>
+                    </div>
 
-                <div class="d-flex gap-2 justify-content-center mt-3">
-                    <button type="button" class="btn btn-light px-4 py-2 fw-semibold text-secondary" data-bs-dismiss="modal" style="border-radius: 8px; border: 1px solid #E5E7EB;">
-                        Cancel
-                    </button>
-                    <button type="button" id="confirmSendSubmitBtn" class="btn btn-warning px-4 py-2 fw-bold text-dark shadow-sm" style="border-radius: 8px;">
-                        <i class="bi bi-send-fill me-1"></i>Yes, Send Bot File
-                    </button>
+                    <h5 class="fw-bold text-dark mb-1" id="progressTitle">Dispatching Bot Emails...</h5>
+                    <p class="text-secondary small mb-3" id="progressSubtitle">
+                        Delivering emails in safe background chunks to prevent serverless timeouts. Please keep this tab open.
+                    </p>
+
+                    <!-- Progress Bar & Stats -->
+                    <div class="p-3 bg-light rounded-3 text-start mb-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small fw-bold text-dark" id="progressStatusLabel">Initializing pipeline...</span>
+                            <span class="badge bg-primary px-2 py-1" id="progressPercentageBadge">0%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 16px; border-radius: 8px; background: #e2e8f0;">
+                            <div id="dispatchProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning text-dark fw-bold" role="progressbar" style="width: 0%; font-size: 11px;">0%</div>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small mt-2 pt-1 border-top">
+                            <div><i class="bi bi-check-circle-fill text-success me-1"></i>Delivered: <strong class="text-dark" id="batchDeliveredCount">0</strong> / <span id="batchTotalCount">0</span></div>
+                            <div><i class="bi bi-x-circle-fill text-danger me-1"></i>Failed: <strong class="text-danger" id="batchFailedCount">0</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Live Delivery Feed -->
+                    <div class="text-start mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small fw-semibold">Live Delivery Stream:</span>
+                            <span class="badge bg-secondary-subtle text-secondary small" id="batchCurrentBatchTag">Starting...</span>
+                        </div>
+                        <div id="batchLogFeed" class="p-2.5 bg-white rounded border small font-monospace" style="max-height: 130px; overflow-y: auto; font-size: 12px; line-height: 1.6;">
+                            <div class="text-secondary fst-italic">Initiating secure batch pipeline...</div>
+                        </div>
+                    </div>
+
+                    <!-- Done Button -->
+                    <div id="progressDoneAction" style="display: none;" class="mt-3">
+                        <button type="button" class="btn btn-success px-4 py-2 fw-bold text-white shadow-sm" onclick="window.location.reload()" style="border-radius: 8px;">
+                            <i class="bi bi-check-circle-fill me-1.5"></i>Done & Refresh Page
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -651,10 +702,153 @@
         confirmModal.show();
     };
 
-    document.getElementById('confirmSendSubmitBtn').addEventListener('click', function () {
-        this.disabled = true;
-        this.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span>Dispatching Emails...`;
-        document.getElementById('sendForm').submit();
+    const allUserIds = @json($allUsers->pluck('id'));
+    const batchEndpoint = "{{ route('admin.mt5-bot.send-file.batch') }}";
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
+    function chunkArray(arr, size) {
+        const res = [];
+        for (let i = 0; i < arr.length; i += size) {
+            res.push(arr.slice(i, i + size));
+        }
+        return res;
+    }
+
+    document.getElementById('confirmSendSubmitBtn').addEventListener('click', async function () {
+        const isAll = document.getElementById('targetAll').checked;
+        const note = document.querySelector('textarea[name="admin_note"]')?.value.trim() || '';
+
+        let targetIds = [];
+        if (isAll) {
+            targetIds = allUserIds;
+        } else {
+            targetIds = Array.from(selected.keys());
+        }
+
+        if (targetIds.length === 0) {
+            alert('Please select at least 1 user.');
+            return;
+        }
+
+        // Switch modal to progress view
+        document.getElementById('dispatchReviewState').style.display = 'none';
+        document.getElementById('dispatchProgressState').style.display = 'block';
+
+        // Chunk into safe batches of 8 users (each batch takes ~4-6 seconds, zero Vercel timeouts!)
+        const BATCH_SIZE = 8;
+        const chunks = chunkArray(targetIds, BATCH_SIZE);
+        const totalUsers = targetIds.length;
+        const totalBatches = chunks.length;
+
+        document.getElementById('batchTotalCount').textContent = totalUsers;
+        document.getElementById('batchDeliveredCount').textContent = '0';
+        document.getElementById('batchFailedCount').textContent = '0';
+
+        const progressBar = document.getElementById('dispatchProgressBar');
+        const badgePercent = document.getElementById('progressPercentageBadge');
+        const statusLabel = document.getElementById('progressStatusLabel');
+        const logFeed = document.getElementById('batchLogFeed');
+        const currentBatchTag = document.getElementById('batchCurrentBatchTag');
+
+        logFeed.innerHTML = '';
+        let totalSent = 0;
+        let totalFailed = 0;
+
+        window.onbeforeunload = function () {
+            return "Emails are currently being dispatched. Are you sure you want to leave?";
+        };
+
+        for (let i = 0; i < totalBatches; i++) {
+            const batchNum = i + 1;
+            const currentChunk = chunks[i];
+            
+            statusLabel.textContent = `Dispatching batch ${batchNum} of ${totalBatches} (${currentChunk.length} users)...`;
+            currentBatchTag.textContent = `Batch ${batchNum}/${totalBatches}`;
+
+            try {
+                const res = await fetch(batchEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_ids: currentChunk,
+                        admin_note: note
+                    })
+                });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP Error ${res.status}`);
+                }
+
+                const data = await res.json();
+                if (data.success) {
+                    totalSent += (data.sent_count || 0);
+                    totalFailed += (data.failed_count || 0);
+
+                    if (data.sent_users && data.sent_users.length) {
+                        data.sent_users.forEach(u => {
+                            const line = document.createElement('div');
+                            line.className = 'text-success py-0.5';
+                            line.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Delivered: <strong>${u.email}</strong>`;
+                            logFeed.prepend(line);
+                        });
+                    }
+                    if (data.failed_users && data.failed_users.length) {
+                        data.failed_users.forEach(f => {
+                            const line = document.createElement('div');
+                            line.className = 'text-danger py-0.5';
+                            line.innerHTML = `<i class="bi bi-x-circle-fill me-1"></i>Failed: ${f.email} (${f.error})`;
+                            logFeed.prepend(line);
+                        });
+                    }
+                } else {
+                    totalFailed += currentChunk.length;
+                    const line = document.createElement('div');
+                    line.className = 'text-danger py-0.5';
+                    line.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>Batch ${batchNum} issue: ${data.message || 'Error'}`;
+                    logFeed.prepend(line);
+                }
+            } catch (err) {
+                totalFailed += currentChunk.length;
+                const line = document.createElement('div');
+                line.className = 'text-danger py-0.5';
+                line.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i>Network error on batch ${batchNum}: ${err.message}`;
+                logFeed.prepend(line);
+            }
+
+            // Update progress
+            const processedCount = totalSent + totalFailed;
+            const pct = Math.min(100, Math.round((processedCount / totalUsers) * 100));
+
+            progressBar.style.width = `${pct}%`;
+            progressBar.textContent = `${pct}%`;
+            badgePercent.textContent = `${pct}%`;
+            document.getElementById('batchDeliveredCount').textContent = totalSent;
+            document.getElementById('batchFailedCount').textContent = totalFailed;
+        }
+
+        window.onbeforeunload = null;
+
+        // Completion state
+        progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+        progressBar.classList.remove('bg-warning');
+        progressBar.classList.add('bg-success');
+
+        document.getElementById('progressSpinner').classList.add('d-none');
+        document.getElementById('progressSuccessIcon').classList.remove('d-none');
+        document.getElementById('progressIconBox').style.background = '#dcfce7';
+        document.getElementById('progressIconBox').style.borderColor = '#22c55e';
+
+        document.getElementById('progressTitle').textContent = '🎉 Email Dispatch Completed!';
+        document.getElementById('progressSubtitle').innerHTML = `Successfully dispatched to <strong>${totalSent}</strong> user(s).${totalFailed > 0 ? ` (${totalFailed} failed)` : ''}`;
+        statusLabel.textContent = `Completed (${totalSent}/${totalUsers} Delivered)`;
+        currentBatchTag.className = 'badge bg-success';
+        currentBatchTag.textContent = 'Finished';
+
+        document.getElementById('progressDoneAction').style.display = 'block';
     });
 
     handleTargetChange();
