@@ -213,18 +213,20 @@
                             </div>
                             <div id="replace-file-container" class="d-none mt-2">
                                 <div class="input-group">
-                                    <input type="file" name="bot_file" class="form-control form-control-sm @error('bot_file') is-invalid @enderror" accept=".exe,.ex5,.ex4,.txt,.zip,.rar,.set,.mq5,.mq4,.dll,.json">
+                                    <input type="file" name="bot_file" class="form-control form-control-sm bot-file-size-check @error('bot_file') is-invalid @enderror" accept=".exe,.ex5,.ex4,.txt,.zip,.rar,.set,.mq5,.mq4,.dll,.json">
                                 </div>
-                                <div class="form-text small">Accepted: <code>.ex5, .ex4, .zip, .rar, .exe, .set</code> (Max: 100MB)</div>
+                                <div class="bot-file-feedback mt-1 small"></div>
+                                <div class="form-text small">Accepted: <code>.ex5, .ex4, .zip, .rar, .exe, .set</code> &bull; <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Max: 4.5 MB</span> (Cloud Serverless Limit)</div>
                             </div>
                             @else
                             <div class="p-3 bg-light rounded-3 border d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="bi bi-info-circle text-muted"></i>
-                                    <span class="text-secondary small">No software file attached. Upload to enable one-click user downloads:</span>
+                                    <span class="text-secondary small">Upload bot software file (<span class="badge bg-warning-subtle text-warning-emphasis">Max 4.5 MB</span>):</span>
                                 </div>
                                 <div class="flex-grow-1" style="max-width: 320px;">
-                                    <input type="file" name="bot_file" class="form-control form-control-sm @error('bot_file') is-invalid @enderror" accept=".exe,.ex5,.ex4,.txt,.zip,.rar,.set,.mq5,.mq4,.dll,.json">
+                                    <input type="file" name="bot_file" class="form-control form-control-sm bot-file-size-check @error('bot_file') is-invalid @enderror" accept=".exe,.ex5,.ex4,.txt,.zip,.rar,.set,.mq5,.mq4,.dll,.json">
+                                    <div class="bot-file-feedback mt-1 small"></div>
                                 </div>
                             </div>
                             @endif
@@ -655,6 +657,52 @@ document.addEventListener('DOMContentLoaded', function () {
         baseLotInput.addEventListener('input', updatePreviews);
         updatePreviews();
     }
+
+    // Client-side file size checker for bot_file inputs (Max 4.2 MB for Vercel payload limit)
+    const MAX_BOT_FILE_BYTES = 4.2 * 1024 * 1024;
+    document.querySelectorAll('.bot-file-size-check').forEach(input => {
+        input.addEventListener('change', function () {
+            const feedback = this.closest('.col-12, .flex-grow-1, #replace-file-container')?.querySelector('.bot-file-feedback');
+            if (!this.files || this.files.length === 0) {
+                if (feedback) feedback.innerHTML = '';
+                return;
+            }
+
+            const file = this.files[0];
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+
+            if (file.size > MAX_BOT_FILE_BYTES) {
+                this.value = ''; // Reset input
+                if (feedback) {
+                    feedback.innerHTML = `
+                        <div class="alert alert-danger py-1.5 px-2 mt-1 mb-0 small">
+                            <i class="bi bi-x-octagon-fill me-1"></i>File size bohot badi hai (<strong>${sizeMb} MB</strong>)! Max allowed limit <strong>4.5 MB</strong> hai.
+                        </div>
+                    `;
+                }
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Size Exceeds 4.5 MB!',
+                        html: `<div class="text-start">
+                            <p class="mb-2">Aapki file ka size <strong>${sizeMb} MB</strong> hai jo allowed limit se bada hai.</p>
+                            <p class="small text-muted mb-0">Vercel serverless functions par maximum upload limit <strong>4.5 MB</strong> hai. Meharbani karke file ko compress karke 4.5 MB se kam size me upload karein.</p>
+                        </div>`,
+                        confirmButtonText: 'Theek Hai',
+                        confirmButtonColor: '#0f172a',
+                    });
+                }
+            } else {
+                if (feedback) {
+                    feedback.innerHTML = `
+                        <div class="text-success small fw-semibold mt-1">
+                            <i class="bi bi-check-circle-fill me-1"></i>Selected: <strong>${file.name}</strong> (${sizeMb} MB - Valid Size)
+                        </div>
+                    `;
+                }
+            }
+        });
+    });
 });
 </script>
 

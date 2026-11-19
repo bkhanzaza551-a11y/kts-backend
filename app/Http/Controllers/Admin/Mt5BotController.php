@@ -89,7 +89,7 @@ class Mt5BotController extends Controller
             'description' => 'nullable|string|max:1000',
             'mt5_account_number' => 'required|string|max:50|unique:mt5_bot_configs,mt5_account_number,' . $bot->id,
             'mt5_server' => 'required|string|max:255',
-            'bot_file' => 'nullable|file|max:102400',
+            'bot_file' => 'nullable|file|max:4608',
             'api_key' => 'nullable|string|max:255',
             'api_secret' => 'nullable|string|max:255',
             'mode' => 'required|in:live,demo,backtest',

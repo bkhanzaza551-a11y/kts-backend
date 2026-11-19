@@ -65,7 +65,9 @@ class Mt5BotFileDispatchController extends Controller
     public function uploadFile(Request $request)
     {
         $request->validate([
-            'bot_file' => 'required|file|max:102400',
+            'bot_file' => 'required|file|max:4608',
+        ], [
+            'bot_file.max' => 'The bot file must not be greater than 4.5 MB due to serverless payload limits. Please compress your file.',
         ]);
 
         $bot = Mt5BotConfig::orderBy('id', 'asc')->first();

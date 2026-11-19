@@ -95,15 +95,24 @@
 
             {{-- Hidden Upload Box --}}
             <div id="uploadBox" class="{{ ($bot && $bot->hasBotFile()) ? 'd-none' : '' }} mt-3 pt-3 border-top">
-                <form method="POST" action="{{ route('admin.mt5-bot.send-file.upload') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('admin.mt5-bot.send-file.upload') }}" enctype="multipart/form-data" id="botFileUploadForm">
                     @csrf
                     <div class="row g-2 align-items-center">
                         <div class="col-md-9">
-                            <label class="form-label small fw-semibold text-secondary mb-1">Select MT5 Bot Software File (.ex5, .ex4, .zip):</label>
-                            <input type="file" name="bot_file" class="form-control form-control-sm" accept=".ex5,.ex4,.zip,.mq5,.mq4" required>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-semibold text-secondary mb-0">Select MT5 Bot Software File (.ex5, .ex4, .zip):</label>
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size:0.7rem;">
+                                    <i class="bi bi-info-circle me-1"></i>Max File Size: 4.5 MB (Cloud Limit)
+                                </span>
+                            </div>
+                            <input type="file" name="bot_file" id="botFileInput" class="form-control form-control-sm" accept=".ex5,.ex4,.zip,.mq5,.mq4,.rar" required>
+                            <div id="botFileSizeFeedback" class="mt-1 small"></div>
+                            <div class="form-text small text-muted" style="font-size:0.75rem;">
+                                Supported: <code>.ex5, .ex4, .zip, .rar</code> &bull; Vercel serverless functions strictly require files to be under <strong>4.5 MB</strong>.
+                            </div>
                         </div>
-                        <div class="col-md-3 pt-md-4">
-                            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-1.5">
+                        <div class="col-md-3 pt-md-2 align-self-start">
+                            <button type="submit" id="botFileUploadBtn" class="btn btn-primary btn-sm w-100 fw-bold py-2 mt-md-3">
                                 <i class="bi bi-upload me-1"></i> Upload & Save
                             </button>
                         </div>
@@ -649,6 +658,79 @@
     });
 
     handleTargetChange();
+
+    // Client-side File Upload Size Validation (Max 4.2 MB for Vercel Serverless payload safety)
+    const botFileInput = document.getElementById('botFileInput');
+    const botFileSizeFeedback = document.getElementById('botFileSizeFeedback');
+    const botFileUploadForm = document.getElementById('botFileUploadForm');
+    const MAX_FILE_BYTES = 4.2 * 1024 * 1024; // 4.2 MB
+
+    if (botFileInput) {
+        botFileInput.addEventListener('change', function () {
+            if (!this.files || this.files.length === 0) {
+                botFileSizeFeedback.innerHTML = '';
+                return;
+            }
+
+            const file = this.files[0];
+            const sizeInMb = (file.size / (1024 * 1024)).toFixed(2);
+
+            if (file.size > MAX_FILE_BYTES) {
+                this.value = ''; // Reset input
+                botFileSizeFeedback.innerHTML = `
+                    <div class="alert alert-danger py-2 px-3 mt-2 d-flex align-items-center gap-2 mb-0">
+                        <i class="bi bi-x-octagon-fill fs-5 flex-shrink-0"></i>
+                        <div>
+                            <strong>File size bohot badi hai (${sizeInMb} MB)!</strong><br>
+                            Vercel cloud serverless par maximum allowed file size <strong>4.5 MB</strong> hai. Meharbani karke file ko compress (.zip / .rar) karke 4.5 MB se kam size me upload karein.
+                        </div>
+                    </div>
+                `;
+
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Size Exceeds 4.5 MB!',
+                        html: `
+                            <div class="text-start">
+                                <p class="mb-2">Aapki select ki hui file ka size <strong>${sizeInMb} MB</strong> hai jo limit se badi hai.</p>
+                                <div class="alert alert-warning p-2 small mb-2">
+                                    <strong>Vercel Serverless Rule:</strong> Vercel par maximum payload limit <strong>4.5 MB</strong> hoti hai.
+                                </div>
+                                <p class="small text-muted mb-0">💡 <strong>Solution:</strong> Bot file (.ex5, .zip, .rar) ko compress karke 4.5 MB se kam size me upload karein.</p>
+                            </div>
+                        `,
+                        confirmButtonText: 'Theek Hai',
+                        confirmButtonColor: '#0f172a',
+                        customClass: { popup: 'custom-swal-modal', title: 'custom-swal-title' }
+                    });
+                }
+            } else {
+                botFileSizeFeedback.innerHTML = `
+                    <div class="text-success small fw-semibold mt-1">
+                        <i class="bi bi-check-circle-fill me-1"></i>Selected: <strong>${file.name}</strong> (${sizeInMb} MB - Valid Size)
+                    </div>
+                `;
+            }
+        });
+    }
+
+    if (botFileUploadForm) {
+        botFileUploadForm.addEventListener('submit', function (e) {
+            if (botFileInput && botFileInput.files && botFileInput.files.length > 0) {
+                if (botFileInput.files[0].size > MAX_FILE_BYTES) {
+                    e.preventDefault();
+                    alert('File size is too large for Vercel serverless. Maximum allowed size is 4.5 MB.');
+                    return false;
+                }
+            }
+            const submitBtn = document.getElementById('botFileUploadBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status"></span>Uploading...`;
+            }
+        });
+    }
 })();
 </script>
 @endpush
