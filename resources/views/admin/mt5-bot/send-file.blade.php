@@ -3,66 +3,83 @@
 
 @push('styles')
 <style>
-    /* Executive Dispatch Studio Custom Styling */
-    .dispatch-studio-card {
+    /* Executive Dispatch Studio Refined Styles */
+    .studio-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+    }
+    
+    .stat-card-widget {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.1rem 1.25rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         transition: all 0.2s ease;
     }
-    .dispatch-option-card {
+    .stat-card-widget:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    .dispatch-choice-card {
         border: 2px solid #e2e8f0;
         border-radius: 12px;
+        padding: 1.25rem;
         background: #ffffff;
         cursor: pointer;
         transition: all 0.2s ease;
-        position: relative;
+        height: 100%;
     }
-    .dispatch-option-card:hover {
-        border-color: #cbd5e1;
+    .dispatch-choice-card:hover {
+        border-color: #94a3b8;
         background: #f8fafc;
-        transform: translateY(-1px);
     }
-    .dispatch-option-card.active-selected {
-        border-color: #3b82f6 !important;
+    .dispatch-choice-card.selected-active {
+        border-color: #2563eb !important;
         background: #eff6ff !important;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12);
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.1);
     }
-    .dispatch-option-card.active-all {
-        border-color: #10b981 !important;
+    .dispatch-choice-card.broadcast-active {
+        border-color: #059669 !important;
         background: #ecfdf5 !important;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.12);
+        box-shadow: 0 4px 14px rgba(5, 150, 105, 0.1);
     }
-    .recipient-table-container {
-        max-height: 440px;
+
+    .table-scroll-wrap {
+        max-height: 420px;
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: #cbd5e1 #f8fafc;
     }
-    .recipient-table-container::-webkit-scrollbar {
+    .table-scroll-wrap::-webkit-scrollbar {
         width: 6px;
     }
-    .recipient-table-container::-webkit-scrollbar-track {
-        background: #f8fafc;
-    }
-    .recipient-table-container::-webkit-scrollbar-thumb {
+    .table-scroll-wrap::-webkit-scrollbar-thumb {
         background-color: #cbd5e1;
         border-radius: 6px;
     }
+
     .trader-row {
         cursor: pointer;
-        transition: background 0.15s ease;
+        transition: background-color 0.15s ease;
     }
     .trader-row:hover {
         background-color: #f8fafc !important;
     }
-    .trader-row.row-selected {
-        background-color: #f0f7ff !important;
+    .trader-row.row-checked {
+        background-color: #eff6ff !important;
     }
-    .user-avatar-circle {
-        width: 34px;
-        height: 34px;
+
+    .avatar-badge {
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -72,17 +89,14 @@
         background: #f1f5f9;
         color: #334155;
         border: 1px solid #e2e8f0;
+        flex-shrink: 0;
     }
-    .sticky-dispatch-hub {
-        position: sticky;
-        top: 20px;
-        z-index: 10;
-    }
-    .quick-template-chip {
+
+    .template-btn-chip {
         font-size: 0.75rem;
         padding: 4px 10px;
-        border-radius: 20px;
-        background: #f1f5f9;
+        border-radius: 6px;
+        background: #f8fafc;
         color: #475569;
         border: 1px solid #e2e8f0;
         cursor: pointer;
@@ -90,35 +104,45 @@
         display: inline-flex;
         align-items: center;
         gap: 4px;
+        font-weight: 500;
     }
-    .quick-template-chip:hover {
+    .template-btn-chip:hover {
         background: #e2e8f0;
         color: #0f172a;
+        border-color: #cbd5e1;
     }
-    .selected-tag-item {
+
+    .sticky-hub-panel {
+        position: sticky;
+        top: 24px;
+        z-index: 10;
+    }
+
+    .user-pill-tag {
         font-size: 0.75rem;
         padding: 3px 8px;
         border-radius: 6px;
-        background: #f8fafc;
+        background: #ffffff;
         border: 1px solid #e2e8f0;
-        color: #1e293b;
+        color: #0f172a;
         display: inline-flex;
         align-items: center;
         gap: 6px;
         max-width: 100%;
     }
-    .selected-tag-item .tag-email {
-        max-width: 180px;
+    .user-pill-tag .tag-text {
+        max-width: 170px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    .selected-tag-item .tag-remove {
+    .user-pill-tag .tag-close {
         color: #94a3b8;
         cursor: pointer;
         font-weight: bold;
+        line-height: 1;
     }
-    .selected-tag-item .tag-remove:hover {
+    .user-pill-tag .tag-close:hover {
         color: #ef4444;
     }
 </style>
@@ -126,146 +150,177 @@
 
 @section('content')
 <div class="container-fluid px-0 pb-5">
-    
-    {{-- Top Executive Header & Breadcrumbs --}}
+
+    {{-- 1. Clean Top Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-            <div class="d-flex align-items-center gap-2 small text-muted mb-1">
-                <span>Admin</span>
-                <i class="bi bi-chevron-right" style="font-size: 0.65rem;"></i>
-                <a href="{{ route('admin.mt5-bot.index') }}" class="text-secondary text-decoration-none">MT5 Bot</a>
-                <i class="bi bi-chevron-right" style="font-size: 0.65rem;"></i>
-                <span class="text-primary fw-semibold">Email Dispatch Studio</span>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1.5 small">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}" class="text-secondary text-decoration-none">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.mt5-bot.index') }}" class="text-secondary text-decoration-none">MT5 Bot</a></li>
+                    <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Email Dispatch Studio</li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center gap-2">
+                <h4 class="mb-0 fw-bold text-dark">
+                    <i class="bi bi-send-check text-primary me-2"></i>MT5 Bot Email Dispatch Studio
+                </h4>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-0.5 small fw-semibold">
+                    v2.5
+                </span>
             </div>
-            <div class="d-flex align-items-center gap-2.5">
-                <div class="rounded-3 bg-primary text-white d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
-                    <i class="bi bi-send-check-fill fs-5"></i>
-                </div>
-                <div>
-                    <h4 class="mb-0 fw-bold text-dark" style="letter-spacing: -0.02em;">MT5 Bot Email Dispatch Studio</h4>
-                    <p class="text-secondary small mb-0">Securely distribute MT5 expert advisors (.ex5/.zip) & installation instructions to platform traders.</p>
-                </div>
-            </div>
+            <p class="text-secondary small mb-0 mt-1">Distribute bot files (.ex5/.zip) & installation guides directly to traders' inboxes.</p>
         </div>
 
         <div class="d-flex align-items-center gap-2">
             <a href="{{ route('admin.mt5-bot.index') }}" class="btn btn-outline-secondary btn-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1.5" style="border-radius: 8px;">
                 <i class="bi bi-arrow-left"></i> Back to MT5 Bot
             </a>
-            <button type="button" class="btn btn-dark btn-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1.5" onclick="toggleUploadBox()" style="border-radius: 8px;">
+            <button type="button" class="btn btn-primary btn-sm px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1.5" onclick="toggleUploadBox()" style="border-radius: 8px;">
                 <i class="bi bi-cloud-arrow-up"></i> {{ ($bot && $bot->hasBotFile()) ? 'Replace Bot File' : 'Upload Bot File' }}
             </button>
         </div>
     </div>
 
-    {{-- Top Executive Mission Control Bar --}}
-    <div class="dispatch-studio-card mb-4 p-3.5">
-        <div class="row g-3 align-items-center">
-            {{-- Segment 1: Active Bot File --}}
-            <div class="col-lg-4 col-md-6 border-end-lg">
+    {{-- 2. Top Stats Bar: 3 Clean, Distinct Cards (Perfect Alignment Grid) --}}
+    <div class="row g-3 mb-4">
+        
+        {{-- Card 1: Active Bot File --}}
+        <div class="col-lg-4 col-md-6 col-12">
+            <div class="stat-card-widget">
+                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Active Bot Software</span>
+                    @if($bot && $bot->hasBotFile())
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5 rounded-pill fw-semibold" style="font-size: 0.7rem;">
+                            <i class="bi bi-check2 me-0.5"></i>Ready
+                        </span>
+                    @else
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-0.5 rounded-pill fw-semibold" style="font-size: 0.7rem;">
+                            Missing File
+                        </span>
+                    @endif
+                </div>
+
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 {{ ($bot && $bot->hasBotFile()) ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}" style="width:44px;height:44px;">
-                        <i class="bi {{ ($bot && $bot->hasBotFile()) ? 'bi-file-earmark-zip-fill' : 'bi-exclamation-triangle-fill' }} fs-4"></i>
+                    <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0 {{ ($bot && $bot->hasBotFile()) ? 'bg-success text-white' : 'bg-danger text-white' }}" style="width: 44px; height: 44px;">
+                        <i class="bi {{ ($bot && $bot->hasBotFile()) ? 'bi-file-earmark-code' : 'bi-exclamation-triangle' }} fs-4"></i>
                     </div>
                     <div class="min-w-0 flex-grow-1">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="fw-bold text-dark text-truncate d-inline-block" style="max-width: 170px;">
-                                {{ $bot->bot_file_name ?? 'No Bot File Uploaded' }}
-                            </span>
-                            @if($bot && $bot->hasBotFile())
-                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5 rounded-pill fw-semibold" style="font-size:0.65rem;">
-                                    READY
-                                </span>
-                            @else
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-0.5 rounded-pill fw-semibold" style="font-size:0.65rem;">
-                                    MISSING
-                                </span>
-                            @endif
+                        <div class="fw-bold text-dark text-truncate" style="max-width: 220px;" title="{{ $bot->bot_file_name ?? 'No bot file' }}">
+                            {{ $bot->bot_file_name ?? 'No bot file loaded' }}
                         </div>
-                        <div class="text-muted small mt-0.5 d-flex align-items-center gap-2">
-                            <span>{{ $bot->bot_file_size ?? '0 KB' }}</span>
-                            <span>•</span>
-                            <span class="text-success small"><i class="bi bi-shield-check"></i> Cloud Storage</span>
+                        <div class="text-muted small mt-0.5">
+                            {{ $bot->bot_file_size ?? '0 KB' }} &bull; <span class="text-success"><i class="bi bi-shield-check"></i> Cloud Storage</span>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Segment 2: Auto-Send on Registration Toggle --}}
-            <div class="col-lg-5 col-md-6 border-end-lg">
-                <div class="d-flex align-items-center justify-content-between pe-lg-3">
-                    <div class="d-flex align-items-center gap-2.5">
+                <div class="mt-3 pt-2.5 border-top d-flex justify-content-between align-items-center small">
+                    <span class="text-muted" style="font-size: 0.75rem;">Format: <strong>{{ strtoupper($bot->bot_file_type ?? 'EX5') }}</strong></span>
+                    <a href="javascript:void(0)" onclick="toggleUploadBox()" class="text-primary text-decoration-none fw-semibold" style="font-size: 0.75rem;">
+                        Replace File <i class="bi bi-chevron-right ms-0.5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- Card 2: Registration Auto-Send --}}
+        <div class="col-lg-4 col-md-6 col-12">
+            <div class="stat-card-widget">
+                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Signup Automation</span>
+                    <span class="badge rounded-pill fw-bold" id="autoDispatchStatusBadge"
+                          style="font-size: 0.7rem; background: {{ $autoSendBotEnabled ? '#ecfdf5' : '#f1f5f9' }}; color: {{ $autoSendBotEnabled ? '#059669' : '#64748b' }}; border: 1px solid {{ $autoSendBotEnabled ? '#a7f3d0' : '#cbd5e1' }};">
+                        {{ $autoSendBotEnabled ? '● ACTIVE (ON)' : '○ INACTIVE (OFF)' }}
+                    </span>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
                         <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" id="autoDispatchIconBox"
-                             style="width:40px;height:40px; background: {{ $autoSendBotEnabled ? '#ecfdf5' : '#f1f5f9' }}; color: {{ $autoSendBotEnabled ? '#059669' : '#64748b' }};">
-                            <i class="bi bi-robot fs-5"></i>
+                             style="width: 44px; height: 44px; background: {{ $autoSendBotEnabled ? '#ecfdf5' : '#f1f5f9' }}; color: {{ $autoSendBotEnabled ? '#059669' : '#64748b' }}; border: 1px solid {{ $autoSendBotEnabled ? '#a7f3d0' : '#e2e8f0' }};">
+                            <i class="bi bi-robot fs-4"></i>
                         </div>
                         <div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="fw-bold text-dark small">Auto-Send on Registration</span>
-                                <span class="badge rounded-pill fw-bold" id="autoDispatchStatusBadge"
-                                      style="font-size:0.65rem; background: {{ $autoSendBotEnabled ? '#ecfdf5' : '#f1f5f9' }}; color: {{ $autoSendBotEnabled ? '#059669' : '#64748b' }}; border: 1px solid {{ $autoSendBotEnabled ? '#a7f3d0' : '#cbd5e1' }};">
-                                    {{ $autoSendBotEnabled ? 'ON' : 'OFF' }}
-                                </span>
-                            </div>
-                            <div class="text-muted small" style="font-size:0.75rem;">
-                                Automatically emails this bot file to new user sign-ups.
-                            </div>
+                            <div class="fw-bold text-dark fs-6">Auto-Send on Register</div>
+                            <div class="text-muted small" style="font-size: 0.75rem;">Delivers bot file to new signups</div>
                         </div>
                     </div>
-                    <div class="form-check form-switch ps-0 mb-0 ms-2">
+
+                    <div class="form-check form-switch ps-0 mb-0">
                         <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch" id="autoSendBotToggle"
-                               style="width: 2.8rem; height: 1.5rem; cursor: pointer;"
+                               style="width: 3rem; height: 1.6rem; cursor: pointer;"
                                {{ $autoSendBotEnabled ? 'checked' : '' }}
                                onchange="toggleAutoSendBot(this.checked)">
                     </div>
                 </div>
-            </div>
 
-            {{-- Segment 3: Audience Stats --}}
-            <div class="col-lg-3 col-md-12">
-                <div class="d-flex align-items-center justify-content-lg-end gap-3">
-                    <div class="text-lg-end">
-                        <div class="fw-bold text-dark fs-6">{{ $allUsers->count() }} Registered Traders</div>
-                        <div class="text-muted small" style="font-size:0.75rem;">{{ $demoRequests->count() }} Approved Demo Accounts</div>
-                    </div>
-                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center flex-shrink-0 text-secondary" style="width:40px;height:40px; border:1px solid #e2e8f0;">
-                        <i class="bi bi-people-fill fs-5"></i>
-                    </div>
+                <div class="mt-3 pt-2.5 border-top d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.75rem;">
+                    <span>Welcome Email Integration</span>
+                    <span class="text-dark fw-semibold" id="autoSendLabelText">{{ $autoSendBotEnabled ? 'Enabled' : 'Disabled' }}</span>
                 </div>
             </div>
         </div>
 
-        {{-- Collapsible File Upload Box --}}
-        <div id="uploadBox" class="{{ ($bot && $bot->hasBotFile()) ? 'd-none' : '' }} mt-3 pt-3 border-top">
-            <form method="POST" action="{{ route('admin.mt5-bot.send-file.upload') }}" enctype="multipart/form-data" id="botFileUploadForm">
-                @csrf
-                <div class="bg-light p-3 rounded-3 border">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="small fw-bold text-dark"><i class="bi bi-cloud-arrow-up me-1 text-primary"></i>Upload New Bot Software File:</span>
-                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size:0.7rem;">
-                            <i class="bi bi-info-circle me-1"></i>Vercel Cloud Limit: Max 4.5 MB
-                        </span>
+        {{-- Card 3: Platform Audience Reach --}}
+        <div class="col-lg-4 col-md-12 col-12">
+            <div class="stat-card-widget">
+                <div class="d-flex justify-content-between align-items-center mb-2.5">
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Audience Reach</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-0.5 rounded-pill fw-semibold" style="font-size: 0.7rem;">
+                        Verified DB
+                    </span>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                        <i class="bi bi-people-fill fs-4"></i>
                     </div>
-                    <div class="row g-2 align-items-center">
-                        <div class="col-md-9">
-                            <input type="file" name="bot_file" id="botFileInput" class="form-control form-control-sm" accept=".ex5,.ex4,.zip,.mq5,.mq4,.rar" required>
-                            <div id="botFileSizeFeedback" class="mt-1 small"></div>
-                            <div class="form-text small text-muted" style="font-size:0.75rem;">
-                                Supported formats: <code>.ex5, .ex4, .zip, .rar</code> &bull; Files are stored safely in cloud database.
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" id="botFileUploadBtn" class="btn btn-primary btn-sm w-100 fw-bold py-1.5">
-                                <i class="bi bi-check-lg me-1"></i> Upload & Set Active
-                            </button>
-                        </div>
+                    <div>
+                        <div class="fw-bold text-dark fs-5 mb-0">{{ $allUsers->count() }} Registered Traders</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">{{ $demoRequests->count() }} Approved Demo Traders</div>
                     </div>
                 </div>
-            </form>
+
+                <div class="mt-3 pt-2.5 border-top d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.75rem;">
+                    <span>Delivery Pipeline</span>
+                    <span class="text-success fw-semibold"><i class="bi bi-lightning-charge-fill me-0.5"></i>Chunked Safe Queue</span>
+                </div>
+            </div>
         </div>
+
     </div>
 
-    {{-- Main Workspace: 2-Column Split --}}
+    {{-- Collapsible Bot File Upload Box --}}
+    <div id="uploadBox" class="{{ ($bot && $bot->hasBotFile()) ? 'd-none' : '' }} studio-card mb-4 p-4 border-primary">
+        <form method="POST" action="{{ route('admin.mt5-bot.send-file.upload') }}" enctype="multipart/form-data" id="botFileUploadForm">
+            @csrf
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-cloud-arrow-up text-primary fs-5"></i>
+                    <h6 class="mb-0 fw-bold text-dark">Upload / Update Bot Software File</h6>
+                </div>
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 small">
+                    <i class="bi bi-info-circle me-1"></i>Max File Size: 4.5 MB (Cloud Limit)
+                </span>
+            </div>
+            <p class="text-muted small mb-3">Upload your compiled MT5 Expert Advisor (<code>.ex5</code>, <code>.ex4</code>, <code>.zip</code>, or <code>.rar</code>). This file will be stored permanently in cloud storage and attached to dispatch emails.</p>
+            
+            <div class="row g-2 align-items-center">
+                <div class="col-md-9">
+                    <input type="file" name="bot_file" id="botFileInput" class="form-control" accept=".ex5,.ex4,.zip,.mq5,.mq4,.rar" required>
+                    <div id="botFileSizeFeedback" class="mt-1 small"></div>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" id="botFileUploadBtn" class="btn btn-primary w-100 fw-bold py-2">
+                        <i class="bi bi-check-lg me-1"></i> Upload & Set Active
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {{-- 3. Main Workspace: 2-Column Split --}}
     <form method="POST" action="{{ route('admin.mt5-bot.send-file.post') }}" id="sendForm">
         @csrf
         <div class="row g-4">
@@ -273,23 +328,23 @@
             {{-- LEFT COLUMN: Configuration, Audience Selection, & Note --}}
             <div class="col-xl-8 col-lg-7">
                 
-                {{-- STEP 1: Audience Mode Selector --}}
-                <div class="dispatch-studio-card mb-4 p-4">
+                {{-- STEP 1: Target Audience Mode --}}
+                <div class="studio-card mb-4 p-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary text-white rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:24px;height:24px;font-size:0.75rem;">1</span>
-                            <h6 class="mb-0 fw-bold text-dark">Target Audience Mode</h6>
+                            <span class="badge bg-primary text-white rounded-pill px-2 py-1 small fw-bold">STEP 1</span>
+                            <h6 class="mb-0 fw-bold text-dark fs-6">Target Audience Mode</h6>
                         </div>
-                        <span class="text-muted small">Choose who receives the email</span>
+                        <span class="text-muted small">Choose dispatch scope</span>
                     </div>
 
                     <div class="row g-3">
                         {{-- Mode 1: Selected Users --}}
                         <div class="col-md-6">
-                            <div class="dispatch-option-card p-3 h-100 active-selected" id="cardOptionSelected" onclick="setTargetMode('selected')">
-                                <div class="d-flex align-items-start justify-content-between">
+                            <div class="dispatch-choice-card selected-active" id="cardOptionSelected" onclick="setTargetMode('selected')">
+                                <div class="d-flex align-items-start justify-content-between mb-2">
                                     <div class="d-flex align-items-center gap-2.5">
-                                        <div class="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                                        <div class="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
                                             <i class="bi bi-people-fill fs-5"></i>
                                         </div>
                                         <div>
@@ -299,7 +354,7 @@
                                     </div>
                                     <input class="form-check-input mt-1 cursor-pointer" type="radio" name="send_target" id="targetSelected" value="selected" checked onchange="handleTargetChange()">
                                 </div>
-                                <p class="text-secondary small mb-0 mt-2.5 ps-1" style="font-size:0.8rem; line-height: 1.4;">
+                                <p class="text-secondary small mb-0 ps-1" style="font-size:0.8rem; line-height: 1.45;">
                                     Pick specific approved demo accounts or select registered users individually from the list below.
                                 </p>
                             </div>
@@ -307,10 +362,10 @@
 
                         {{-- Mode 2: ALL Registered Users --}}
                         <div class="col-md-6">
-                            <div class="dispatch-option-card p-3 h-100" id="cardOptionAll" onclick="setTargetMode('all')">
-                                <div class="d-flex align-items-start justify-content-between">
+                            <div class="dispatch-choice-card" id="cardOptionAll" onclick="setTargetMode('all')">
+                                <div class="d-flex align-items-start justify-content-between mb-2">
                                     <div class="d-flex align-items-center gap-2.5">
-                                        <div class="rounded-circle bg-success-subtle text-success p-2 d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                                        <div class="rounded-circle bg-success-subtle text-success p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
                                             <i class="bi bi-broadcast-pin fs-5"></i>
                                         </div>
                                         <div>
@@ -320,7 +375,7 @@
                                     </div>
                                     <input class="form-check-input mt-1 cursor-pointer" type="radio" name="send_target" id="targetAll" value="all" onchange="handleTargetChange()">
                                 </div>
-                                <p class="text-secondary small mb-0 mt-2.5 ps-1" style="font-size:0.8rem; line-height: 1.4;">
+                                <p class="text-secondary small mb-0 ps-1" style="font-size:0.8rem; line-height: 1.45;">
                                     Dispatches to <strong>all {{ $allUsers->count() }} registered users</strong> in safe background chunks. Zero timeouts.
                                 </p>
                             </div>
@@ -329,12 +384,12 @@
                 </div>
 
                 {{-- STEP 2: Recipient Selection Table (Shown when Specific Traders is active) --}}
-                <div class="dispatch-studio-card mb-4" id="userSelectionCard" style="overflow: hidden;">
+                <div class="studio-card mb-4" id="userSelectionCard" style="overflow: hidden;">
                     <div class="card-header bg-white border-bottom p-3.5">
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2.5 mb-2.5">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-primary text-white rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:24px;height:24px;font-size:0.75rem;">2</span>
-                                <h6 class="mb-0 fw-bold text-dark">Select Recipients</h6>
+                                <span class="badge bg-primary text-white rounded-pill px-2 py-1 small fw-bold">STEP 2</span>
+                                <h6 class="mb-0 fw-bold text-dark fs-6">Select Recipients</h6>
                             </div>
 
                             {{-- Navigation Tabs --}}
@@ -356,7 +411,7 @@
 
                         {{-- Search & Bulk Actions Toolbar --}}
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pt-2 border-top">
-                            <div class="input-group input-group-sm" style="max-width: 320px;">
+                            <div class="input-group input-group-sm" style="max-width: 340px;">
                                 <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
                                 <input type="text" id="globalUserSearch" class="form-control border-start-0 bg-light" placeholder="Search by trader name, email, or account..." oninput="handleTableSearch(this.value)">
                             </div>
@@ -383,7 +438,7 @@
                                     <small>Switch to the "All Traders" tab to select registered users.</small>
                                 </div>
                             @else
-                                <div class="recipient-table-container">
+                                <div class="table-scroll-wrap">
                                     <table class="table table-hover align-middle mb-0" id="demoTable">
                                         <thead class="table-light sticky-top small text-secondary" style="border-bottom: 1px solid #e2e8f0;">
                                             <tr>
@@ -412,7 +467,7 @@
                                                     </td>
                                                     <td>
                                                         <div class="d-flex align-items-center gap-2.5">
-                                                            <div class="user-avatar-circle">
+                                                            <div class="avatar-badge">
                                                                 {{ strtoupper(substr($req->user->name ?? 'T', 0, 2)) }}
                                                             </div>
                                                             <div>
@@ -452,7 +507,7 @@
 
                         {{-- TAB 2: All Registered Users --}}
                         <div class="tab-pane fade" id="allUsersPanel" role="tabpanel">
-                            <div class="recipient-table-container">
+                            <div class="table-scroll-wrap">
                                 <table class="table table-hover align-middle mb-0" id="allUsersTable">
                                     <thead class="table-light sticky-top small text-secondary" style="border-bottom: 1px solid #e2e8f0;">
                                         <tr>
@@ -480,7 +535,7 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center gap-2.5">
-                                                    <div class="user-avatar-circle">
+                                                    <div class="avatar-badge">
                                                         {{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}
                                                     </div>
                                                     <div>
@@ -516,7 +571,7 @@
                 </div>
 
                 {{-- Broadcast Mode Notification Banner (Visible in Broadcast Mode) --}}
-                <div id="allUsersBanner" class="dispatch-studio-card d-none mb-4 p-4" style="background: #f0fdf4; border-color: #a7f3d0 !important;">
+                <div id="allUsersBanner" class="studio-card d-none mb-4 p-4" style="background: #f0fdf4; border-color: #a7f3d0 !important;">
                     <div class="d-flex align-items-center gap-3">
                         <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width:48px;height:48px;">
                             <i class="bi bi-broadcast fs-4"></i>
@@ -531,38 +586,37 @@
                 </div>
 
                 {{-- STEP 3: Email Content & Instructions --}}
-                <div class="dispatch-studio-card p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="studio-card p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary text-white rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:24px;height:24px;font-size:0.75rem;">3</span>
-                            <h6 class="mb-0 fw-bold text-dark">Email Instructions & Note</h6>
+                            <span class="badge bg-primary text-white rounded-pill px-2 py-1 small fw-bold">STEP 3</span>
+                            <h6 class="mb-0 fw-bold text-dark fs-6">Email Instructions & Note</h6>
                         </div>
                         <span class="badge bg-light text-muted border">Optional</span>
                     </div>
+                    <p class="text-muted small mb-3">This note will appear inside a highlighted callout box in the email body for traders.</p>
 
                     {{-- Quick Insert Templates --}}
-                    <div class="mb-2.5">
-                        <span class="text-muted small me-2" style="font-size:0.75rem;">Quick insert template:</span>
-                        <div class="d-inline-flex flex-wrap gap-1.5 align-items-center">
-                            <span class="quick-template-chip" onclick="insertNoteTemplate('exness')">
-                                <i class="bi bi-plus"></i> Exness Setup Guide
-                            </span>
-                            <span class="quick-template-chip" onclick="insertNoteTemplate('vps')">
-                                <i class="bi bi-plus"></i> 24/7 VPS Note
-                            </span>
-                            <span class="quick-template-chip" onclick="insertNoteTemplate('support')">
-                                <i class="bi bi-plus"></i> Support & Questions
-                            </span>
-                        </div>
+                    <div class="mb-3 d-flex align-items-center flex-wrap gap-2">
+                        <span class="text-muted small fw-medium" style="font-size:0.75rem;">Quick Templates:</span>
+                        <span class="template-btn-chip" onclick="insertNoteTemplate('exness')">
+                            <i class="bi bi-plus-circle text-primary"></i> Exness Setup Guide
+                        </span>
+                        <span class="template-btn-chip" onclick="insertNoteTemplate('vps')">
+                            <i class="bi bi-plus-circle text-primary"></i> 24/7 VPS Note
+                        </span>
+                        <span class="template-btn-chip" onclick="insertNoteTemplate('support')">
+                            <i class="bi bi-plus-circle text-primary"></i> Support & Questions
+                        </span>
                     </div>
 
                     <textarea name="admin_note" id="adminNoteInput" class="form-control" rows="3" maxlength="500" 
                         placeholder="e.g. Please copy this .ex5 file to your MT5 'Experts' folder, allow algorithmic trading in MT5 options, and configure your lot sizes. Reach out on support chat if you need assistance."
                         style="border-radius: 10px; font-size: 0.85rem; line-height: 1.5;">{{ old('admin_note') }}</textarea>
                     
-                    <div class="d-flex justify-content-between align-items-center mt-1.5 text-muted small" style="font-size:0.75rem;">
-                        <span>This note is highlighted prominently inside the email body received by traders.</span>
-                        <span id="noteCharCounter">0 / 500</span>
+                    <div class="d-flex justify-content-between align-items-center mt-2 text-muted small" style="font-size:0.75rem;">
+                        <span><i class="bi bi-info-circle me-1"></i>Shown prominently inside trader's email.</span>
+                        <span id="noteCharCounter" class="fw-semibold">0 / 500</span>
                     </div>
                 </div>
 
@@ -570,9 +624,9 @@
 
             {{-- RIGHT COLUMN: Sticky Live Dispatch Summary & Action Hub --}}
             <div class="col-xl-4 col-lg-5">
-                <div class="sticky-dispatch-hub">
+                <div class="sticky-hub-panel">
                     
-                    <div class="dispatch-studio-card p-4">
+                    <div class="studio-card p-4">
                         <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                             <div class="d-flex align-items-center gap-2">
                                 <i class="bi bi-sliders text-primary fs-5"></i>
@@ -633,7 +687,7 @@
                         <div class="mb-4 pt-2 border-top">
                             <div class="d-flex align-items-center gap-2 mb-1.5 text-muted small" style="font-size:0.75rem;">
                                 <i class="bi bi-check-circle-fill text-success"></i>
-                                <span>Bot file verified in cloud permanent storage</span>
+                                <span>Bot file verified in permanent storage</span>
                             </div>
                             <div class="d-flex align-items-center gap-2 mb-1.5 text-muted small" style="font-size:0.75rem;">
                                 <i class="bi bi-check-circle-fill text-success"></i>
@@ -657,7 +711,7 @@
                         </button>
 
                         <div class="text-center text-muted small mt-2" style="font-size:0.7rem;">
-                            <i class="bi bi-lock me-1"></i>You will be asked to confirm before any email is dispatched.
+                            <i class="bi bi-lock me-1"></i>Confirmation required before email dispatch begins.
                         </div>
 
                     </div>
@@ -817,6 +871,9 @@
         const box = document.getElementById('uploadBox');
         if (box) {
             box.classList.toggle('d-none');
+            if (!box.classList.contains('d-none')) {
+                box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
     };
 
@@ -839,21 +896,31 @@
             if (data.success) {
                 const badge = document.getElementById('autoDispatchStatusBadge');
                 const iconBox = document.getElementById('autoDispatchIconBox');
+                const labelText = document.getElementById('autoSendLabelText');
+
                 if (data.is_enabled) {
                     badge.style.background = '#ecfdf5';
                     badge.style.color = '#059669';
                     badge.style.borderColor = '#a7f3d0';
-                    badge.textContent = 'ON';
+                    badge.textContent = '● ACTIVE (ON)';
+
                     iconBox.style.background = '#ecfdf5';
                     iconBox.style.color = '#059669';
+                    iconBox.style.borderColor = '#a7f3d0';
+
+                    if (labelText) labelText.textContent = 'Enabled';
                     window.showToast?.('success', 'Auto-send MT5 bot file on new registration is now <strong>ACTIVATED</strong>!');
                 } else {
                     badge.style.background = '#f1f5f9';
                     badge.style.color = '#64748b';
                     badge.style.borderColor = '#cbd5e1';
-                    badge.textContent = 'OFF';
+                    badge.textContent = '○ INACTIVE (OFF)';
+
                     iconBox.style.background = '#f1f5f9';
                     iconBox.style.color = '#64748b';
+                    iconBox.style.borderColor = '#e2e8f0';
+
+                    if (labelText) labelText.textContent = 'Disabled';
                     window.showToast?.('warning', 'Auto-send MT5 bot file on new registration is now <strong>DEACTIVATED</strong>.');
                 }
             } else {
@@ -896,8 +963,8 @@
             userCard.classList.add('d-none');
             allBanner.classList.remove('d-none');
 
-            cardAll.classList.add('active-all');
-            cardSelected.classList.remove('active-selected');
+            cardAll.classList.add('broadcast-active');
+            cardSelected.classList.remove('selected-active');
 
             summaryModeLabel.textContent = 'Broadcast Target:';
             summaryCountNumber.textContent = totalUsersCount;
@@ -914,8 +981,8 @@
             userCard.classList.remove('d-none');
             allBanner.classList.add('d-none');
 
-            cardSelected.classList.add('active-selected');
-            cardAll.classList.remove('active-all');
+            cardSelected.classList.add('selected-active');
+            cardAll.classList.remove('broadcast-active');
 
             summaryModeLabel.textContent = 'Selected Recipients:';
             summaryCountUnit.textContent = 'traders';
@@ -960,10 +1027,10 @@
             selectedPillsContainer.innerHTML = '';
             selected.forEach((u, id) => {
                 const tag = document.createElement('span');
-                tag.className = 'selected-tag-item';
+                tag.className = 'user-pill-tag';
                 tag.innerHTML = `
-                    <span class="tag-email" title="${u.email}">${u.name || u.email}</span>
-                    <span class="tag-remove" onclick="removeSelectedUser('${id}')" title="Remove">&times;</span>
+                    <span class="tag-text" title="${u.email}">${u.name || u.email}</span>
+                    <span class="tag-close" onclick="removeSelectedUser('${id}')" title="Remove">&times;</span>
                 `;
                 selectedPillsContainer.appendChild(tag);
             });
@@ -974,7 +1041,7 @@
         selected.delete(String(id));
         document.querySelectorAll(`.user-checkbox[value="${id}"]`).forEach(c => {
             c.checked = false;
-            c.closest('tr')?.classList.remove('row-selected');
+            c.closest('tr')?.classList.remove('row-checked');
         });
         updateCount();
     };
@@ -983,7 +1050,7 @@
         selected.clear();
         document.querySelectorAll('.user-checkbox').forEach(c => {
             c.checked = false;
-            c.closest('tr')?.classList.remove('row-selected');
+            c.closest('tr')?.classList.remove('row-checked');
         });
         document.getElementById('selectAllDemo').checked = false;
         document.getElementById('selectAllUsers').checked = false;
@@ -999,7 +1066,7 @@
             const cb = row.querySelector('.user-checkbox');
             if (cb) {
                 cb.checked = true;
-                row.classList.add('row-selected');
+                row.classList.add('row-checked');
                 selected.set(cb.value, { email: cb.dataset.email, name: cb.dataset.name });
             }
         });
@@ -1007,7 +1074,6 @@
     };
 
     window.toggleRowSelection = function(event, row) {
-        // Prevent double toggling if user directly clicked on the checkbox itself
         if (event.target.tagName === 'INPUT') return;
 
         const cb = row.querySelector('.user-checkbox');
@@ -1022,16 +1088,16 @@
         const row = cb.closest('tr');
         if (cb.checked) {
             selected.set(id, { email: cb.dataset.email, name: cb.dataset.name });
-            row?.classList.add('row-selected');
+            row?.classList.add('row-checked');
         } else {
             selected.delete(id);
-            row?.classList.remove('row-selected');
+            row?.classList.remove('row-checked');
         }
 
-        // Sync mirror checkboxes if same user exists in both tabs
+        // Mirror check across tabs if user appears in both
         document.querySelectorAll(`.user-checkbox[value="${id}"]`).forEach(c => {
             c.checked = cb.checked;
-            c.closest('tr')?.classList.toggle('row-selected', cb.checked);
+            c.closest('tr')?.classList.toggle('row-checked', cb.checked);
         });
 
         updateCount();
@@ -1090,7 +1156,7 @@
             const row = cb.closest('tr');
             if (row && row.style.display === 'none') return;
             cb.checked = this.checked;
-            row?.classList.toggle('row-selected', this.checked);
+            row?.classList.toggle('row-checked', this.checked);
             const id = cb.value;
             if (this.checked) {
                 selected.set(id, { email: cb.dataset.email, name: cb.dataset.name });
@@ -1099,7 +1165,7 @@
             }
             document.querySelectorAll(`.user-checkbox[value="${id}"]`).forEach(c => {
                 c.checked = this.checked;
-                c.closest('tr')?.classList.toggle('row-selected', this.checked);
+                c.closest('tr')?.classList.toggle('row-checked', this.checked);
             });
         });
         updateCount();
@@ -1110,7 +1176,7 @@
             const row = cb.closest('tr');
             if (row && row.style.display === 'none') return;
             cb.checked = this.checked;
-            row?.classList.toggle('row-selected', this.checked);
+            row?.classList.toggle('row-checked', this.checked);
             const id = cb.value;
             if (this.checked) {
                 selected.set(id, { email: cb.dataset.email, name: cb.dataset.name });
@@ -1119,7 +1185,7 @@
             }
             document.querySelectorAll(`.user-checkbox[value="${id}"]`).forEach(c => {
                 c.checked = this.checked;
-                c.closest('tr')?.classList.toggle('row-selected', this.checked);
+                c.closest('tr')?.classList.toggle('row-checked', this.checked);
             });
         });
         updateCount();
