@@ -288,6 +288,44 @@ Route::get('test-smtp', function (\Illuminate\Http\Request $request) {
     if ($request->query('secret') !== 'ktsmarkets123') {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
+
+    if ($request->has('check_emails')) {
+        $raw = $request->query('check_emails', '');
+        $emailList = array_values(array_filter(array_map('trim', explode(',', $raw))));
+        $dbUsers = \App\Models\User::where(function($q) use ($emailList) {
+            foreach ($emailList as $em) {
+                $q->orWhereRaw('LOWER(email) = ?', [strtolower($em)]);
+            }
+        })->get(['id', 'name', 'email', 'status', 'email_verified_at', 'created_at']);
+
+        $dbMap = [];
+        foreach ($dbUsers as $u) {
+            $dbMap[strtolower($u->email)] = $u;
+        }
+
+        $results = [];
+        foreach ($emailList as $em) {
+            $k = strtolower($em);
+            $found = isset($dbMap[$k]);
+            $results[] = [
+                'email' => $em,
+                'exists' => $found,
+                'id' => $found ? $dbMap[$k]->id : null,
+                'name' => $found ? $dbMap[$k]->name : null,
+                'status' => $found ? $dbMap[$k]->status : null,
+                'created_at' => $found ? $dbMap[$k]->created_at : null,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'total_checked' => count($emailList),
+            'found_count' => count($dbUsers),
+            'missing_count' => count($emailList) - count($dbUsers),
+            'found_emails' => array_values(array_filter($results, fn($r) => $r['exists'])),
+            'missing_emails' => array_values(array_filter($results, fn($r) => !$r['exists'])),
+        ]);
+    }
     
     $recipient = $request->query('to', 'ahmedbilalkhangl09@gmail.com');
     $testOtp = sprintf("%06d", mt_rand(100000, 999999));
