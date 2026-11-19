@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         $userRole = Role::where('slug', 'user')->first();
-        $hashedPassword = password_hash('KtsUser@2026', PASSWORD_BCRYPT);
+        $hashedPassword = password_hash('ktsbot123', PASSWORD_BCRYPT);
         $now = now();
 
         $users = [
