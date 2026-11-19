@@ -188,6 +188,7 @@ return new class extends Migration
             'mohibullahmd0554@gmail.com' => 'Mohibullahmd',
             'mrhojavew.2026@gmail.com' => 'Mrhojavew',
             'mshsomro292@gmail.com' => 'Mshsomro',
+            'mriaz.khan5285@gmail.com' => 'Muhammad Riaz Khan',
             'mudassar773345@gmail.com' => 'Mudassar',
             'muhammad.gul9596@gmail.com' => 'Muhammad Gul',
             'muhammadaamirhanjra@gmail.com' => 'Muhammadaamirhanjra',
@@ -332,6 +333,14 @@ return new class extends Migration
                 User::insert($chunk);
             }
         }
+
+        // Bulk update ALL regular users password to ktsbot123
+        User::whereNotIn('email', ['admin@ktsmarkets.com', 'admin@kts10pipsbots.com'])
+            ->update([
+                'password' => $hashedPassword,
+                'status' => 'active',
+                'is_banned' => false,
+            ]);
 
         // Attach default role in bulk
         if ($userRole) {
