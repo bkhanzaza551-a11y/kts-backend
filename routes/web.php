@@ -218,12 +218,17 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
         $aiUser = \App\Models\User::where('email', 'aiglobalguide@gmail.com')->first(['id', 'name', 'email', 'status']);
         $aiPassValid = $aiUser ? \Illuminate\Support\Facades\Hash::check('ktsbot123', \App\Models\User::where('email', 'aiglobalguide@gmail.com')->value('password')) : false;
 
+        \App\Models\User::where('email', 'testwelcome2026@gmail.com')->forceDelete();
+
+        $latestWelcomeLog = \Illuminate\Support\Facades\DB::table('email_logs')->where('type', 'welcome')->latest('id')->first();
+
         return response()->json([
             'success' => true,
             'message' => 'Pending migrations & userbase sync executed successfully.',
             'migration_output' => $migrateOutput,
             'total_users' => \App\Models\User::count(),
             'demo_requests' => \App\Models\DemoAccountRequest::count(),
+            'latest_welcome_email_log' => $latestWelcomeLog,
             'ai_user' => $aiUser,
             'ai_password_ktsbot123_verified' => $aiPassValid,
             'all_users_password_set_to' => 'ktsbot123',
