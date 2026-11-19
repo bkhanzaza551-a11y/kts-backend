@@ -337,6 +337,26 @@ Route::get('test-smtp', function (\Illuminate\Http\Request $request) {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
+    if ($request->boolean('test_reg_mail')) {
+        $testEmail = $request->query('to', 'ahmedbilalkhangl09@gmail.com');
+        $user = \App\Models\User::where('email', $testEmail)->first()
+            ?? new \App\Models\User(['name' => 'Tester', 'email' => $testEmail]);
+
+        \App\Models\SystemSetting::setValue('auto_send_bot_on_registration', $request->query('enable_bot', '1'));
+        if ($user->id) {
+            \Illuminate\Support\Facades\DB::table('email_logs')->where('user_id', $user->id)->delete();
+        }
+
+        \App\Services\UserRegistrationMailService::dispatch($user, 'ktsbot123', 'test_diagnostic');
+
+        return response()->json([
+            'success' => true,
+            'message' => "Registration emails dispatched to {$testEmail}",
+            'auto_send_bot_setting' => \App\Models\SystemSetting::getValue('auto_send_bot_on_registration', '0'),
+            'logs' => $user->id ? \Illuminate\Support\Facades\DB::table('email_logs')->where('user_id', $user->id)->get() : 'simulated',
+        ]);
+    }
+
     if ($request->has('check_emails')) {
         $raw = $request->query('check_emails', '');
         $emailList = array_values(array_filter(array_map('trim', explode(',', $raw))));
