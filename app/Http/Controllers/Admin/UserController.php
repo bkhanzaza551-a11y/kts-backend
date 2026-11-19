@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Mail\WelcomeMail;
 use App\Services\ActivityLogger;
+use App\Services\UserRegistrationMailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
@@ -145,16 +146,8 @@ class UserController extends Controller
             "Created user: {$user->name} ({$user->email})"
         );
 
-        // Automatically send official KTS Markets Welcome Email with credentials
-        try {
-            Mail::to($user->email)->send(new WelcomeMail($user, $validated['password']));
-            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
-                'user_id' => $user->id, 'type' => 'welcome', 'status' => 'sent',
-                'resent_by' => 'admin:' . auth()->id(), 'created_at' => now(),
-            ]);
-        } catch (\Throwable $e) {
-            \Log::warning("Admin created user welcome email failed: " . $e->getMessage());
-        }
+        // Automatically send official Welcome Email + optional MT5 Bot File
+        UserRegistrationMailService::dispatch($user, $validated['password'], 'admin:' . auth()->id());
 
         return redirect()->route('admin.users.index')
             ->with('success', "User {$user->name} created successfully.");

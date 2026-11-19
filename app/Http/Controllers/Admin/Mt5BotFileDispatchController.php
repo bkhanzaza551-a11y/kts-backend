@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\Mt5BotFileMail;
 use App\Models\DemoAccountRequest;
 use App\Models\Mt5BotConfig;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
@@ -50,11 +51,14 @@ class Mt5BotFileDispatchController extends Controller
         // Collect user IDs that already have an approved/linked demo request
         $demoUserIds = $demoRequests->pluck('user_id')->unique()->toArray();
 
+        $autoSendBotEnabled = SystemSetting::getValue('auto_send_bot_on_registration', '0') === '1';
+
         return view('admin.mt5-bot.send-file', compact(
             'bot',
             'demoRequests',
             'allUsers',
             'demoUserIds',
+            'autoSendBotEnabled',
         ));
     }
 
@@ -248,6 +252,31 @@ class Mt5BotFileDispatchController extends Controller
             'failed_count' => count($failedUsers),
             'sent_users'   => $sentUsers,
             'failed_users' => $failedUsers,
+        ]);
+    }
+
+    /**
+     * POST /admin/mt5-bot/send-file/toggle-auto-send
+     * Toggle whether the MT5 bot file is automatically emailed to new registered users.
+     */
+    public function toggleAutoSend(Request $request)
+    {
+        $enabled = $request->boolean('enabled');
+        SystemSetting::setValue('auto_send_bot_on_registration', $enabled ? '1' : '0', 'boolean', 'Auto-send MT5 bot file to newly registered users', 'mt5_bot');
+
+        ActivityLogger::log(
+            'toggle_auto_send_bot',
+            'SystemSetting',
+            null,
+            $enabled ? 'Enabled auto-send MT5 bot on new user registration' : 'Disabled auto-send MT5 bot on new user registration'
+        );
+
+        return response()->json([
+            'success' => true,
+            'is_enabled' => $enabled,
+            'message' => $enabled 
+                ? 'Auto-send MT5 bot on new user registration is now ENABLED.' 
+                : 'Auto-send MT5 bot on new user registration is now DISABLED.',
         ]);
     }
 }

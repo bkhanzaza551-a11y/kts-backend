@@ -99,6 +99,41 @@
         </div>
     </div>
 
+    {{-- Auto-Send on New Registration Switch Card --}}
+    <div class="card border-0 shadow-sm mb-4" style="border-radius:12px; background: #ffffff; border: 1px solid #e2e8f0 !important;">
+        <div class="card-body p-3.5">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-2.5 rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" id="autoDispatchIconBox"
+                         style="width:48px;height:48px; background: {{ $autoSendBotEnabled ? '#ecfdf5' : '#f1f5f9' }}; color: {{ $autoSendBotEnabled ? '#059669' : '#64748b' }};">
+                        <i class="bi bi-robot fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h6 class="mb-0 fw-bold text-dark fs-6">Auto-Send MT5 Bot File on New User Registration</h6>
+                            <span class="badge px-2 py-0.5 rounded-pill fw-semibold" id="autoDispatchStatusBadge"
+                                  style="font-size:0.75rem; background: {{ $autoSendBotEnabled ? '#ecfdf5' : '#f1f5f9' }}; color: {{ $autoSendBotEnabled ? '#059669' : '#64748b' }}; border: 1px solid {{ $autoSendBotEnabled ? '#a7f3d0' : '#cbd5e1' }};">
+                                {{ $autoSendBotEnabled ? '● Active (Auto-Send ON)' : '○ Inactive (Auto-Send OFF)' }}
+                            </span>
+                        </div>
+                        <p class="text-secondary small mb-0 mt-1">
+                            Jab bhi koi naya user mobile app ya web par register karega, usko Welcome Email ke sath sath yeh uploaded MT5 bot file automatically send ho jayegi.
+                        </p>
+                    </div>
+                </div>
+                <div class="form-check form-switch ps-0 d-flex align-items-center gap-2">
+                    <label class="form-check-label fw-bold text-dark small cursor-pointer me-2" for="autoSendBotToggle">
+                        {{ $autoSendBotEnabled ? 'Enabled' : 'Disabled' }}
+                    </label>
+                    <input class="form-check-input ms-0 cursor-pointer" type="checkbox" role="switch" id="autoSendBotToggle"
+                           style="width: 3.2rem; height: 1.7rem; cursor: pointer;"
+                           {{ $autoSendBotEnabled ? 'checked' : '' }}
+                           onchange="toggleAutoSendBot(this.checked)">
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Main Send Form (Full Width) --}}
     <form method="POST" action="{{ route('admin.mt5-bot.send-file.post') }}" id="sendForm">
         @csrf
@@ -509,6 +544,57 @@
         if (box) {
             box.classList.toggle('d-none');
         }
+    };
+
+    window.toggleAutoSendBot = function (enabled) {
+        const toggleInput = document.getElementById('autoSendBotToggle');
+        toggleInput.disabled = true;
+
+        fetch("{{ route('admin.mt5-bot.toggle-auto-send') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ enabled: enabled })
+        })
+        .then(r => r.json())
+        .then(data => {
+            toggleInput.disabled = false;
+            if (data.success) {
+                const badge = document.getElementById('autoDispatchStatusBadge');
+                const iconBox = document.getElementById('autoDispatchIconBox');
+                const label = toggleInput.previousElementSibling;
+                if (data.is_enabled) {
+                    badge.style.background = '#ecfdf5';
+                    badge.style.color = '#059669';
+                    badge.style.borderColor = '#a7f3d0';
+                    badge.textContent = '● Active (Auto-Send ON)';
+                    iconBox.style.background = '#ecfdf5';
+                    iconBox.style.color = '#059669';
+                    if (label) label.textContent = 'Enabled';
+                    window.showToast('success', 'Auto-send MT5 bot file on new registration is now <strong>ACTIVATED</strong>!');
+                } else {
+                    badge.style.background = '#f1f5f9';
+                    badge.style.color = '#64748b';
+                    badge.style.borderColor = '#cbd5e1';
+                    badge.textContent = '○ Inactive (Auto-Send OFF)';
+                    iconBox.style.background = '#f1f5f9';
+                    iconBox.style.color = '#64748b';
+                    if (label) label.textContent = 'Disabled';
+                    window.showToast('warning', 'Auto-send MT5 bot file on new registration is now <strong>DEACTIVATED</strong>.');
+                }
+            } else {
+                toggleInput.checked = !enabled;
+                window.showToast('error', data.message || 'Failed to update setting.');
+            }
+        })
+        .catch(err => {
+            toggleInput.disabled = false;
+            toggleInput.checked = !enabled;
+            window.showToast('error', 'Network error while updating setting.');
+        });
     };
 
     window.setTargetMode = function (mode) {
