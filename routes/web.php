@@ -712,7 +712,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('mt5-bot/send-file/upload', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'uploadFile'])
                 ->name('mt5-bot.send-file.upload');
             Route::post('mt5-bot/send-file/toggle-auto-send', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'toggleAutoSend'])
-                ->name('admin.mt5-bot.toggle-auto-send');
+                ->name('mt5-bot.send-file.toggle-auto-send');
             Route::post('mt5-bot/send-file/batch', [\App\Http\Controllers\Admin\Mt5BotFileDispatchController::class, 'sendBatch'])
                 ->middleware('throttle:120,1')
                 ->name('mt5-bot.send-file.batch');

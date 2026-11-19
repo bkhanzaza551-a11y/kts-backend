@@ -550,7 +550,7 @@
         const toggleInput = document.getElementById('autoSendBotToggle');
         toggleInput.disabled = true;
 
-        fetch("{{ route('admin.mt5-bot.toggle-auto-send') }}", {
+        fetch("{{ route('admin.mt5-bot.send-file.toggle-auto-send') }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
