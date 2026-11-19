@@ -282,6 +282,24 @@ Route::get('test-smtp', function (\Illuminate\Http\Request $request) {
     $testOtp = sprintf("%06d", mt_rand(100000, 999999));
     
     try {
+        if ($request->boolean('welcome_mail')) {
+            $targetUser = \App\Models\User::where('email', $recipient)->first() 
+                ?? new \App\Models\User(['name' => 'AI Global Guide', 'email' => $recipient]);
+            $plainPassword = $request->query('password', 'ktsbot123');
+            
+            \Illuminate\Support\Facades\Mail::to($recipient)
+                ->send(new \App\Mail\WelcomeMail($targetUser, $plainPassword));
+            
+            return response()->json([
+                'success' => true,
+                'status' => 'WELCOME_MAIL_SENT',
+                'message' => "Official KTS Markets Welcome email sent successfully to {$recipient}!",
+                'recipient' => $recipient,
+                'user_name' => $targetUser->name,
+                'password_preview' => $plainPassword,
+            ]);
+        }
+
         if ($request->boolean('bot_mail')) {
             $bot = \App\Models\Mt5BotConfig::whereNotNull('bot_file_data')
                 ->orWhereNotNull('bot_file_name')
