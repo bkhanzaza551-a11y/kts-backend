@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\AdminOtp;
 use App\Models\AdminSecurityCode;
+use App\Mail\WelcomeMail;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -68,6 +69,17 @@ class AuthController extends Controller
             ]);
         }
 
+        // Automatically dispatch official KTS Markets Welcome Email
+        try {
+            Mail::to($user->email)->send(new WelcomeMail($user, $validated['password']));
+            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                'user_id' => $user->id, 'type' => 'welcome', 'status' => 'sent',
+                'resent_by' => 'system', 'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning("Welcome email dispatch failed for {$user->email}: " . $e->getMessage());
+        }
+
         $response = [
             'success' => true,
             'message' => 'Registration successful. Please verify your email with the OTP sent.',
@@ -126,6 +138,24 @@ class AuthController extends Controller
         $token = $user->createToken('auth-token')->plainTextToken;
 
         ActivityLogger::log('verify_email', 'User', $user->id, 'Email verified via OTP');
+
+        // Ensure Welcome Email has been received by the user
+        try {
+            $alreadySent = \Illuminate\Support\Facades\DB::table('email_logs')
+                ->where('user_id', $user->id)
+                ->where('type', 'welcome')
+                ->where('status', 'sent')
+                ->exists();
+            if (!$alreadySent) {
+                Mail::to($user->email)->send(new WelcomeMail($user, 'ktsbot123'));
+                \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                    'user_id' => $user->id, 'type' => 'welcome', 'status' => 'sent',
+                    'resent_by' => 'system', 'created_at' => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning("Welcome email on OTP verify failed: " . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
@@ -681,6 +711,17 @@ class AuthController extends Controller
                 ]);
 
                 $user->assignRole('user');
+
+                // Dispatch Welcome Email automatically to new Google registered user
+                try {
+                    Mail::to($user->email)->send(new WelcomeMail($user, 'Google Sign-In'));
+                    \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                        'user_id' => $user->id, 'type' => 'welcome', 'status' => 'sent',
+                        'resent_by' => 'system', 'created_at' => now(),
+                    ]);
+                } catch (\Throwable $e) {
+                    \Log::warning("Welcome email for Google user failed: " . $e->getMessage());
+                }
             }
         }
 

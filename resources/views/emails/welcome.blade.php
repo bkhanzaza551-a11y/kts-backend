@@ -77,12 +77,18 @@
                                 {{ $user->email }}
                               </td>
                             </tr>
+                            @if(!empty($password))
                             <tr>
                               <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Password:</td>
-                              <td style="padding: 6px 0; color: #0f172a; font-family: monospace; font-size: 16px; font-weight: 800; letter-spacing: 0.5px;">
+                              <td style="padding: 6px 0; color: #0f172a; font-family: monospace; font-size: 15px; font-weight: 800; letter-spacing: 0.5px;">
+                                @if($password === 'Google Sign-In')
+                                <span style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; font-family: inherit; font-size: 12.5px;">Google Authentication</span>
+                                @else
                                 <span style="background: #e2e8f0; padding: 2px 8px; border-radius: 6px;">{{ $password }}</span>
+                                @endif
                               </td>
                             </tr>
+                            @endif
                             <tr>
                               <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Account Status:</td>
                               <td style="padding: 6px 0;">

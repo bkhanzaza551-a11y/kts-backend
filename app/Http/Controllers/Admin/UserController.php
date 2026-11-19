@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Mail\WelcomeMail;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
@@ -142,6 +144,17 @@ class UserController extends Controller
             $user->id,
             "Created user: {$user->name} ({$user->email})"
         );
+
+        // Automatically send official KTS Markets Welcome Email with credentials
+        try {
+            Mail::to($user->email)->send(new WelcomeMail($user, $validated['password']));
+            \Illuminate\Support\Facades\DB::table('email_logs')->insert([
+                'user_id' => $user->id, 'type' => 'welcome', 'status' => 'sent',
+                'resent_by' => 'admin:' . auth()->id(), 'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning("Admin created user welcome email failed: " . $e->getMessage());
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', "User {$user->name} created successfully.");
