@@ -20,8 +20,10 @@ class Mt5BotFileMail extends Mailable
     public function __construct(
         public User $user,
         public Mt5BotConfig $bot,
-        public string $adminNote = '',
-    ) {}
+        public ?string $adminNote = '',
+    ) {
+        $this->adminNote = $this->adminNote ?? '';
+    }
 
     public function envelope(): Envelope
     {

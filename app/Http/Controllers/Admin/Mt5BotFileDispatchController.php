@@ -151,7 +151,7 @@ class Mt5BotFileDispatchController extends Controller
             return back()->with('error', 'No valid users selected to receive the email.');
         }
 
-        $adminNote = $request->input('admin_note', '');
+        $adminNote = (string) ($request->input('admin_note') ?? '');
         $sent      = 0;
         $failed    = [];
 
