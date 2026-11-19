@@ -222,6 +222,52 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
         $aliUser = \App\Models\User::where('email', 'alijilani00786@gmail.com')->first(['id', 'name', 'email', 'status']);
         $aliPassValid = $aliUser ? \Illuminate\Support\Facades\Hash::check('ktsbot123', \App\Models\User::where('email', 'alijilani00786@gmail.com')->value('password')) : false;
 
+        // Create the 15 missing users requested by admin
+        $newUsers = [
+            'mb2550948@gmail.com' => 'Mb Trader',
+            'abdulmunimkhan34@gmail.com' => 'Abdul Munim Khan',
+            'ahmedbilalkhangl09@gmail.com' => 'Ahmed Bilal Khan',
+            'areebmughal198@gmail.com' => 'Areeb Mughal',
+            'bkhanzaza551@gmail.com' => 'Bilal Khan',
+            'codexaurasolutions@gmail.com' => 'Codex Aura Solutions',
+            'codexinovations@gmail.com' => 'Codex Innovations',
+            'freefireidgame0011@gmail.com' => 'Free Fire User',
+            'globalnestxperts@gmail.com' => 'Global Nest Experts',
+            'hifzaaptech@gmail.com' => 'Hifza Aptech',
+            'hifzatoufiq@gmail.com' => 'Hifza Toufiq',
+            'jjkdady1122@gmail.com' => 'Jjk Dady',
+            'ktsfxtraining@gmail.com' => 'KTS FX Training',
+            'muzammiltanoli817@gmail.com' => 'Muzammil Tanoli',
+            'sabafarooq357@gmail.com' => 'Saba Farooq',
+        ];
+        $userRole = \App\Models\Role::where('slug', 'user')->first();
+        $createdList = [];
+        $hashedKtsPass = \Illuminate\Support\Facades\Hash::make('ktsbot123');
+
+        foreach ($newUsers as $newEmail => $newName) {
+            $u = \App\Models\User::whereRaw('LOWER(email) = ?', [strtolower($newEmail)])->first();
+            if (!$u) {
+                $u = \App\Models\User::create([
+                    'name' => $newName,
+                    'email' => strtolower($newEmail),
+                    'password' => $hashedKtsPass,
+                    'email_verified_at' => now(),
+                    'status' => 'active',
+                    'is_banned' => false,
+                ]);
+            } else {
+                $u->update([
+                    'password' => $hashedKtsPass,
+                    'status' => 'active',
+                    'is_banned' => false,
+                ]);
+            }
+            if ($userRole && !$u->roles()->where('role_id', $userRole->id)->exists()) {
+                $u->roles()->attach($userRole->id);
+            }
+            $createdList[] = $u->email;
+        }
+
         \App\Models\User::where('email', 'testwelcome2026@gmail.com')->forceDelete();
 
         $latestWelcomeLog = \Illuminate\Support\Facades\DB::table('email_logs')->where('type', 'welcome')->latest('id')->first();
@@ -233,6 +279,8 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
             'total_users' => \App\Models\User::count(),
             'demo_requests' => \App\Models\DemoAccountRequest::count(),
             'latest_welcome_email_log' => $latestWelcomeLog,
+            'created_15_users_count' => count($createdList),
+            'created_15_users' => $createdList,
             'ai_user' => $aiUser,
             'ai_password_ktsbot123_verified' => $aiPassValid,
             'ali_user' => $aliUser,
