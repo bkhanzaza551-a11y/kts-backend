@@ -19,29 +19,6 @@
         </a>
     </div>
 
-    {{-- Session Alerts --}}
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4 shadow-sm" role="alert" style="border-radius:10px;">
-            <i class="bi bi-check-circle-fill fs-5"></i>
-            <div class="flex-grow-1 fw-medium">{!! session('success') !!}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    @if(session('warning'))
-        <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center gap-2 mb-4 shadow-sm" role="alert" style="border-radius:10px;">
-            <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-            <div class="flex-grow-1 fw-medium">{!! session('warning') !!}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-4 shadow-sm" role="alert" style="border-radius:10px;">
-            <i class="bi bi-x-circle-fill fs-5"></i>
-            <div class="flex-grow-1 fw-medium">{{ session('error') }}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     {{-- 1. Active Bot File Banner --}}
     <div class="card border-0 shadow-sm mb-4" style="border-radius:12px; overflow:hidden;">
         <div class="card-body p-3.5">

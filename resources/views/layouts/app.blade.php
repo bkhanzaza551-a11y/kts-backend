@@ -89,6 +89,182 @@
             background-color: #e2e8f0 !important;
             color: #0f172a !important;
         }
+
+        /* ==============================================================
+           KTS Markets Ultra-Modern Top-Right Toast Notifications
+           ============================================================== */
+        #ktsToastContainer {
+            position: fixed !important;
+            top: 24px !important;
+            right: 24px !important;
+            z-index: 999999 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 420px;
+            width: calc(100vw - 48px);
+            pointer-events: none;
+        }
+
+        .kts-toast {
+            pointer-events: auto;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px 16px 14px;
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.22), 0 4px 12px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            animation: ktsToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        .kts-toast.hiding {
+            animation: ktsToastOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes ktsToastIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes ktsToastOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+        }
+
+        .kts-toast-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .kts-toast-content {
+            flex-grow: 1;
+            padding-top: 1px;
+            padding-right: 6px;
+        }
+
+        .kts-toast-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 3px;
+            color: #0f172a;
+        }
+
+        .kts-toast-message {
+            font-size: 0.835rem;
+            color: #475569;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .kts-toast-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.25rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .kts-toast-close:hover {
+            color: #0f172a;
+            background: #f1f5f9;
+        }
+
+        .kts-toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(0, 0, 0, 0.06);
+        }
+        .kts-toast-progress-bar {
+            height: 100%;
+            width: 100%;
+            transform-origin: left;
+            transition: width linear;
+        }
+
+        /* Success */
+        .kts-toast-success {
+            border-left: 4px solid #10b981;
+        }
+        .kts-toast-success .kts-toast-icon {
+            background: #ecfdf5;
+            color: #059669;
+        }
+        .kts-toast-success .kts-toast-progress-bar {
+            background: #10b981;
+        }
+
+        /* Danger / Error */
+        .kts-toast-danger {
+            border-left: 4px solid #ef4444;
+        }
+        .kts-toast-danger .kts-toast-icon {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        .kts-toast-danger .kts-toast-progress-bar {
+            background: #ef4444;
+        }
+
+        /* Warning */
+        .kts-toast-warning {
+            border-left: 4px solid #f59e0b;
+        }
+        .kts-toast-warning .kts-toast-icon {
+            background: #fffbeb;
+            color: #d97706;
+        }
+        .kts-toast-warning .kts-toast-progress-bar {
+            background: #f59e0b;
+        }
+
+        /* Info */
+        .kts-toast-info {
+            border-left: 4px solid #3b82f6;
+        }
+        .kts-toast-info .kts-toast-icon {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+        .kts-toast-info .kts-toast-progress-bar {
+            background: #3b82f6;
+        }
+
         body { 
             background-color: var(--body-bg); 
             color: var(--text-primary); 
@@ -998,33 +1174,96 @@
         </header>
         @endauth
 
-        <div class="p-4">
+        {{-- Global Top-Right Toast Notifications Container --}}
+        <div id="ktsToastContainer" class="toast-container" aria-live="polite" aria-atomic="true">
             @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show fade-in" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+                <div class="kts-toast kts-toast-success" role="alert" data-auto-dismiss="5500">
+                    <div class="kts-toast-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="kts-toast-content">
+                        <div class="kts-toast-title">Success</div>
+                        <div class="kts-toast-message">{!! session('success') !!}</div>
+                    </div>
+                    <button type="button" class="kts-toast-close" onclick="dismissKtsToast(this.closest('.kts-toast'))" aria-label="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    <div class="kts-toast-progress"><div class="kts-toast-progress-bar"></div></div>
+                </div>
             @endif
 
             @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show fade-in" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+                <div class="kts-toast kts-toast-danger" role="alert" data-auto-dismiss="6000">
+                    <div class="kts-toast-icon">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                    <div class="kts-toast-content">
+                        <div class="kts-toast-title">Error</div>
+                        <div class="kts-toast-message">{!! session('error') !!}</div>
+                    </div>
+                    <button type="button" class="kts-toast-close" onclick="dismissKtsToast(this.closest('.kts-toast'))" aria-label="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    <div class="kts-toast-progress"><div class="kts-toast-progress-bar"></div></div>
+                </div>
+            @endif
+
+            @if(session('warning'))
+                <div class="kts-toast kts-toast-warning" role="alert" data-auto-dismiss="6000">
+                    <div class="kts-toast-icon">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="kts-toast-content">
+                        <div class="kts-toast-title">Notice</div>
+                        <div class="kts-toast-message">{!! session('warning') !!}</div>
+                    </div>
+                    <button type="button" class="kts-toast-close" onclick="dismissKtsToast(this.closest('.kts-toast'))" aria-label="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    <div class="kts-toast-progress"><div class="kts-toast-progress-bar"></div></div>
+                </div>
+            @endif
+
+            @if(session('info'))
+                <div class="kts-toast kts-toast-info" role="alert" data-auto-dismiss="5500">
+                    <div class="kts-toast-icon">
+                        <i class="bi bi-info-circle-fill"></i>
+                    </div>
+                    <div class="kts-toast-content">
+                        <div class="kts-toast-title">Info</div>
+                        <div class="kts-toast-message">{!! session('info') !!}</div>
+                    </div>
+                    <button type="button" class="kts-toast-close" onclick="dismissKtsToast(this.closest('.kts-toast'))" aria-label="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    <div class="kts-toast-progress"><div class="kts-toast-progress-bar"></div></div>
+                </div>
             @endif
 
             @if($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show fade-in" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+                <div class="kts-toast kts-toast-danger" role="alert" data-auto-dismiss="7500">
+                    <div class="kts-toast-icon">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                    </div>
+                    <div class="kts-toast-content">
+                        <div class="kts-toast-title">Validation Error</div>
+                        <div class="kts-toast-message">
+                            <ul class="mb-0 ps-3">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                    <button type="button" class="kts-toast-close" onclick="dismissKtsToast(this.closest('.kts-toast'))" aria-label="Close">
+                        <i class="bi bi-x"></i>
+                    </button>
+                    <div class="kts-toast-progress"><div class="kts-toast-progress-bar"></div></div>
+                </div>
             @endif
+        </div>
 
+        <div class="p-4">
             @yield('content')
         </div>
     </div>
@@ -1366,6 +1605,114 @@
                     }
                 });
             })();
+        });
+
+        // ==============================================================
+        // Global Top-Right Toast Notifications Engine
+        // ==============================================================
+        window.dismissKtsToast = function (el) {
+            if (!el || el.classList.contains('hiding')) return;
+            el.classList.add('hiding');
+            setTimeout(() => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 320);
+        };
+
+        window.initKtsToasts = function () {
+            document.querySelectorAll('.kts-toast[data-auto-dismiss]:not([data-initialized])').forEach(toast => {
+                toast.setAttribute('data-initialized', 'true');
+                const duration = parseInt(toast.getAttribute('data-auto-dismiss') || '5500', 10);
+                const pBar = toast.querySelector('.kts-toast-progress-bar');
+                
+                let startTime = Date.now();
+                let remaining = duration;
+                let timer = null;
+
+                if (pBar) {
+                    pBar.style.transition = `width ${duration}ms linear`;
+                    requestAnimationFrame(() => {
+                        pBar.style.width = '0%';
+                    });
+                }
+
+                const startTimer = () => {
+                    startTime = Date.now();
+                    timer = setTimeout(() => {
+                        window.dismissKtsToast(toast);
+                    }, remaining);
+                };
+
+                const pauseTimer = () => {
+                    clearTimeout(timer);
+                    remaining -= (Date.now() - startTime);
+                    if (remaining < 0) remaining = 0;
+                    if (pBar) {
+                        const computedWidth = window.getComputedStyle(pBar).width;
+                        pBar.style.transition = 'none';
+                        pBar.style.width = computedWidth;
+                    }
+                };
+
+                toast.addEventListener('mouseenter', pauseTimer);
+                toast.addEventListener('mouseleave', () => {
+                    if (pBar && remaining > 0) {
+                        pBar.style.transition = `width ${remaining}ms linear`;
+                        pBar.style.width = '0%';
+                    }
+                    startTimer();
+                });
+
+                startTimer();
+            });
+        };
+
+        window.showToast = function (type, message, title = '') {
+            const container = document.getElementById('ktsToastContainer');
+            if (!container) return;
+
+            const icons = {
+                success: 'bi-check-circle-fill',
+                danger: 'bi-x-circle-fill',
+                error: 'bi-x-circle-fill',
+                warning: 'bi-exclamation-triangle-fill',
+                info: 'bi-info-circle-fill'
+            };
+            const titles = {
+                success: 'Success',
+                danger: 'Error',
+                error: 'Error',
+                warning: 'Notice',
+                info: 'Info'
+            };
+
+            const actualType = (type === 'error') ? 'danger' : type;
+            const finalTitle = title || titles[actualType] || 'Notification';
+            const iconClass = icons[actualType] || 'bi-bell-fill';
+
+            const toast = document.createElement('div');
+            toast.className = `kts-toast kts-toast-${actualType}`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('data-auto-dismiss', '5500');
+            toast.innerHTML = `
+                <div class="kts-toast-icon">
+                    <i class="bi ${iconClass}"></i>
+                </div>
+                <div class="kts-toast-content">
+                    <div class="kts-toast-title">${finalTitle}</div>
+                    <div class="kts-toast-message">${message}</div>
+                </div>
+                <button type="button" class="kts-toast-close" onclick="window.dismissKtsToast(this.closest('.kts-toast'))" aria-label="Close">
+                    <i class="bi bi-x"></i>
+                </button>
+                <div class="kts-toast-progress"><div class="kts-toast-progress-bar"></div></div>
+            `;
+
+            container.appendChild(toast);
+            window.initKtsToasts();
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            window.initKtsToasts();
         });
     </script>
     @stack('scripts')
