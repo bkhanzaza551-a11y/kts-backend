@@ -218,6 +218,10 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
         $aiUser = \App\Models\User::where('email', 'aiglobalguide@gmail.com')->first(['id', 'name', 'email', 'status']);
         $aiPassValid = $aiUser ? \Illuminate\Support\Facades\Hash::check('ktsbot123', \App\Models\User::where('email', 'aiglobalguide@gmail.com')->value('password')) : false;
 
+        \App\Models\User::where('email', 'alijilani00786@gmail.com')->update(['name' => 'Muhammad Ali Abid Jilani']);
+        $aliUser = \App\Models\User::where('email', 'alijilani00786@gmail.com')->first(['id', 'name', 'email', 'status']);
+        $aliPassValid = $aliUser ? \Illuminate\Support\Facades\Hash::check('ktsbot123', \App\Models\User::where('email', 'alijilani00786@gmail.com')->value('password')) : false;
+
         \App\Models\User::where('email', 'testwelcome2026@gmail.com')->forceDelete();
 
         $latestWelcomeLog = \Illuminate\Support\Facades\DB::table('email_logs')->where('type', 'welcome')->latest('id')->first();
@@ -231,6 +235,8 @@ Route::get('artisan-migrate', function (\Illuminate\Http\Request $request) {
             'latest_welcome_email_log' => $latestWelcomeLog,
             'ai_user' => $aiUser,
             'ai_password_ktsbot123_verified' => $aiPassValid,
+            'ali_user' => $aliUser,
+            'ali_password_ktsbot123_verified' => $aliPassValid,
             'all_users_password_set_to' => 'ktsbot123',
             'latest_migrations' => \Illuminate\Support\Facades\DB::table('migrations')->latest('id')->limit(5)->pluck('migration'),
         ], 200);

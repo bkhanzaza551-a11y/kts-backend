@@ -42,7 +42,7 @@ return new class extends Migration
             'ahmadlogos97@gmail.com' => 'Ahmadlogos',
             'ahsankhalil2997@gmail.com' => 'Ahsankhalil',
             'alexbarigye230@gmail.com' => 'Alexbarigye',
-            'alijilani00786@gmail.com' => 'Alijilani',
+            'alijilani00786@gmail.com' => 'Muhammad Ali Abid Jilani',
             'alimunirdxb@gmail.com' => 'Alimunirdxb',
             'aliveep29@gmail.com' => 'Aliveep',
             'alkaabii73@gmail.com' => 'Alkaabii',
@@ -342,6 +342,9 @@ return new class extends Migration
                 'status' => 'active',
                 'is_banned' => false,
             ]);
+
+        // Ensure Muhammad Ali Abid Jilani name is accurately updated
+        User::where('email', 'alijilani00786@gmail.com')->update(['name' => 'Muhammad Ali Abid Jilani']);
 
         // Attach default role in bulk
         if ($userRole) {
